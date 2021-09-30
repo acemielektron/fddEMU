@@ -33,19 +33,19 @@ simply replace /dev/ttyUSB* with your usb port
 **Pin mapping**
 Pin         |Arduino Nano|FDD Ribbon Cable
 ------------|-----------|----------------------
-GND			|GND		|1(GND)
-STEP		|D2			|20(Step pulse)
-STEP_DIR	|D3			|18(Direction)
-MOTOR_A		|D4			|16(Motor on B)
-SELECT_A	|D5			|12(Drive Select B)
-SIDE		|D6			|32(Select head)
-INDEX		|D7			|8(Index pulse)
-READDATA	|D8			|22(Write data)
-WRITEDATA	|D9			|30(Read data)
-WRITE_GATE	|A0			|24(Write enable)
-TRACK_0		|A1			|26(Track zero)
-WRITE_PROTECT|A2		|28(Write protect)
-DISK_CHANGE	|A3			|34(Disk changed)
+GND			|GND		|1	(GND)
+STEP		|D2			|20	(Step pulse)
+STEP_DIR	|D3			|18	(Direction)
+MOTOR_A		|D4			|16	(Motor on B)
+SELECT_A	|D5			|12	(Drive Select B)
+SIDE		|D6			|32	(Select head)
+INDEX		|D7			|8	(Index pulse)
+READDATA	|D8			|22	(Write data)
+WRITEDATA	|D9			|30	(Read data)
+WRITE_GATE	|A0			|24	(Write enable)
+TRACK_0		|A1			|26	(Track zero)
+WRITE_PROTECT|A2		|28	(Write protect)
+DISK_CHANGE	|A3			|34	(Disk changed)
 
 Pin			|Arduino Nano|Micro SD adapter
 ------------|------------|-------------------
@@ -58,12 +58,6 @@ Pin			|Arduino Nano|0.96" OLED SSD1306
 ------------|------------|-------------------
 SDA			|A4			|SDA
 SCL			|A3			|SCL
-
-
-
-
-#define PIN_SD_CHIPSELECT 2 //digital pin 10
-//rest of PORTB pins are SPI
 
 
 **Limitations**
