@@ -2,7 +2,7 @@
 An AVR (atmega328p) based floppy emulator for PC
 
 **Requirements**
-* Arduino nano (UNO will do but button inputs require ADC7, use serial comands instead)
+* Arduino nano (UNO will do but button inputs require ADC7, use serial commands instead)
 * Micro SD card adapter
 * A micro SD card (formatted FAT16/32, floppy images in root directory)
 * 7 1kOhm resistors (2 for step and readdata pins, the rest required for making ADC buttons)
