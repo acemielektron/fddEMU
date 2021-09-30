@@ -41,5 +41,8 @@ simply replace /dev/ttyUSB* with your usb port
 * [Petit FAT FS](https://github.com/greiman/PetitFS) by [Chan](http://elm-chan.org/fsw/ff/00index_p.html) adapted for hardware SPI by [Bill Greiman](https://github.com/greiman). fddEMU uses a modified Petit FAT FS.
 * [u8glib](https://github.com/olikraus/u8glib)
 
+**Release**
+[fddEMU v0.9](https://github.com/acemielektron/fddEMU/releases)
+
 Pictures and further documentation is coming ...
 
