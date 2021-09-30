@@ -24,17 +24,12 @@
 #include "avrFlux.h"
 
 // -------------------------------  Pin assignments for Arduino UNO/Nano/Pro Mini (Atmega328p)  ------------------------------
-//#define ENABLE_DRIVE_B
+
 //PORTD
 #define PIN_STEP       2  // can be changed to different pin
 #define PIN_STEPDIR    3  // can be changed to different pin
-#ifndef ENABLE_DRIVE_B
 #define PIN_MOTORA     4  // can be changed to different pin
 #define PIN_SELECTA    5  // can be changed to different pin
-#else // Drive B enabled: combine motor and select pins through an or gate
-#define PIN_SELECTB     4  // can be changed to different pin
-#define PIN_SELECTA    5  // can be changed to different pin
-#endif //ENABLE_DRIVE_B
 #define PIN_SIDE       6  // can be changed to different pin
 #define PIN_INDEX      7  // accesses via IDXPORT/IDXBIT #defines below
 

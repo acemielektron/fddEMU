@@ -54,11 +54,14 @@ ISR(INT0_vect) //int0 pin 2 of port D
     iTrack = (PIND & bit(PIN_STEPDIR)) ? --iTrack : ++iTrack;
 }
 
+//Two drive mode requires SELECT and MOTOR pins combined trough an OR gate
+//if two drive mode is enabled SELECTA pin is used for combined SELECTA & MOTORA
+//and MOTORA pin is used for combined SELECTB & MOTORB
 ISR(PCINT2_vect) //pin change interrupt of port D
 {
 #ifdef ENABLE_DRIVE_B
-  if (!(PIND & (1 << PIN_SELECTA))) drvSel = 1; //driveA is selected 
-  else if (!(PIND & (1 << PIN_SELECTB))) drvSel = 2; //driveA is selected   
+  if (!(PIND & (1 << PIN_SELECTA))) drvSel = 1; //drive A is selected 
+  else if (!(PIND & (1 << PIN_MOTORA))) drvSel = 2; //drive B is selected   
 #else //Drive B not enabled
   if ( (!(PIND & bit(PIN_SELECTA))) && (!(PIND & bit(PIN_MOTORA))) ) drvSel = 1; //driveA is selected 
 #endif  //ENABLE_DRIVE_B

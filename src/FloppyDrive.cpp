@@ -38,12 +38,7 @@ void initFDDpins()
   PORTB &= ~bit(PIN_WRITEDATA);//LOW "0"
   PORTC &= ~(bit(PIN_TRACK0)|bit(PIN_WRITEPROT)|bit(PIN_DSKCHANGE));//LOW "0"
   //inputs
-#ifdef ENABLE_DRIVE_B
-  PORTD |= bit(PIN_SELECTB); //Enable Pull Up  
-  PORTD |= bit(PIN_SELECTA); //Enable Pull Up  
-#else
   PORTD |= bit(PIN_MOTORA)|bit(PIN_SELECTA); //Enable Pull Up  
-#endif //ENABLE_DRIVE_B
   PORTD |= bit(PIN_STEP)|bit(PIN_STEPDIR)|bit(PIN_SIDE); //Enable Pull Up
   PORTB |= bit(PIN_READDATA); //pullup "1"  
   PORTC |= bit(PIN_WRITEGATE); //pullup
@@ -53,11 +48,7 @@ void initFDDpins()
   EICRA |= bit(ISC01); //set ISC01 "falling edge"
   EIMSK |= bit(INT0); //External Interrupt Mask Register enable INT0  
   
-#ifdef ENABLE_DRIVE_B
-  PCMSK2 = bit(PIN_SELECTA)| bit(PIN_SELECTB); // Pin Change Mask Register 2 enable SELECTA&SELECTB
-#else  
   PCMSK2 = bit(PIN_SELECTA)| bit(PIN_MOTORA); // Pin Change Mask Register 2 enable SELECTA&MOTORA
-#endif //ENABLE_DRIVE_B  
   PCICR |= bit(PCIE2); // Pin Change Interrupt Control Register enable port D    
   pinsInitialized = true; //done
   sei(); //Turn interrupts on
