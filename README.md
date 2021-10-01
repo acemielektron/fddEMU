@@ -99,19 +99,21 @@ Image file must be contiguous for fddEMU to be able to load, if the file is not 
 **How to use (Serial)**
 <br>
 ![initial serial output](/images/serial-init.png)
-<br>
+<br><br>
 fddEMU serial interface is used through keys 
 * S: Select
 * N: Next file
 * P: Previous file
 * L: Load selected file
-* E: Eject selected disk
+* E: Eject selected disk / Cancel loading file
 
 To use any of the functions first a drive must be selected through "S" key then serial terminal will report "Sel drive: A" or if drive B is selected "Sel drive: B".<br>
-After a drive is selected the "N" key selects next file in root directory. If the last file in the root directory is selected this file is reselected.<br>
-The "P" key selects the previous file in the root directory listing. If the first file is selected, this file is reselected.<br>
-"L" key loads selected image file to selected drive.
-"E" key ejects image file loaded to drive.
+After a drive is selected:
+"S" key selects the next drive or if last drive in the list is selected deselects drive<br>
+"N" key selects next file in root directory. If the last file in the root directory is selected this file is reselected.<br>
+"P" key selects the previous file in the root directory listing. If the first file is selected, this file is reselected.<br>
+"L" key loads selected image file to selected drive.<br>
+"E" key ejects image file loaded to selected drive. If pressed during file selection, cancels file section.<br>
 
 
 <br><br>
