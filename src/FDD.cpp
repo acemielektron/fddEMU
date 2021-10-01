@@ -145,9 +145,14 @@ void FDDloop()
 
   if (drvSel) cDrv = drvSel - 1;
   else return; 
-  disp.setDriveActive(drvSel);
-  (drive[cDrv].fName[0] == 0) ? SET_DSKCHANGE_LOW() : SET_DSKCHANGE_HIGH(); //disk present ?
+  if (drive[cDrv].diskChange) //pulse disk change pin
+    {
+      SET_DSKCHANGE_LOW();
+      if ((drive[cDrv].fName[0])) drive[cDrv].diskChange = 0; //if a disk is loaded clear diskChange flag
+    }
+  disp.setDriveActive(drvSel);  
   (drive[cDrv].fAttr & AM_RDO) ? SET_WRITEPROT_LOW() : SET_WRITEPROT_HIGH();  //check readonly
+  (drive[cDrv].fName[0]) ? SET_DSKCHANGE_HIGH() : SET_DSKCHANGE_LOW(); //disk present ?
   setup_timer1_for_write(); 
   while(drvSel) //PCINT for SELECTA and MOTORA
   {    
@@ -200,4 +205,6 @@ void FDDloop()
     }//sectors             
   }//selected
   disp.setDriveIdle();
+  SET_DSKCHANGE_HIGH();
+  SET_WRITEPROT_HIGH();
 }

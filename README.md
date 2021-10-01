@@ -1,12 +1,13 @@
 # fddEMU
 An AVR (atmega328p) based floppy emulator for PC
 
-fddEMU is a DIY floppy emulator. You can immediately begin testing with an arduino nano, an SD adapter, SD card,  and some jumper cables. 
+fddEMU is a DIY floppy emulator. You can immediately begin testing fddEMU on serial terminal with an arduino nano, an SD adapter that converts 5 volts arduino power supply and signals to 3.3 volts suitable for SD card, an SD card,  and some jumper cables. 
 Standalone (using without usb serial connection) require SSD1306 i2c screen, buttons and a 5 volts power supply.
+<br><br>
 
 **Requirements**
 * Arduino nano (UNO will do but button inputs require ADC7, use serial commands instead)
-* Micro SD card adapter
+* Micro SD card adapter (converts 5 volts arduino power supply and signals to 3.3 volts)
 * A micro SD card (formatted FAT16/32, floppy images in root directory)
 * 2 1kOhm resistors (for step and readdata pins - atmega's internal pullups are not sufficicient for parasitic capacitance of long floppy drive cable)
 * Male to female jumper wires (for connecting arduino nano pins to FDC ribbon cable)
@@ -18,21 +19,16 @@ Standalone (using without usb serial connection) require SSD1306 i2c screen, but
 * 1 100kOhm resistor (ADC7 has no pullup, so an external pullup required)
 * 5 push buttons (required for ADC input obviously)
 * 5 volts power supply (Computer PSU 5v pins or an external PSU can be used)
-
 * Female to female jumper wires (for connecting SD adapter to arduino nano)
 * Breadboard (for placing pullups and ADC buttons)
-
-
+<br><br>
 
 **Programming**
-
-Arduino bootloader could be used for uploading
-
+<br>
+Arduino bootloader could be used for uploading (see command below), simply replace /dev/ttyUSB0 with your usb port
+<br>
 *avrdude -B 10 -p m328p -c arduino -P /dev/ttyUSB0 -U flash:w:fddEMU.hex*
-
-simply replace /dev/ttyUSB* with your usb port
-
-
+<br><br>
 
 **Pin mapping**
 Pin         |Arduino Nano|FDD Ribbon Cable
@@ -50,6 +46,7 @@ WRITE_GATE	|A0			|24	(Write enable)
 TRACK_0		|A1			|26	(Track zero)
 WRITE_PROTECT|A2		|28	(Write protect)
 DISK_CHANGE	|A3			|34	(Disk changed)
+<br><br>
 
 Pin			|Arduino Nano|Micro SD adapter
 ------------|------------|-------------------
@@ -59,6 +56,7 @@ MISO		|D12			|MISO
 SCK			|D13			|SCK
 VCC         |5V             |VCC
 GND         |GND            |GND
+<br><br>
 
 Pin			|Arduino Nano|0.96" OLED SSD1306
 ------------|------------|-------------------
@@ -66,25 +64,56 @@ GND         |GND        |GND
 VCC         |5V         |VCC
 SDA			|A4			|SDA
 SCL			|A3			|SCL
+<br><br>
 
 **Resistor ladder for ADC buttons**
-
-
+<br>
 ![Resistor Ladder 1x5](/images/ResistorLadder-1x5.png)
-
+<br><br>
 **Limitations**
+<br>
 * Uses raw floppy images (images prepared with dd or rawread) does not require or use a MFM file. Converts raw image sectors to MFM on the fly using [ArduinoFDC](https://github.com/dhansel/ArduinoFDC) library.
 * fddEMU supports fixed sector size of 512 bytes, other sector sizes are not supported
 * Requires a Floppy Drive Controller (FDC) on the PC side to communicate so it probably wont work with an Amiga.
 * Repeated write on same SD card sectors might lead to SD failure so use floppy images in read only mode (set read only attribute) when possible. Modern O.S. such as linux write and clear the dirty bit every mount/unmount even if you dont write anything to floppy image.
+<br><br>
 
 **Acknowledgements**
+<br>
 * [ArduinoFDC](https://github.com/dhansel/ArduinoFDC) by [David Hansel](https://github.com/dhansel). fddEMU uses a modified ArduinoFDC library renamed to avrFlux for communicating with FDC.
 * [Petit FAT FS](https://github.com/greiman/PetitFS) by [Chan](http://elm-chan.org/fsw/ff/00index_p.html) adapted for hardware SPI by [Bill Greiman](https://github.com/greiman). fddEMU uses a modified Petit FAT FS.
 * [u8glib](https://github.com/olikraus/u8glib)
+<br><br>
 
 **Releases**
+<br>
 * [fddEMU v0.9](https://github.com/acemielektron/fddEMU/releases)
+<br><br>
 
+**How to use**
+fddEMU supports standart floppy image files of 360K, 720K, 1.2M and 1.44M. If selected image file size match one of these sizes the image is loaded as raw floppy image and number of tracks and sectors are selected accordingly. Otherwise, if selected image file size doesn't match one of the standart floppy sizes, fddEMU looks for a boot record on "sector 0" of the image. If the boot record reports that the image is formatted as "FAT12", sector size is 512 and number of tracks and number of sectors are less than 255 the image file is loaded with the settings provided by the boot record. To be able to read these custom FAT12 images host system should support provided number of tracks and sectors.<br>
+For booting a host system, on startup fddEmu looks for "BOOT.IMG" on SD card. If there is a "BOOT.IMG" on the SD card fddEMU tries to load this file to drive A. <br>
+Image file must be contiguous for fddEMU to be able to load, if the file is not contiguous an error message will be shown and loading will fail.
+<br><br>
+
+**How to use (Serial)**
+<br>
+![initial serial output](/images/serial-init.png)
+<br>
+fddEMU serial interface is used through keys 
+* S: Select
+* N: Next file
+* P: Previous file
+* L: Load selected file
+* E: Eject selected disk
+
+To use any of the functions first a drive must be selected through "S" key then serial terminal will report "Sel drive: A" or if drive B is selected "Sel drive: B".<br>
+After a drive is selected the "N" key selects next file in root directory. If the last file in the root directory is selected this file is reselected.<br>
+The "P" key selects the previous file in the root directory listing. If the first file is selected, this file is reselected.<br>
+"L" key loads selected image file to selected drive.
+"E" key ejects image file loaded to drive.
+
+
+<br><br>
 Pictures and further documentation is coming ...
 

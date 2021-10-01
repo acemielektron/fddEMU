@@ -31,6 +31,9 @@
 
 const char str_colon[]		PROGMEM = ": ";
 const char str_nodisk[]		PROGMEM = "No disk";
+const char str_eject[]		PROGMEM = "Ejected\n";
+const char str_cancel[]		PROGMEM = "Cancel\n";
+const char str_loading[]	PROGMEM = "Loading ";
 const char errHDR[] 		PROGMEM = "ERROR";
 const char err_initSD[]		PROGMEM = "Initialize SD card";
 const char err_fopen[] 		PROGMEM = "File open failed";

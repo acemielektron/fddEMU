@@ -33,7 +33,6 @@
 
 int16_t nItems = 0;  //required for menu system
 extern class FloppyDrive *pDrive;
-uint8_t drv_sel = 0;
 
 
 int scan_files (char* path)
@@ -178,25 +177,26 @@ void buttonAction(int button)
 
   switch(button)
   {
+    static uint8_t lastDrive = 0;
     case  5:  //select drive
       switch (disp.getPage())
 		  {
 		    case PAGE_NSEL:
 			    disp.setPage(PAGE_SELA);
 			    Serial.print(F("Sel drive: A\n"));	
-          drv_sel = 1;		
+          lastDrive = 1;		
 			    break;
       #ifdef   ENABLE_DRIVE_B
 		    case PAGE_SELA:
 			    disp.setPage(PAGE_SELB);
 			    Serial.print(F("Sel drive: B\n"));
-          drv_sel = 2;
+          lastDrive = 2;
 			    break;
       #endif //ENABLE_DRIVE_B  
 		    default:
 			    disp.setPage(PAGE_NSEL);
 			    Serial.print(F("Sel drive: None\n"));
-          drv_sel = 0;
+          lastDrive = 0;
 		  }
       break;
     case  4:  //Previous file
@@ -210,7 +210,7 @@ void buttonAction(int button)
 		loadMenuStrings();
     break;
   case  3:  //Next file
-    	if (disp.getPage() == PAGE_MENU) disp.menu_sel++;
+    if (disp.getPage() == PAGE_MENU) disp.menu_sel++;
 		else 
 			{
 			disp.menu_sel = 0;
@@ -221,15 +221,26 @@ void buttonAction(int button)
 		break;
   case  2:  //load disk    
     if (disp.getPage() != PAGE_MENU) break; //if we are not in menu disable load
-		Serial.print(F("Loading "));
+		Serial.print_P(str_loading);
 		Serial.print(disp.menu_strings[disp.menu_sel]);
 		Serial.write('\n');
 		disp.setPage(PAGE_NSEL);
-    pDrive[drv_sel - 1].loadDisk(disp.menu_strings[disp.menu_sel]); 
+    pDrive[lastDrive - 1].loadDisk(disp.menu_strings[disp.menu_sel]); 
 		break;		
   case  1:  //eject disk
-    Serial.print(F("Eject/Cancel\n"));
-    pDrive[drv_sel - 1].ejectDisk();  
+    switch(disp.getPage())
+    {
+      case PAGE_MENU: //behave as cancel
+        disp.setPage(PAGE_NSEL);
+        Serial.print(str_cancel);
+        break;
+      case PAGE_SELA: //behave as eject
+        pDrive[0].ejectDisk();      
+        Serial.print_P(str_eject);
+      case PAGE_SELB:
+        pDrive[1].ejectDisk();      
+        Serial.print_P(str_eject);
+    }
     break;
   }  
 }

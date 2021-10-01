@@ -24,6 +24,7 @@
 
 class DiskFile{
     public:
+    uint8_t diskChange;
     uint8_t numTrack;   //number of tracks
     uint8_t numSec;     //sectors per track
     long startSector;

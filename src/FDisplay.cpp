@@ -88,9 +88,10 @@ void FDISPLAY::statusScreen()
 		u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_A, floppya_width, floppya_height, floppya_bits);
 
 	u8g_SetFont(&u8g, u8g_font_6x10);
-	drawStr(40, Y_OFS_A+11, pDrive[0].fName);
+	u8g_SetFontPosTop(&u8g);	
+	drawStr(40, Y_OFS_A+1, pDrive[0].fName);
 	diskinfo(&pDrive[0]); //generate disk CHS info
-	drawStr(40, Y_OFS_A+24, infostring); //use itoabuf (defined in simpleUART)
+	drawStr(40, Y_OFS_A+14, infostring); //use itoabuf (defined in simpleUART)
 
 #ifdef ENABLE_DRIVE_B
 	if (page == PAGE_ACTB)
@@ -105,7 +106,7 @@ void FDISPLAY::statusScreen()
 
 	drawStr(40, Y_OFS_B+11, pDrive[1].fName);
 	diskinfo(&pDrive[1]); //generate disk CHS info
-	drawStr(40, Y_OFS_B+24, infostring);
+	drawStr(40, Y_OFS_B+14, infostring);
 #endif //ENABLE_DRIVE_B
 }
 
@@ -113,18 +114,20 @@ void FDISPLAY::noticeScreen()
 {
 	u8g_DrawXBMP(&u8g, 0, 0, caution_width, caution_height, caution_bits);
 	u8g_SetFont(&u8g, u8g_font_6x10);
-	drawStrP(50, 20, notice_header);
-	drawStrP(0+0, 40, notice_message);
-	//drawStrP(0+0, 55, PSTR("on fdd emulation"));
+	u8g_SetFontPosTop(&u8g);	
+	drawStrP(50, 10, notice_header);
+	drawStrP(0+0, 30, notice_message);
+	//drawStrP(0+0, 45, PSTR("on fdd emulation"));
 }
 
 void FDISPLAY::splashScreen()
 {
 	u8g_DrawXBMP(&u8g, 1, 5, floppy_width, floppy_height, floppy_bits);
 	u8g_SetFont(&u8g, u8g_font_6x10);
-	drawStrP(50+10, 20, PSTR("(c) 2021"));
-	drawStrP(50+20, 35, PSTR("Acemi"));
-	drawStrP(50+5, 50, PSTR("Elektronikci"));
+	u8g_SetFontPosTop(&u8g);	
+	drawStrP(50+10, 10, PSTR("(c) 2021"));
+	drawStrP(50+20, 25, PSTR("Acemi"));
+	drawStrP(50+5, 40, PSTR("Elektronikci"));
 }
 
 void FDISPLAY::init()

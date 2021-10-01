@@ -145,6 +145,7 @@ void DiskFile::ejectDisk(void)
   fName[0] = '\0';
   numTrack = 80; //default for 3.5" HD Floppy
   numSec = 18; //default for 3.5" HD Floppy
+  diskChange = 0xFF; //disk changed  
 }
 
 DiskFile::DiskFile(void)
