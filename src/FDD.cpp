@@ -146,6 +146,8 @@ void FDDloop()
   if (drvSel) cDrv = drvSel - 1;
   else return; 
   disp.setDriveActive(drvSel);
+  (drive[cDrv].fName[0] == 0) ? SET_DSKCHANGE_LOW() : SET_DSKCHANGE_HIGH(); //disk present ?
+  (drive[cDrv].fAttr & AM_RDO) ? SET_WRITEPROT_LOW() : SET_WRITEPROT_HIGH();  //check readonly
   setup_timer1_for_write(); 
   while(drvSel) //PCINT for SELECTA and MOTORA
   {    
@@ -154,7 +156,7 @@ void FDDloop()
     track_start(drive[cDrv].bitLength);       
     SET_INDEX_HIGH();
     
-    for (sector=0; (sector<drive[cDrv].numSec) && drvSel; sector++)
+    for (sector=0; (sector < drive[cDrv].numSec) && drvSel; sector++)
     {                                              
       wdt_reset();
       if (!drvSel) break; //if drive unselected exit loop      

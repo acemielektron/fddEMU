@@ -54,25 +54,6 @@ void initFDDpins()
   sei(); //Turn interrupts on
 }
 
-void FloppyDrive::ejectDisk()
-{
-  DiskFile::ejectDisk();
-  SET_DSKCHANGE_LOW();
-}
-
-int FloppyDrive::loadDisk(char *filename)
-{
-  int res = DiskFile::loadDisk(filename);
-  if (res == FR_OK)
-  {
-    (fAttr & AM_RDO) ? SET_WRITEPROT_LOW() : SET_WRITEPROT_HIGH();  //check readonly
-    SET_DSKCHANGE_HIGH();    
-  }
-  else
-    ejectDisk();
-  return (res);
-}
-
 void FloppyDrive::init() 
 { 
   bitLength=16; //  bit length for 3.5" HD floppy is 16

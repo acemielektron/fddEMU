@@ -142,7 +142,9 @@ void DiskFile::ejectDisk(void)
 {
   startSector = 0;
   fAttr = 0;
-  fName[0] = '\0';  
+  fName[0] = '\0';
+  numTrack = 80; //default for 3.5" HD Floppy
+  numSec = 18; //default for 3.5" HD Floppy
 }
 
 DiskFile::DiskFile(void)

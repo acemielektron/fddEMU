@@ -29,8 +29,6 @@ class FloppyDrive : public DiskFile
     uint8_t bitLength;
     FloppyDrive();
     void init();
-    int loadDisk(char *);
-    void ejectDisk();
 };
 
 #endif

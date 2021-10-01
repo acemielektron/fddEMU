@@ -22,6 +22,8 @@ Standalone (using without usb serial connection) require SSD1306 i2c screen, but
 * Female to female jumper wires (for connecting SD adapter to arduino nano)
 * Breadboard (for placing pullups and ADC buttons)
 
+
+
 **Programming**
 
 Arduino bootloader could be used for uploading
@@ -29,6 +31,8 @@ Arduino bootloader could be used for uploading
 *avrdude -B 10 -p m328p -c arduino -P /dev/ttyUSB0 -U flash:w:fddEMU.hex*
 
 simply replace /dev/ttyUSB* with your usb port
+
+
 
 **Pin mapping**
 Pin         |Arduino Nano|FDD Ribbon Cable
@@ -53,12 +57,18 @@ Slave Select|D10			|CS
 MOSI		|D11			|MOSI
 MISO		|D12			|MISO
 SCK			|D13			|SCK
+VCC         |5V             |VCC
+GND         |GND            |GND
 
 Pin			|Arduino Nano|0.96" OLED SSD1306
 ------------|------------|-------------------
+GND         |GND        |GND
+VCC         |5V         |VCC
 SDA			|A4			|SDA
 SCL			|A3			|SCL
 
+**Resistor ladder for ADC buttons**
+![Resistor Ladder 1x5](/images/ResistorLadder-1x5.png)
 
 **Limitations**
 * Uses raw floppy images (images prepared with dd or rawread) does not require or use a MFM file. Converts raw image sectors to MFM on the fly using [ArduinoFDC](https://github.com/dhansel/ArduinoFDC) library.
