@@ -46,6 +46,7 @@ WRITE_GATE	|A0			|24	(Write enable)
 TRACK_0		|A1			|26	(Track zero)
 WRITE_PROTECT|A2		|28	(Write protect)
 DISK_CHANGE	|A3			|34	(Disk changed)
+
 <br><br>
 
 Pin			|Arduino Nano|Micro SD adapter
@@ -56,6 +57,7 @@ MISO		|D12			|MISO
 SCK			|D13			|SCK
 VCC         |5V             |VCC
 GND         |GND            |GND
+
 <br><br>
 
 Pin			|Arduino Nano|0.96" OLED SSD1306
@@ -64,6 +66,7 @@ GND         |GND        |GND
 VCC         |5V         |VCC
 SDA			|A4			|SDA
 SCL			|A3			|SCL
+
 <br><br>
 
 **Resistor ladder for ADC buttons**
@@ -98,6 +101,22 @@ SCL			|A3			|SCL
 
 <br><br>
 
+fddEMU button interface:
+* S1: Select
+* S2: Next file
+* S3: Previous file
+* S4: Load selected file
+* S5: Eject selected disk / Cancel loading file
+
+On the main screen, drive A and if enabled drive B are displayed. To use any of the functions a drive must first be selected through "S1" button then a box frame will be shown around the selected drive.<br>
+After a drive is selected:<br>
+"S1" button selects the next drive or if last drive in the list is selected deselects drive<br>
+"S2" button opens the file selection menu on the screen. Pressing again selects next file in the menu. If end of the menu is reached last file selected.<br>
+"S3" button opens the file selection menu on the screen. Pressing again selects previous file in the menu. If start of the menu is reached first file is selected.<br>
+"S4" button loads the image file selected inte menu to the selected drive.<br>
+"S5" button ejects image file loaded to the selected drive. If pressed during file selection menu, cancels file selection menu and returns to main screen.<br>
+
+<br><br>
 **How to use (Serial)**
 <br>
 ![initial serial output](/images/serial-init.png)
@@ -109,13 +128,13 @@ fddEMU serial interface is used through keys
 * L: Load selected file
 * E: Eject selected disk / Cancel loading file
 
-To use any of the functions first a drive must be selected through "S" key then serial terminal will report "Sel drive: A" or if drive B is selected "Sel drive: B".<br>
-After a drive is selected:
+To use any of the functions a drive must first be selected through "S" key then serial terminal will report "Sel drive: A" or if drive B is selected "Sel drive: B".<br>
+After a drive is selected:<br>
 "S" key selects the next drive or if last drive in the list is selected deselects drive<br>
 "N" key selects next file in root directory. If the last file in the root directory is selected this file is reselected.<br>
 "P" key selects the previous file in the root directory listing. If the first file is selected, this file is reselected.<br>
-"L" key loads selected image file to selected drive.<br>
-"E" key ejects image file loaded to selected drive. If pressed during file selection, cancels file section.<br>
+"L" key loads the selected image file to the selected drive.<br>
+"E" key ejects image file loaded to selected drive. If pressed during file selection, cancels file selection.<br>
 
 
 <br><br>
