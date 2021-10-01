@@ -68,6 +68,8 @@ SDA			|A4			|SDA
 SCL			|A3			|SCL
 
 **Resistor ladder for ADC buttons**
+
+
 ![Resistor Ladder 1x5](/images/ResistorLadder-1x5.png)
 
 **Limitations**
