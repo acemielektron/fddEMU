@@ -90,10 +90,12 @@ SCL			|A3			|SCL
 * [fddEMU v0.9](https://github.com/acemielektron/fddEMU/releases)
 <br><br>
 
-**How to use**
-fddEMU supports standart floppy image files of 360K, 720K, 1.2M and 1.44M. If selected image file size match one of these sizes the image is loaded as raw floppy image and number of tracks and sectors are selected accordingly. Otherwise, if selected image file size doesn't match one of the standart floppy sizes, fddEMU looks for a boot record on "sector 0" of the image. If the boot record reports that the image is formatted as "FAT12", sector size is 512 and number of tracks and number of sectors are less than 255 the image file is loaded with the settings provided by the boot record. To be able to read these custom FAT12 images host system should support provided number of tracks and sectors.<br>
-For booting a host system, on startup fddEmu looks for "BOOT.IMG" on SD card. If there is a "BOOT.IMG" on the SD card fddEMU tries to load this file to drive A. <br>
-Image file must be contiguous for fddEMU to be able to load, if the file is not contiguous an error message will be shown and loading will fail.
+**How to use**<br>
+* fddEMU supports standart floppy image files of 360K, 720K, 1.2M and 1.44M. If selected image file size match one of these sizes the image is loaded as raw floppy image and number of tracks and sectors are selected accordingly. 
+* If selected image file size doesn't match one of the standart floppy sizes, fddEMU looks for a boot record on "sector 0" of the image. If the boot record reports that the image is formatted as "FAT12", sector size is 512, number of heads is 2 and number of tracks and number of sectors are less than 255 the image file is loaded with the settings provided by the boot record. To be able to read these custom FAT12 images host system should support provided number of tracks and sectors.
+* Image file must be contiguous for fddEMU to be able to load, if the file is not contiguous an error message will be shown and loading will fail.
+* For booting a host system, on startup fddEmu looks for "BOOT.IMG" on SD card. If there is a "BOOT.IMG" on the SD card fddEMU tries to load this file to drive A. 
+
 <br><br>
 
 **How to use (Serial)**
