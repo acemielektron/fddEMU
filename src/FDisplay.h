@@ -23,8 +23,8 @@
 #include "u8g.h"
 #include "images.h"
 
-#define NOTICE_TIMEOUT	10
-#define SLEEP_TIMEOUT	100
+#define NOTICE_TIMEOUT	40
+#define SLEEP_TIMEOUT	250
 
 #define PAGE_SPLASH	0
 #define PAGE_NSEL	1
@@ -41,9 +41,9 @@
 class FDISPLAY{
 private:
 u8g_t u8g;
-uint16_t idle_timer;
-uint16_t sleep_timer;
-uint16_t notice_timer;
+uint8_t idle_timer;
+uint8_t sleep_timer;
+uint8_t notice_timer;
 uint8_t page;
 const char *notice_header;
 const char *notice_message;

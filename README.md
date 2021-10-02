@@ -99,7 +99,7 @@ SCL			|A3			|SCL
 * Image file must be contiguous for fddEMU to be able to load, if the file is not contiguous an error message will be shown and loading will fail.
 * For booting a host system, on startup fddEmu looks for "BOOT.IMG" on SD card. If there is a "BOOT.IMG" on the SD card fddEMU tries to load this file to drive A. 
 * To protect OLED screen fddEMU will put screen to sleep after some idle time, press "S1" (SELECT) button or "S" key inside serial terminal to wake screen up.
-* When host selected (reading/writing) one the drives, the selected (active) drive's icon become inverted and stays this way till host unselects the drive. During this time fddEMU will not accept input.<br>*Warning: fddEMU will not put the screen to sleep while drive is active. If there is a hardware or software problem that cause an emulated drive to go continuously active OLED screen might be damaged.*
+* When host selected (reading/writing) one the emulated drives, the selected (active) drive's icon become inverted and stays this way till host unselects the drive. During this time fddEMU will not accept input.<br>*Warning: fddEMU will not put the screen to sleep while drive is active. If there is a hardware or software problem causing an emulated drive to go continuously active OLED screen might be damaged.*
 
 <br><br>
 

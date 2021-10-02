@@ -172,7 +172,7 @@ void FDISPLAY::setPage(uint8_t r_page)
 {
 	page = r_page;
 	if (sleep_timer == 0) FDISPLAY::wakeup();
-	sleep_timer = SLEEP_TIMEOUT;
+	sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
 }
 
 void FDISPLAY::showNoticeP(const char *header, const char *message)
@@ -205,6 +205,7 @@ if (idle_timer == 0)
 		{
 		notice_timer --;
 		if (notice_timer == 0) FDISPLAY::setPage(PAGE_NSEL); //return to status page
+		sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
 		}
 	if (sleep_timer)
 		{

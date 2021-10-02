@@ -105,10 +105,10 @@ int adcButton()
   adcval = readADC();
   reqADC(ADC_PIN);
   if (adcval > 900) newval = 6;
-  else if ( (adcval >= 840) && (adcval < 870) ) newval = 5;
-  else if ( (adcval >= 630) && (adcval < 660) ) newval = 4;
-  else if ( (adcval >= 420) && (adcval < 450) ) newval = 3;
-  else if ( (adcval >= 190) && (adcval < 220) ) newval = 2;
+  else if ( (adcval >= 800) && (adcval < 870) ) newval = 5;
+  else if ( (adcval >= 600) && (adcval < 660) ) newval = 4;
+  else if ( (adcval >= 400) && (adcval < 450) ) newval = 3;
+  else if ( (adcval >= 190) && (adcval < 230) ) newval = 2;
   else if (adcval == 0)  newval = 1;
   
   if  ( (prevval == 6) && (lastval == newval) ) //if dropped from max && stable value        
@@ -199,8 +199,8 @@ void buttonAction(int button)
           lastDrive = 0;
 		  }
       break;
-    case  4:  //Previous file
-      if (disp.getPage() == PAGE_MENU) disp.menu_sel--;
+    case  4:  //Next file
+      if (disp.getPage() == PAGE_MENU) disp.menu_sel++;
 		  else 
 			{
 			disp.menu_sel = 0;
@@ -209,8 +209,8 @@ void buttonAction(int button)
 			}
 		loadMenuStrings();
     break;
-  case  3:  //Next file
-    if (disp.getPage() == PAGE_MENU) disp.menu_sel++;
+  case  3:  //Previous file
+    if (disp.getPage() == PAGE_MENU) disp.menu_sel--;
 		else 
 			{
 			disp.menu_sel = 0;
@@ -257,11 +257,11 @@ switch(ch)
       break;
 	  case 'p':
 	  case 'P':
-      buttonAction(4);
+      buttonAction(3);
 		  break;
 	  case 'n':
 	  case 'N':
-      buttonAction(3);
+      buttonAction(4);
 		  break;      
 	  case 'l':	//OK
 	  case 'L':
