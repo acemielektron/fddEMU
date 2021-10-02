@@ -145,14 +145,14 @@ void FDDloop()
 
   if (drvSel) cDrv = drvSel - 1;
   else return; 
-  if (drive[cDrv].diskChange) //pulse disk change pin
-    {
-      SET_DSKCHANGE_LOW();
-      if ((drive[cDrv].fName[0])) drive[cDrv].diskChange = 0; //if a disk is loaded clear diskChange flag
-    }
   disp.setDriveActive(drvSel);  
-  (drive[cDrv].fAttr & AM_RDO) ? SET_WRITEPROT_LOW() : SET_WRITEPROT_HIGH();  //check readonly
-  (drive[cDrv].fName[0]) ? SET_DSKCHANGE_HIGH() : SET_DSKCHANGE_LOW(); //disk present ?
+  if (drive[cDrv].diskChange) 
+  {
+    SET_DSKCHANGE_LOW();
+    if ((drive[cDrv].fName[0])) drive[cDrv].diskChange = 0; //if a disk is loaded clear diskChange flag
+  }
+  else (drive[cDrv].fName[0]) ? SET_DSKCHANGE_HIGH() : SET_DSKCHANGE_LOW(); //disk present ?  
+  (drive[cDrv].fAttr & AM_RDO) ? SET_WRITEPROT_LOW() : SET_WRITEPROT_HIGH();  //check readonly  
   setup_timer1_for_write(); 
   while(drvSel) //PCINT for SELECTA and MOTORA
   {    
@@ -174,6 +174,7 @@ void FDDloop()
         if (track == 0) SET_TRACK0_LOW();
         else  SET_TRACK0_HIGH(); 
         iTrack = track;
+        (drive[cDrv].fName[0]) ? SET_DSKCHANGE_HIGH() : SET_DSKCHANGE_LOW(); //disk present ?
       }
       //start sector
       lba=(track*2+side)*18+sector;//LBA = (C × HPC + H) × SPT + (S − 1)

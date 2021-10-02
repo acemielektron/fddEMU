@@ -98,6 +98,8 @@ SCL			|A3			|SCL
 * If selected image file size doesn't match one of the standart floppy sizes, fddEMU looks for a boot record on "sector 0" of the image. If the boot record reports that the image is formatted as "FAT12", sector size is 512, number of heads is 2 and number of tracks and number of sectors are less than 255 the image file is loaded with the settings provided by the boot record. To be able to read these custom FAT12 images host system should support provided number of tracks and sectors.
 * Image file must be contiguous for fddEMU to be able to load, if the file is not contiguous an error message will be shown and loading will fail.
 * For booting a host system, on startup fddEmu looks for "BOOT.IMG" on SD card. If there is a "BOOT.IMG" on the SD card fddEMU tries to load this file to drive A. 
+* To protect OLED screen fddEMU will put screen to sleep after some idle time, press "S1" (SELECT) button or "S" key inside serial terminal to wake screen up.
+* When host selected (reading/writing) one the drives, the selected (active) drive's icon become inverted and stays this way till host unselects the drive. During this time fddEMU will not accept input.<br>*Warning: fddEMU will not put the screen to sleep while drive is active. If there is a hardware or software problem that cause an emulated drive to go continuously active OLED screen might be damaged.*
 
 <br><br>
 
