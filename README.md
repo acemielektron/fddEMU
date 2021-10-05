@@ -30,13 +30,32 @@ Arduino bootloader could be used for uploading (see command below), simply repla
 *avrdude -B 10 -p m328p -c arduino -P /dev/ttyUSB0 -U flash:w:fddEMU.hex*
 <br><br>
 
-**Pin mapping**
+**Pin mapping (single drive)**
 Pin         |Arduino Nano|FDD Ribbon Cable
 ------------|-----------|----------------------
 GND			|GND		|1	(GND)
 STEP		|D2			|20	(Step pulse)
 STEP_DIR	|D3			|18	(Direction)
 MOTOR_A		|D4			|16	(Motor on B)
+SELECT_A	|D5			|12	(Drive Select B)
+SIDE		|D6			|32	(Select head)
+INDEX		|D7			|8	(Index pulse)
+READDATA	|D8			|22	(Write data)
+WRITEDATA	|D9			|30	(Read data)
+WRITE_GATE	|A0			|24	(Write enable)
+TRACK_0		|A1			|26	(Track zero)
+WRITE_PROTECT|A2		|28	(Write protect)
+DISK_CHANGE	|A3			|34	(Disk changed)
+
+<br><br>
+
+**Pin mapping (dual drive)**
+Pin         |Arduino Nano|FDD Ribbon Cable
+------------|-----------|----------------------
+GND			|GND		|1	(GND)
+STEP		|D2			|20	(Step pulse)
+STEP_DIR	|D3			|18	(Direction)
+SELECT_B	|D4			|14	(Drive Select A)
 SELECT_A	|D5			|12	(Drive Select B)
 SIDE		|D6			|32	(Select head)
 INDEX		|D7			|8	(Index pulse)
@@ -75,6 +94,7 @@ SCL			|A3			|SCL
 <br><br>
 **Limitations**
 <br>
+* fddEMU is not an cycle exact floppy emulator, it is more of a hack but it works because floppy controller integrated circuits have sensible timeouts and we take advantage of that
 * Uses raw floppy images (images prepared with dd or rawread) does not require or use a MFM file. Converts raw image sectors to MFM on the fly using [ArduinoFDC](https://github.com/dhansel/ArduinoFDC) library.
 * fddEMU supports fixed sector size of 512 bytes, other sector sizes are not supported
 * Requires a Floppy Drive Controller (FDC) on the PC side to communicate so it probably wont work with an Amiga.

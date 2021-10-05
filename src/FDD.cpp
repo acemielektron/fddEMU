@@ -171,8 +171,7 @@ void FDDloop()
         track = iTrack;
         if (track < 0) track=0; //Check if track valid
         else if (track >= drive[cDrv].numTrack) track=drive[cDrv].numTrack-1;          
-        if (track == 0) SET_TRACK0_LOW();
-        else  SET_TRACK0_HIGH(); 
+        (track == 0) ? SET_TRACK0_LOW() : SET_TRACK0_HIGH(); 
         iTrack = track;
         (drive[cDrv].fName[0]) ? SET_DSKCHANGE_HIGH() : SET_DSKCHANGE_LOW(); //disk present ?
       }

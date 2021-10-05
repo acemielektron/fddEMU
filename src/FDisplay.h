@@ -24,7 +24,7 @@
 #include "images.h"
 
 #define NOTICE_TIMEOUT	40
-#define SLEEP_TIMEOUT	250
+#define SLEEP_TIMEOUT	255
 
 #define PAGE_SPLASH	0
 #define PAGE_NSEL	1

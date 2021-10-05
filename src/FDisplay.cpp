@@ -22,6 +22,7 @@
 #include "constStrings.h"
 #include <string.h>
 #include <stdlib.h>
+#include "simpleUART.h" //debug
 
 class FDISPLAY disp; //will use as exter
 extern class FloppyDrive *pDrive;
@@ -104,7 +105,7 @@ void FDISPLAY::statusScreen()
 	else
 		u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_B, floppyb_width, floppyb_height, floppyb_bits);
 
-	drawStr(40, Y_OFS_B+11, pDrive[1].fName);
+	drawStr(40, Y_OFS_B+1, pDrive[1].fName);
 	diskinfo(&pDrive[1]); //generate disk CHS info
 	drawStr(40, Y_OFS_B+14, infostring);
 #endif //ENABLE_DRIVE_B
@@ -171,6 +172,9 @@ switch(page)
 void FDISPLAY::setPage(uint8_t r_page)
 {
 	page = r_page;
+	Serial.print("Page timer: ");
+	Serial.printDEC(sleep_timer);
+	Serial.write('\n');
 	if (sleep_timer == 0) FDISPLAY::wakeup();
 	sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
 }
@@ -202,20 +206,19 @@ void FDISPLAY::update()
 if (idle_timer == 0)
 	{
 	if (notice_timer)
-		{
+	{
 		notice_timer --;
 		if (notice_timer == 0) FDISPLAY::setPage(PAGE_NSEL); //return to status page
 		sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
-		}
+	}
 	if (sleep_timer)
-		{
+	{
 		sleep_timer --;
 		if (sleep_timer == 0) FDISPLAY::sleep();
-		}
+	}
 	//update page
 	u8g_FirstPage(&u8g);
-    do
-    	{
+    do	{
       	drawPage();
     	} while ( u8g_NextPage(&u8g) );
 	}
