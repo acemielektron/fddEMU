@@ -50,8 +50,8 @@
 #define SET_INDEX_HIGH()   DDRD &= ~(1 << PIN_INDEX)
 #define SET_TRACK0_LOW()    DDRC |= (1 << PIN_TRACK0)
 #define SET_TRACK0_HIGH()   DDRC &= ~(1 << PIN_TRACK0)
-#define SET_DSKCHANGE_LOW()    DDRC |= (1 << PIN_TRACK0)
-#define SET_DSKCHANGE_HIGH()   DDRC &= ~(1 << PIN_TRACK0)
+#define SET_DSKCHANGE_LOW()    DDRC |= (1 << PIN_DSKCHANGE)
+#define SET_DSKCHANGE_HIGH()   DDRC &= ~(1 << PIN_DSKCHANGE)
 #define SET_WRITEPROT_LOW()    DDRC |= (1 << PIN_WRITEPROT)
 #define SET_WRITEPROT_HIGH()   DDRC &= ~(1 << PIN_WRITEPROT)
 

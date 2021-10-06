@@ -6,14 +6,15 @@ CC = avr-gcc
 CXX = avr-g++
 
 INCLUDES	= -I /usr/avr/include  -I libs/u8glib/csrc -I libs/petitfs -I .
-ENABLE_DUAL_DRIVE = -DENABLE_DRIVE_B
+#ENABLE_DUAL_DRIVE = -DENABLE_DRIVE_B
 ENABLE_DEBUG = -DDEBUG
+FLIP_SCREEN = -DFLIP_SCREEN
 
 CFLAGS = -Os -mmcu=$(MCU) -DF_CPU=$(OSC) -Wall $(INCLUDES)
-CFLAGS += $(ENABLE_DUAL_DRIVE) $(ENABLE_DEBUG)
+CFLAGS += $(ENABLE_DUAL_DRIVE) $(ENABLE_DEBUG) $(FLIP_SCREEN)
 CFLAGS += -ffunction-sections -fdata-sections -Wl,--gc-sections
 CXXFLAGS= -Os -mmcu=$(MCU) -DF_CPU=$(OSC) -Wall $(INCLUDES)
-CXXFLAGS += $(ENABLE_DUAL_DRIVE) $(ENABLE_DEBUG)
+CXXFLAGS += $(ENABLE_DUAL_DRIVE) $(ENABLE_DEBUG) $(FLIP_SCREEN)
 CXXFLAGS += -ffunction-sections -fdata-sections -Wl,--gc-sections
 LINKERFLAG = -lm
 
@@ -50,6 +51,6 @@ bin:
 size:
 	avr-size --mcu=$(MCU) -C -x $(TARGET).elf
 flash:
-	avrdude -B 10 -p m328p -c arduino -P /dev/ttyUSB2 -U flash:w:$(TARGET).hex
+	avrdude -p m328p -c arduino -P /dev/ttyUSB0 -U flash:w:$(TARGET).hex
 clean :
 	rm $(TARGET).elf $(OBJECTS)

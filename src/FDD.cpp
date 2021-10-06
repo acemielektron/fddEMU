@@ -149,9 +149,8 @@ void FDDloop()
   if (drive[cDrv].diskChange) 
   {
     SET_DSKCHANGE_LOW();
-    if ((drive[cDrv].fName[0])) drive[cDrv].diskChange = 0; //if a disk is loaded clear diskChange flag
+    if ((drive[cDrv].fName[0])) drive[cDrv].diskChange = 0; //if a disk is loaded clear diskChange flag    
   }
-  else (drive[cDrv].fName[0]) ? SET_DSKCHANGE_HIGH() : SET_DSKCHANGE_LOW(); //disk present ?  
   (drive[cDrv].fAttr & AM_RDO) ? SET_WRITEPROT_LOW() : SET_WRITEPROT_HIGH();  //check readonly  
   setup_timer1_for_write(); 
   while(drvSel) //PCINT for SELECTA and MOTORA
@@ -172,7 +171,7 @@ void FDDloop()
         if (track < 0) track=0; //Check if track valid
         else if (track >= drive[cDrv].numTrack) track=drive[cDrv].numTrack-1;          
         (track == 0) ? SET_TRACK0_LOW() : SET_TRACK0_HIGH(); 
-        iTrack = track;
+        iTrack = track;        
         (drive[cDrv].fName[0]) ? SET_DSKCHANGE_HIGH() : SET_DSKCHANGE_LOW(); //disk present ?
       }
       //start sector

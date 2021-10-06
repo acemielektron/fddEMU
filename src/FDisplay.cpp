@@ -136,6 +136,9 @@ void FDISPLAY::init()
 	u8g_SetPinInput(PN(2,5)); u8g_SetPinLevel(PN(2,5), 1); u8g_SetPinOutput(PN(2,5));
 	u8g_SetPinInput(PN(2,4)); u8g_SetPinLevel(PN(2,4), 1); u8g_SetPinOutput(PN(2,4));
 	u8g_InitI2C(&u8g, &u8g_dev_ssd1306_128x64_2x_i2c, U8G_I2C_OPT_NONE);
+#ifdef FLIP_SCREEN
+	u8g_SetRot180(&u8g);
+#endif //FLIP_SCREEN	
 }
 
 FDISPLAY::FDISPLAY()
