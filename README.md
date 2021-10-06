@@ -105,7 +105,8 @@ SCL			|A3			|SCL
 <br>
 * [ArduinoFDC](https://github.com/dhansel/ArduinoFDC) by [David Hansel](https://github.com/dhansel). fddEMU uses a modified ArduinoFDC library renamed to avrFlux for communicating with FDC.
 * [Petit FAT FS](https://github.com/greiman/PetitFS) by [Chan](http://elm-chan.org/fsw/ff/00index_p.html) adapted for hardware SPI by [Bill Greiman](https://github.com/greiman). fddEMU uses a modified Petit FAT FS.
-* [u8glib](https://github.com/olikraus/u8glib)
+* [rjhcoding.com/avrc-sd-interface](http://rjhcoding.com/avrc-sd-interface-1.php) Great tutorial for using SD card with AVR.
+* [u8glib](https://github.com/olikraus/u8glib) Very useful for incorporating of SSD1306.
 <br><br>
 
 **Releases**
