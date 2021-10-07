@@ -24,8 +24,7 @@
 #include <stdlib.h>
 #include "simpleUART.h" //debug
 
-class FDISPLAY disp; //will use as exter
-extern class FloppyDrive *pDrive;
+class FDISPLAY disp; //will use as extern
 char infostring[12]; //drive C/H/S info string
 
 
@@ -53,9 +52,9 @@ void FDISPLAY::drawMenu(void)
   uint8_t i, h;
   u8g_uint_t w, d;
 
-  u8g_SetFont(&u8g, u8g_font_6x10);
+  //u8g_SetFont(&u8g, u8g_font_6x10);
   u8g_SetFontRefHeightText(&u8g);
-  u8g_SetFontPosTop(&u8g);
+  //u8g_SetFontPosTop(&u8g);
   
   h = u8g_GetFontAscent(&u8g)-u8g_GetFontDescent(&u8g);
   w = u8g_GetWidth(&u8g);
@@ -78,35 +77,29 @@ void FDISPLAY::statusScreen()
 #define Y_OFS_A	4
 #define Y_OFS_B 35
 
-	if (page == PAGE_ACTA)
+	if (page & ((1 << BIT_BUSY) | (1 << BIT_DRIVEA)) )
 		u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_A, floppyar_width, floppyar_height, floppyar_bits);
-	else if (page == PAGE_SELA)
-		{
-		u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_A, floppya_width, floppya_height, floppya_bits);
-		u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_A-1, X_OFS+floppya_width+1,Y_OFS_A+floppya_height+1);
-		}
 	else
+	{
 		u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_A, floppya_width, floppya_height, floppya_bits);
-
-	u8g_SetFont(&u8g, u8g_font_6x10);
-	u8g_SetFontPosTop(&u8g);	
-	drawStr(40, Y_OFS_A+1, pDrive[0].fName);
-	diskinfo(&pDrive[0]); //generate disk CHS info
+		if (page & (1 << BIT_DRIVEA) )	//if selected draw frame
+			u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_A-1, X_OFS+floppya_width+1,Y_OFS_A+floppya_height+1);	
+	}
+	drawStr(40, Y_OFS_A+1, driveA.fName);
+	diskinfo(&driveA); //generate disk CHS info
 	drawStr(40, Y_OFS_A+14, infostring); //use itoabuf (defined in simpleUART)
 
 #ifdef ENABLE_DRIVE_B
-	if (page == PAGE_ACTB)
+	if (page & ((1 << BIT_BUSY) | (1 << BIT_DRIVEB)) )
 		u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_B, floppybr_width, floppybr_height, floppybr_bits);
-	else if (page == PAGE_SELB)
-		{
-		u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_B, floppyb_width, floppyb_height, floppyb_bits);
-		u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_B-1, X_OFS+floppyb_width+1,Y_OFS_B+floppyb_height+1);
-		}
 	else
+	{
 		u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_B, floppyb_width, floppyb_height, floppyb_bits);
-
-	drawStr(40, Y_OFS_B+1, pDrive[1].fName);
-	diskinfo(&pDrive[1]); //generate disk CHS info
+		if (page & (1 << BIT_DRIVEB) )	//if selected draw frame
+			u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_B-1, X_OFS+floppyb_width+1,Y_OFS_B+floppyb_height+1);
+	}
+	drawStr(40, Y_OFS_B+1, driveB.fName);
+	diskinfo(&driveB); //generate disk CHS info
 	drawStr(40, Y_OFS_B+14, infostring);
 #endif //ENABLE_DRIVE_B
 }
@@ -139,6 +132,8 @@ void FDISPLAY::init()
 #ifdef FLIP_SCREEN
 	u8g_SetRot180(&u8g);
 #endif //FLIP_SCREEN	
+	u8g_SetFont(&u8g, u8g_font_6x10);	//select font
+	u8g_SetFontPosTop(&u8g);	//set font position
 }
 
 FDISPLAY::FDISPLAY()
@@ -156,14 +151,10 @@ switch(page)
 	case PAGE_SPLASH:		
 		splashScreen();
 		break;
-	case PAGE_NSEL:
-	case PAGE_SELA:
-	case PAGE_SELB:
-	case PAGE_ACTA:
-	case PAGE_ACTB: 
+	case PAGE_STATUS:
 		statusScreen();
 		break;
-	case PAGE_NOTC:
+	case PAGE_NOTICE:
 		noticeScreen();
 		break;
 	case PAGE_MENU:
@@ -174,7 +165,8 @@ switch(page)
 
 void FDISPLAY::setPage(uint8_t r_page)
 {
-	page = r_page;
+	page &= 0xF0;	//clear lower nibble
+	page |= (r_page & 0x0F); //set requested page
 	Serial.print("Page timer: ");
 	Serial.printDEC(sleep_timer);
 	Serial.write('\n');
@@ -186,7 +178,7 @@ void FDISPLAY::showNoticeP(const char *header, const char *message)
 {
 	notice_header = header;
 	notice_message = message;
-	FDISPLAY::setPage(PAGE_NOTC);
+	FDISPLAY::setPage(PAGE_NOTICE);
 	notice_timer = NOTICE_TIMEOUT;
 	idle_timer = 0; //show ASAP
 }
@@ -194,12 +186,13 @@ void FDISPLAY::showNoticeP(const char *header, const char *message)
 void FDISPLAY::setDriveActive(uint8_t drive)
 {
 	if (drive == 0) return;
+	page &= 0x0F;	//clear higher nibble	
+	if (drive == 1) selectDriveA();
 #ifdef ENABLE_DRIVE_B	
-	else if (drive == 2) 
-		setPage(PAGE_ACTB);
-	else if (drive == 1)
-#endif //ENABLE_DRIVE_B	
-		setPage(PAGE_ACTA);
+	else if (drive == 2) selectDriveB();
+#endif //ENABLE_DRIVE_B		
+	page |= (1 << BIT_BUSY); //selectDrive clears busy bit
+	setPage(PAGE_STATUS);
 	idle_timer = 0; //update screen ASAP
 	update();
 }
@@ -211,7 +204,7 @@ if (idle_timer == 0)
 	if (notice_timer)
 	{
 		notice_timer --;
-		if (notice_timer == 0) FDISPLAY::setPage(PAGE_NSEL); //return to status page
+		if (notice_timer == 0) FDISPLAY::setPage(PAGE_STATUS); //return to status page
 		sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
 	}
 	if (sleep_timer)

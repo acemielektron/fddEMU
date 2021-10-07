@@ -20,15 +20,29 @@
 #ifndef FLOPPYDRIVE_H
 #define PLOPPYDRIVE_H
 
+#include "FloppyDisk.h"
 #include <stdint.h>
-#include "diskFile.h"
 
-class FloppyDrive : public DiskFile
+#define DRIVEA_SELECT   1
+#define DRIVEB_SELECT   2
+
+class FloppyDrive : public FloppyDisk
 {
     public:      
     uint8_t bitLength;
     FloppyDrive();
     void init();
+    int getSectorData(int lba);
+    int setSectorData(int lba);
+    void loop();
 };
 
-#endif
+extern volatile uint8_t drvSel;
+
+extern class FloppyDrive driveA;
+#ifdef ENABLE_DRIVE_B
+extern class FloppyDrive driveB;
+#endif //ENABLE_DRIVE_B
+
+
+#endif //PLOPPYDRIVE_H

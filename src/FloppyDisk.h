@@ -17,22 +17,31 @@
 // Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 // -----------------------------------------------------------------------------
 
-#ifndef DISKFILE_H
-#define DISKFILE_H
+#ifndef FLOPPYDISK_H
+#define FLOPPYDISK_H
 
-#include "FDDcommon.h"
+#include <stdint.h>
+#include <stdbool.h>
 
-class DiskFile{
+//define FLAGS
+#define FD_CHANGED   (1 << 0)
+#define FD_READY     (1 << 1)
+#define FD_READONLY  (1 << 2)
+
+class FloppyDisk{
     public:
-    uint8_t diskChange;
+    uint8_t flags;
     uint8_t numTrack;   //number of tracks
     uint8_t numSec;     //sectors per track
     long startSector;
-    char fName[13];
-    uint8_t fAttr;    
-    DiskFile();
-    int loadDisk(char *);
-    void ejectDisk();
+    char fName[13];    
+    FloppyDisk();
+    int load(char *);
+    void eject();
+    bool isReady(void) {return (flags & FD_READY);}
+    bool isReadonly(void) {return (flags & FD_READONLY);}
+    bool isChanged(void) {return (flags & FD_CHANGED);}
+    void clrChanged(void) {flags &= ~FD_CHANGED;}
 };
 
-#endif
+#endif  //FLOPPYDISK_H

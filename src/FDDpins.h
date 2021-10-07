@@ -17,11 +17,8 @@
 // Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 // -----------------------------------------------------------------------------
 
-#ifndef FDDCOMMON_H
-#define FDDCOMMON_H
-
-#include <stdint.h>
-#include "avrFlux.h"
+#ifndef FDDPINS_H
+#define FDDPINS_H
 
 // -------------------------------  Pin assignments for Arduino UNO/Nano/Pro Mini (Atmega328p)  ------------------------------
 
@@ -57,10 +54,4 @@
 
 #define DISK_DIR "" //empty - root directory
 
-void FDDloop();
-
-#ifdef DEBUG
-extern  uint8_t debugSectors;
-#endif  //DEBUG
-
-#endif  //FDDCOMMON_H
+#endif  //FDDPINS_H

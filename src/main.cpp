@@ -18,7 +18,6 @@
 // -----------------------------------------------------------------------------
 
 
-#include "FDDcommon.h"
 #include "FloppyDrive.h"
 #include "simpleUART.h"
 #include <avr/io.h>
@@ -27,12 +26,12 @@
 #include "analog_read.h"
 #include "FDisplay.h"
 #include "constStrings.h"
+#include "FDDpins.h"
 
 
 #define ADC_PIN 7 //ADC7
 
 int16_t nItems = 0;  //required for menu system
-extern class FloppyDrive *pDrive;
 
 
 int scan_files (char* path)
@@ -177,26 +176,24 @@ void buttonAction(int button)
 
   switch(button)
   {
-    static uint8_t lastDrive = 0;
-    case  5:  //select drive
-      switch (disp.getPage())
+    case  5:  //select drive      
+      switch (disp.getSelectedDrive())
 		  {
-		    case PAGE_NSEL:
-			    disp.setPage(PAGE_SELA);
-			    Serial.print(F("Sel drive: A\n"));	
-          lastDrive = 1;		
+		    case 0:
+          disp.selectDriveA();
+			    disp.setPage(PAGE_STATUS);
+			    Serial.print(F("Sel drive: A\n"));	          
 			    break;
       #ifdef   ENABLE_DRIVE_B
-		    case PAGE_SELA:
-			    disp.setPage(PAGE_SELB);
-			    Serial.print(F("Sel drive: B\n"));
-          lastDrive = 2;
+		    case 1:          
+			    disp.selectDriveB();
+          disp.setPage(PAGE_STATUS);
+			    Serial.print(F("Sel drive: B\n"));          
 			    break;
       #endif //ENABLE_DRIVE_B  
 		    default:
-			    disp.setPage(PAGE_NSEL);
-			    Serial.print(F("Sel drive: None\n"));
-          lastDrive = 0;
+			    disp.setDriveIdle();
+			    Serial.print(F("Sel drive: None\n"));          
 		  }
       break;
     case  4:  //Next file
@@ -204,7 +201,7 @@ void buttonAction(int button)
 		  else 
 			{
 			disp.menu_sel = 0;
-			if ( (disp.getPage() == PAGE_SELA) || (disp.getPage() == PAGE_SELB) ) //if a drive selected
+			if ( disp.getSelectedDrive() ) //if a drive selected
         disp.setPage(PAGE_MENU);
 			}
 		loadMenuStrings();
@@ -214,7 +211,7 @@ void buttonAction(int button)
 		else 
 			{
 			disp.menu_sel = 0;
-			if ( (disp.getPage() == PAGE_SELA) || (disp.getPage() == PAGE_SELB) ) //if a drive selected
+			if ( disp.getSelectedDrive() ) //if a drive selected
         disp.setPage(PAGE_MENU);
 			}
 		loadMenuStrings();
@@ -224,22 +221,26 @@ void buttonAction(int button)
 		Serial.print_P(str_loading);
 		Serial.print(disp.menu_strings[disp.menu_sel]);
 		Serial.write('\n');
-		disp.setPage(PAGE_NSEL);
-    pDrive[lastDrive - 1].loadDisk(disp.menu_strings[disp.menu_sel]); 
+		disp.setPage(PAGE_STATUS);
+    if (disp.getSelectedDrive() == DRIVEA_SELECT) driveA.load(disp.menu_strings[disp.menu_sel]); 
+  #ifdef ENABLE_DRIVE_B
+    else if (disp.getSelectedDrive() == DRIVEB_SELECT) driveB.load(disp.menu_strings[disp.menu_sel]); 
+  #endif //ENABLE_DRIVE_B  
 		break;		
   case  1:  //eject disk
     switch(disp.getPage())
     {
       case PAGE_MENU: //behave as cancel
-        disp.setPage(PAGE_NSEL);
+        disp.setPage(PAGE_STATUS);
         Serial.print(str_cancel);
         break;
-      case PAGE_SELA: //behave as eject
-        pDrive[0].ejectDisk();      
+      case PAGE_STATUS: //behave as eject
+        if (disp.getSelectedDrive() == DRIVEA_SELECT)  driveA.eject();    
+      #ifdef ENABLE_DRIVE_B    
+        else if (disp.getSelectedDrive() == DRIVEB_SELECT) driveB.eject();
+      #endif //ENABLE_DRIVE_B  
         Serial.print_P(str_eject);
-      case PAGE_SELB:
-        pDrive[1].ejectDisk();      
-        Serial.print_P(str_eject);
+        break;
     }
     break;
   }  
@@ -283,7 +284,7 @@ int main(void)
   Serial.init(115200);
   Serial.print(F("\nfddEMU (c) 2001 Acemi Elektronikci\n"));
   Serial.print(F("\nS: Select drive\nP: Previous\nN: Next\nL: Load\nE: Eject\n\n"));
-  pDrive[0].loadDisk((char *)"BOOT.IMG");   //if there is "BOOT.IMG" on SD load it
+  driveA.load((char *)"BOOT.IMG");   //if there is "BOOT.IMG" on SD load it
   nItems = scan_files((char *)DISK_DIR); //get number of files on SD
   init_ADC(); //prep ADC
   reqADC(ADC_PIN); //request ADC reading on ADC_PIN
@@ -291,7 +292,20 @@ int main(void)
   for(;;)
   {   
     wdt_reset();
-    FDDloop();
+    if (drvSel == DRIVEA_SELECT) 
+    {
+      disp.setDriveActive(drvSel);
+      driveA.loop();
+      disp.setDriveIdle();
+    }    
+  #ifdef ENABLE_DRIVE_B  
+    else if (drvSel == DRIVEB_SELECT)
+    {
+      disp.setDriveActive(drvSel);
+      driveB.loop();
+      disp.setDriveIdle();    
+    }
+  #endif //ENABLE_DRIVE_B  
     if (adcReady) buttonAction(adcButton());    
 	  if (rxReady) readRx();
 	  disp.update();

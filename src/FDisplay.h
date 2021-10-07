@@ -21,19 +21,21 @@
 #define FDISPLAY_H
 
 #include "u8g.h"
-#include "images.h"
 
 #define NOTICE_TIMEOUT	40
 #define SLEEP_TIMEOUT	255
 
+
+//Higher nibble of page
+#define BIT_DRIVEB  7   //drive B is selected
+#define BIT_DRIVEA  6   //drive A is selected
+#define BIT_BUSY    5   //drive in use
+
+//Lower nibble of page
 #define PAGE_SPLASH	0
-#define PAGE_NSEL	1
-#define PAGE_SELA	2
-#define PAGE_SELB	3
-#define PAGE_ACTA	4
-#define PAGE_ACTB	5
-#define PAGE_NOTC   6   //Notice
-#define PAGE_MENU	7
+#define PAGE_STATUS	1
+#define PAGE_NOTICE 2
+#define PAGE_MENU	3
 
 #define FNAME_SIZE	13
 #define MENU_ITEMS	5
@@ -62,9 +64,12 @@ char menu_strings[MENU_ITEMS][FNAME_SIZE];
 int8_t menu_sel;	//menu index
 FDISPLAY();
 void setDriveActive(uint8_t);
-void setDriveIdle() {setPage(PAGE_NSEL);}
+void setDriveIdle() {page &= 0x0F; setPage(PAGE_STATUS);}
+void selectDriveA() {page &= 0x0F; page |= (1 << BIT_DRIVEA);}
+void selectDriveB() {page &= 0x0F; page |= (1 << BIT_DRIVEB);}
+uint8_t getSelectedDrive() {return (page >> 6);} //2 MSB bits are selected drive
 void setPage(uint8_t);
-uint8_t getPage() {return page;}
+uint8_t getPage() {return (page & 0x0F);}   //return lower nibble
 void showNoticeP(const char *, const char *);
 void update();
 };

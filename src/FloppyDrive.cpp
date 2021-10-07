@@ -17,14 +17,52 @@
 // Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 // -----------------------------------------------------------------------------
 
+
 #include "FloppyDrive.h"
-#include "FDDcommon.h"
+#include "FDDpins.h"
 #include "pff.h"
+#include "diskio.h"
+#include "simpleUART.h"
+#include "avrFlux.h"
+#include "constStrings.h"
+#include "FDisplay.h"
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <avr/wdt.h>
 
-
+//Global variables
 bool pinsInitialized = false;
+
+class FloppyDrive driveA;
+#ifdef ENABLE_DRIVE_B
+class FloppyDrive driveB;
+#endif //ENABLE_DRIVE_B
+
+static uint8_t dataBuffer[516];
+volatile int iTrack = 0;
+volatile uint8_t drvSel = 0;
+
+//Interrupt routines
+ISR(INT0_vect) //int0 pin 2 of port D
+{
+  if (!(PIND & bit(PIN_STEP))) //debounce
+    iTrack = (PIND & bit(PIN_STEPDIR)) ? --iTrack : ++iTrack;
+}
+
+//Two drive mode requires SELECT and MOTOR pins combined trough an OR gate
+//if two drive mode is enabled SELECTA pin is used for combined SELECTA & MOTORA
+//and MOTORA pin is used for combined SELECTB & MOTORB
+ISR(PCINT2_vect) //pin change interrupt of port D
+{
+#ifdef ENABLE_DRIVE_B
+  if (!(PIND & (1 << PIN_SELECTA))) drvSel = DRIVEA_SELECT; //drive A is selected 
+  else if (!(PIND & (1 << PIN_MOTORA))) drvSel = DRIVEB_SELECT; //drive B is selected   
+#else //Drive B not enabled
+  if ( (!(PIND & bit(PIN_SELECTA))) && (!(PIND & bit(PIN_MOTORA))) ) drvSel = DRIVEA_SELECT; //driveA is selected 
+#endif  //ENABLE_DRIVE_B
+  else drvSel = 0;
+}
 
 void initFDDpins()
 {
@@ -56,11 +94,146 @@ void initFDDpins()
 
 void FloppyDrive::init() 
 { 
+  if (!pinsInitialized) initFDDpins();
   bitLength=16; //  bit length for 3.5" HD floppy is 16
 }
 
 FloppyDrive::FloppyDrive(void)
-{  
-  if (!pinsInitialized) initFDDpins();
+{    
   init();
+}
+
+
+
+int FloppyDrive::getSectorData(int lba)
+{
+  int n = FR_DISK_ERR;
+  uint8_t *pbuf=dataBuffer+1;  
+  
+  #ifdef DEBUG 
+  uint8_t head   = 0;
+  uint8_t track  = lba / (numSec*2);
+  uint8_t sector = lba % (numSec*2);
+  if( sector >= numSec ) { head = 1; sector -= numSec; }
+
+  Serial.write('R');
+  Serial.printDEC(track);
+  Serial.write('/');
+  Serial.printDEC(head);
+  Serial.write('/');
+  Serial.printDEC(sector+1);
+  Serial.write('\n');
+  #endif //DEBUG
+  
+  if (isReady())
+  {
+    n = disk_read_sector(pbuf, startSector+lba);
+    if (n) errorMessage(err_diskread);
+  }
+  else errorMessage(err_fnopen);
+  return n;
+}
+
+int FloppyDrive::setSectorData(int lba)
+{
+  int n = FR_DISK_ERR;
+  uint8_t *pbuf=dataBuffer+1;  
+  
+  if (isReady())
+  {
+    n = disk_write_sector(pbuf, startSector+lba);
+    if (n) errorMessage(err_diskwrite);
+  }
+  else errorMessage(err_fnopen);
+  
+  #ifdef DEBUG
+  uint8_t head   = 0;
+  uint8_t track  = lba / (numSec*2);
+  uint8_t sector = lba % (numSec*2);
+  if( sector >= numSec ) { head = 1; sector -= numSec; }
+
+  Serial.write('W');
+  Serial.printDEC(track);
+  Serial.write('/');
+  Serial.printDEC(head);
+  Serial.write('/');
+  Serial.printDEC(sector+1);
+  Serial.write('\n');
+
+  for (int i=0; i<512; i++)
+  {    
+    Serial.printHEX(pbuf[i]);
+    Serial.write(' ');
+    if ( (i&0xf) ==0xf ) Serial.write('\n');
+  }
+  #endif //DEBUG
+  return n;
+}
+
+void FloppyDrive::loop()
+{
+  static int track=0;
+  static uint8_t side=0;
+  static uint8_t sector=0;
+  static int lba;
+
+  if (isChanged()) 
+  {
+    SET_DSKCHANGE_LOW();
+    if (isReady()) clrChanged();//if a disk is loaded clear diskChange flag    
+  }
+  (isReadonly()) ? SET_WRITEPROT_LOW() : SET_WRITEPROT_HIGH();  //check readonly  
+  setup_timer1_for_write(); 
+  while(drvSel) //PCINT for SELECTA and MOTORA
+  {    
+    //Start track with index signal
+    SET_INDEX_LOW();
+    track_start(bitLength);       
+    SET_INDEX_HIGH();
+    
+    for (sector=0; (sector < numSec) && drvSel; sector++)
+    {                                              
+      wdt_reset();
+      if (!drvSel) break; //if drive unselected exit loop      
+      side = (PIND & bit(PIN_SIDE)) ? 0:1; //check side
+      if (track != iTrack) //if track changed
+      {                     
+        track = iTrack;
+        if (track < 0) track=0; //Check if track valid
+        else if (track >= numTrack) track = numTrack-1;          
+        (track == 0) ? SET_TRACK0_LOW() : SET_TRACK0_HIGH(); 
+        iTrack = track;        
+        (isReady()) ? SET_DSKCHANGE_HIGH() : SET_DSKCHANGE_LOW(); //disk present ?
+      }
+      //start sector
+      lba=(track*2+side)*18+sector;//LBA = (C × HPC + H) × SPT + (S − 1)
+      getSectorData(lba); //get sector from SD
+      setup_timer1_for_write();
+      genSectorID((uint8_t)track,side,sector);
+      sector_start(bitLength);          
+      if (track != iTrack) continue; //check track change
+      //check WriteGate
+      for (int i=0; i<20; i++) //wait 20X cycles for WRITEGATE
+        if (!(PINC & bit(PIN_WRITEGATE))) break;
+      if (PINC & bit(PIN_WRITEGATE))
+      {//write gate off                                  
+        dataBuffer[0]   = 0xFB; // "data" id
+        uint16_t crc = calc_crc(dataBuffer, 513);
+        dataBuffer[513] = crc/256;
+        dataBuffer[514] = crc&255;
+        dataBuffer[515] = 0x4E; // first byte of post-data gap        
+        write_data(bitLength, dataBuffer, 516);                                      
+      }
+      else
+      {//write gate on               
+      setup_timer1_for_read();      
+      read_data(bitLength, dataBuffer, 515);                              
+      wdt_reset();
+      setup_timer1_for_write(); //Write-mode: arduinoFDC immediately tries to verify written sector
+      setSectorData(lba); //save sector to SD
+      }      
+    }//sectors             
+  }//selected
+  SET_DSKCHANGE_HIGH();
+  SET_WRITEPROT_HIGH();
 }

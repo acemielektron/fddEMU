@@ -17,13 +17,13 @@
 // Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 // -----------------------------------------------------------------------------
 
-#include "diskFile.h"
-#include "FDDcommon.h"
+#include "FloppyDisk.h"
 #include "simpleUART.h"
 #include "pff.h"
 #include "diskio.h"
 #include "constStrings.h"
 #include "FDisplay.h"
+#include "FDDpins.h"
 
 bool sdInitialized = false;
 FATFS fs; //petitfs
@@ -59,13 +59,13 @@ int initSD()
   return rVal;    
 }
 
-int DiskFile::loadDisk(char *filename)
+int FloppyDisk::load(char *filename)
 {
   FILINFO fno;
   int rVal=FR_OK;
   uint16_t totalSectors;
     
-  ejectDisk(); 
+  eject(); 
   if (!sdInitialized) 
   if  ( (rVal = initSD()) ) 
     return rVal;
@@ -78,7 +78,7 @@ int DiskFile::loadDisk(char *filename)
     return -1;
   }
   memcpy(fName, fno.fname, 13); 
-  fAttr = fno.fattrib; 
+  if (fno.fattrib & AM_RDO) flags |= FD_READONLY;
   startSector=get_start_sector();  
   if (!isContiguousFile())  //we will use direct sector access so we need a contiguous file
   {
@@ -132,23 +132,20 @@ int DiskFile::loadDisk(char *filename)
         numSec = (wbuf[14] << 8) & wbuf[13];     //WsectorsPerTrack@24
         numTrack = totalSectors / (numSec*2);
     } //switch        
-  #ifdef DEBUG
-  debugSectors = numSec;
-  #endif  //DEBUG    
+  flags |= FD_READY;  
   return rVal;
 }
 
-void DiskFile::ejectDisk(void)
+void FloppyDisk::eject(void)
 {
-  startSector = 0;
-  fAttr = 0;
-  fName[0] = '\0';
+  startSector = 0;  
+  fName[0] = '\0';  //clear disk file name
   numTrack = 80; //default for 3.5" HD Floppy
   numSec = 18; //default for 3.5" HD Floppy
-  diskChange = 0xFF; //disk changed  
+  flags = FD_CHANGED; //clear flags & set DISK CHANGED
 }
 
-DiskFile::DiskFile(void)
+FloppyDisk::FloppyDisk(void)
 {
-  ejectDisk();
+  eject();
 }

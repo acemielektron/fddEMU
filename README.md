@@ -9,7 +9,7 @@ Standalone (using without usb serial connection) require SSD1306 i2c screen, but
 * Arduino nano (UNO will do but button inputs require ADC7, use serial commands instead)
 * Micro SD card adapter (converts 5 volts arduino power supply and signals to 3.3 volts)
 * A micro SD card (formatted FAT16/32, floppy images in root directory)
-* 2 1kOhm resistors (for step and readdata pins - atmega's internal pullups are not sufficicient for parasitic capacitance of long floppy drive cable)
+* Two 1kOhm resistors (for step and readdata pins - atmega's internal pullups are not sufficicient for parasitic capacitance of long floppy drive cable)
 * Male to female jumper wires (for connecting arduino nano pins to FDC ribbon cable)
 * Male to male jumper wires (for pullup on step and readdata pins)
 
@@ -106,7 +106,7 @@ SCL			|A3			|SCL
 * [ArduinoFDC](https://github.com/dhansel/ArduinoFDC) by [David Hansel](https://github.com/dhansel). fddEMU uses a modified ArduinoFDC library renamed to avrFlux for communicating with FDC.
 * [Petit FAT FS](https://github.com/greiman/PetitFS) by [Chan](http://elm-chan.org/fsw/ff/00index_p.html) adapted for hardware SPI by [Bill Greiman](https://github.com/greiman). fddEMU uses a modified Petit FAT FS.
 * [rjhcoding.com/avrc-sd-interface](http://rjhcoding.com/avrc-sd-interface-1.php) Great tutorial for using SD card with AVR.
-* [u8glib](https://github.com/olikraus/u8glib) Very useful for incorporating of SSD1306.
+* [u8glib](https://github.com/olikraus/u8glib) Very useful for incorporating SSD1306 and can easily be used with various displays.
 <br><br>
 
 **Releases**
