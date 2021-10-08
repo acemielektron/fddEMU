@@ -77,7 +77,7 @@ void FDISPLAY::statusScreen()
 #define Y_OFS_A	4
 #define Y_OFS_B 35
 
-	if (page & ((1 << BIT_BUSY) | (1 << BIT_DRIVEA)) )
+	if ( (page & (1 << BIT_BUSY)) && (page & (1 << BIT_DRIVEA)) )
 		u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_A, floppyar_width, floppyar_height, floppyar_bits);
 	else
 	{
@@ -90,7 +90,7 @@ void FDISPLAY::statusScreen()
 	drawStr(40, Y_OFS_A+14, infostring); //use itoabuf (defined in simpleUART)
 
 #ifdef ENABLE_DRIVE_B
-	if (page & ((1 << BIT_BUSY) | (1 << BIT_DRIVEB)) )
+	if ( (page & (1 << BIT_BUSY)) && (page & (1 << BIT_DRIVEB)) )
 		u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_B, floppybr_width, floppybr_height, floppybr_bits);
 	else
 	{
@@ -136,6 +136,33 @@ void FDISPLAY::init()
 	u8g_SetFontPosTop(&u8g);	//set font position
 }
 
+void FDISPLAY::showNoticeP(const char *header, const char *message)
+{
+	notice_header = header;
+	notice_message = message;
+	FDISPLAY::setPage(PAGE_NOTICE);
+	notice_timer = NOTICE_TIMEOUT;
+	idle_timer = 0; //show ASAP
+}
+
+void FDISPLAY::setDriveBusy(uint8_t drive)
+{	
+	page &= 0x0F;	//clear higher nibble	
+	page |= (drive << 6); //get two lsb bits
+	if (drive) page |= (1 << BIT_BUSY); //set busy bit
+	setPage(PAGE_STATUS);
+	idle_timer = 0; //update screen ASAP
+	update();
+}
+
+void FDISPLAY::setPage(uint8_t r_page)
+{
+	page &= 0xF0;	//clear lower nibble
+	page |= (r_page & 0x0F); //set requested page
+	if (sleep_timer == 0) FDISPLAY::wakeup();
+	sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
+}
+
 FDISPLAY::FDISPLAY()
 {
 init();
@@ -146,7 +173,7 @@ menu_sel = 0;
 
 void FDISPLAY::drawPage()
 {
-switch(page)
+switch(getPage())
 	{
 	case PAGE_SPLASH:		
 		splashScreen();
@@ -163,60 +190,26 @@ switch(page)
 	}
 }
 
-void FDISPLAY::setPage(uint8_t r_page)
-{
-	page &= 0xF0;	//clear lower nibble
-	page |= (r_page & 0x0F); //set requested page
-	Serial.print("Page timer: ");
-	Serial.printDEC(sleep_timer);
-	Serial.write('\n');
-	if (sleep_timer == 0) FDISPLAY::wakeup();
-	sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
-}
-
-void FDISPLAY::showNoticeP(const char *header, const char *message)
-{
-	notice_header = header;
-	notice_message = message;
-	FDISPLAY::setPage(PAGE_NOTICE);
-	notice_timer = NOTICE_TIMEOUT;
-	idle_timer = 0; //show ASAP
-}
-
-void FDISPLAY::setDriveActive(uint8_t drive)
-{
-	if (drive == 0) return;
-	page &= 0x0F;	//clear higher nibble	
-	if (drive == 1) selectDriveA();
-#ifdef ENABLE_DRIVE_B	
-	else if (drive == 2) selectDriveB();
-#endif //ENABLE_DRIVE_B		
-	page |= (1 << BIT_BUSY); //selectDrive clears busy bit
-	setPage(PAGE_STATUS);
-	idle_timer = 0; //update screen ASAP
-	update();
-}
-
 void FDISPLAY::update()
 {
-if (idle_timer == 0)
+	if (idle_timer == 0)
 	{
-	if (notice_timer)
-	{
-		notice_timer --;
-		if (notice_timer == 0) FDISPLAY::setPage(PAGE_STATUS); //return to status page
-		sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
-	}
-	if (sleep_timer)
-	{
-		sleep_timer --;
-		if (sleep_timer == 0) FDISPLAY::sleep();
-	}
-	//update page
-	u8g_FirstPage(&u8g);
-    do	{
-      	drawPage();
-    	} while ( u8g_NextPage(&u8g) );
+		if (notice_timer)
+		{
+			notice_timer --;
+			if (notice_timer == 0) FDISPLAY::setPage(PAGE_STATUS); //return to status page
+			sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
+		}
+		if (sleep_timer)
+		{
+			sleep_timer --;
+			if (sleep_timer == 0) FDISPLAY::sleep();
+		}
+		//update page
+		u8g_FirstPage(&u8g);
+    	do	{
+      		drawPage();
+    		} while ( u8g_NextPage(&u8g) );
 	}
 	idle_timer++;
 }

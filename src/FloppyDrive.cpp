@@ -170,7 +170,7 @@ int FloppyDrive::setSectorData(int lba)
   return n;
 }
 
-void FloppyDrive::loop()
+void FloppyDrive::run()
 {
   static int track=0;
   static uint8_t side=0;

@@ -63,15 +63,15 @@ public:
 char menu_strings[MENU_ITEMS][FNAME_SIZE];
 int8_t menu_sel;	//menu index
 FDISPLAY();
-void setDriveActive(uint8_t);
-void setDriveIdle() {page &= 0x0F; setPage(PAGE_STATUS);}
-void selectDriveA() {page &= 0x0F; page |= (1 << BIT_DRIVEA);}
-void selectDriveB() {page &= 0x0F; page |= (1 << BIT_DRIVEB);}
-uint8_t getSelectedDrive() {return (page >> 6);} //2 MSB bits are selected drive
 void setPage(uint8_t);
 uint8_t getPage() {return (page & 0x0F);}   //return lower nibble
 void showNoticeP(const char *, const char *);
 void update();
+void setDriveBusy(uint8_t);
+void setDriveIdle() {setDriveBusy(0);}
+void selectDriveA() {page &= 0x0F; page |= (1 << BIT_DRIVEA); setPage(PAGE_STATUS);}
+void selectDriveB() {page &= 0x0F; page |= (1 << BIT_DRIVEB); setPage(PAGE_STATUS);}
+uint8_t getSelectedDrive() {return (page >> 6);} //2 MSB bits are selected drive
 };
 
 extern class FDISPLAY disp;

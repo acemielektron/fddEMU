@@ -176,18 +176,16 @@ void buttonAction(int button)
 
   switch(button)
   {
-    case  5:  //select drive      
+    case  5:  //select drive     
       switch (disp.getSelectedDrive())
 		  {
 		    case 0:
-          disp.selectDriveA();
-			    disp.setPage(PAGE_STATUS);
+          disp.selectDriveA();			    
 			    Serial.print(F("Sel drive: A\n"));	          
 			    break;
       #ifdef   ENABLE_DRIVE_B
 		    case 1:          
-			    disp.selectDriveB();
-          disp.setPage(PAGE_STATUS);
+			    disp.selectDriveB();          
 			    Serial.print(F("Sel drive: B\n"));          
 			    break;
       #endif //ENABLE_DRIVE_B  
@@ -294,15 +292,15 @@ int main(void)
     wdt_reset();
     if (drvSel == DRIVEA_SELECT) 
     {
-      disp.setDriveActive(drvSel);
-      driveA.loop();
+      disp.setDriveBusy(drvSel);
+      driveA.run();
       disp.setDriveIdle();
     }    
   #ifdef ENABLE_DRIVE_B  
     else if (drvSel == DRIVEB_SELECT)
     {
-      disp.setDriveActive(drvSel);
-      driveB.loop();
+      disp.setDriveBusy(drvSel);
+      driveB.run();
       disp.setDriveIdle();    
     }
   #endif //ENABLE_DRIVE_B  

@@ -34,7 +34,7 @@ class FloppyDrive : public FloppyDisk
     void init();
     int getSectorData(int lba);
     int setSectorData(int lba);
-    void loop();
+    void run();
 };
 
 extern volatile uint8_t drvSel;
