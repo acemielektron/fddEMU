@@ -280,8 +280,8 @@ int main(void)
 { 
   wdt_enable(WDTO_1S);  
   Serial.init(115200);
-  Serial.print(F("\nfddEMU (c) 2001 Acemi Elektronikci\n"));
-  Serial.print(F("\nS: Select drive\nP: Previous\nN: Next\nL: Load\nE: Eject\n\n"));
+  Serial.print_P(str_intro);
+  Serial.print(str_usage);
   driveA.load((char *)"BOOT.IMG");   //if there is "BOOT.IMG" on SD load it
   nItems = scan_files((char *)DISK_DIR); //get number of files on SD
   init_ADC(); //prep ADC
