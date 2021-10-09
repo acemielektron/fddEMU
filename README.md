@@ -99,6 +99,7 @@ SCL			|A3			|SCL
 <br>
 ![Resistor Ladder 1x5](/images/ResistorLadder-1x5.png)
 <br><br>
+
 **Limitations**
 <br>
 * fddEMU is not an cycle exact floppy emulator, it is more of a hack but it works because floppy controller integrated circuits have sensible timeouts and we take advantage of that
@@ -106,6 +107,7 @@ SCL			|A3			|SCL
 * fddEMU supports fixed sector size of 512 bytes, other sector sizes are not supported
 * Requires a Floppy Drive Controller (FDC) on the PC side to communicate so it probably wont work with an Amiga.
 * Repeated write on same SD card sectors might lead to SD failure so use floppy images in read only mode (set read only attribute) when possible. Modern O.S. such as linux write and clear the dirty bit every mount/unmount even if you dont write anything to floppy image.
+* Multisector writes to floppy image works in FreeDOS v1.3 but fails in MS-DOS 6.22 
 <br><br>
 
 **Acknowledgements**
