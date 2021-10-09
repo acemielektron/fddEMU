@@ -32,6 +32,7 @@
 #define ADC_PIN 7 //ADC7
 
 int16_t nItems = 0;  //required for menu system
+int16_t idx_sel = 0; //where were we in the menu index ?
 
 
 int scan_files (char* path)
@@ -131,8 +132,7 @@ int adcButton()
 }
 
 void loadMenuStrings()
-{  
-  static int16_t idx_sel = 0; //where were we in the index ?
+{    
   DIR dir;
   FILINFO fno;
   int i = 0;
@@ -153,20 +153,21 @@ void loadMenuStrings()
   if (idx_sel < 0) idx_sel = 0;
   else if (idx_sel > (nItems - MENU_ITEMS)) idx_sel = nItems - MENU_ITEMS;
   //load menu strings
-  get_first_file(&dir, &fno, (char *)DISK_DIR);
-  for (int i=1; i < idx_sel; i++) get_next_file(&dir, &fno); //skip some files
-  //for (int i=0; i < MENU_ITEMS && i < nItems; i++)
-  while(fno.fname[0] != 0)
+  
+  get_first_file(&dir, &fno, (char *)s_diskdir);
+  for (int i=1; i < idx_sel; i++) 
+    get_next_file(&dir, &fno); //skip some files
+  while( (fno.fname[0] != 0) && (i < MENU_ITEMS) )
   {
     strcpy(disp.menu_strings[i], fno.fname);
     get_next_file(&dir, &fno);
     i++;
   }   
-  if (nItems == 0) strcpy_P(disp.menu_strings[0], PSTR("NO FILE"));
-  //Output to serial
-  Serial.print(F("Selected "));
+  if (nItems == 0) strcpy_P(disp.menu_strings[0], str_nofile);  
+  //Output to serial  
+  Serial.print_P(str_selected);
   Serial.print(disp.menu_strings[disp.menu_sel]);
-  Serial.write('\n');
+  Serial.write('\n');  
 }
 
 void buttonAction(int button)
@@ -199,6 +200,7 @@ void buttonAction(int button)
 		  else 
 			{
 			disp.menu_sel = 0;
+      idx_sel = 0;
 			if ( disp.getSelectedDrive() ) //if a drive selected
         disp.setPage(PAGE_MENU);
 			}
@@ -209,6 +211,7 @@ void buttonAction(int button)
 		else 
 			{
 			disp.menu_sel = 0;
+      idx_sel = 0;
 			if ( disp.getSelectedDrive() ) //if a drive selected
         disp.setPage(PAGE_MENU);
 			}
@@ -282,8 +285,8 @@ int main(void)
   Serial.init(115200);
   Serial.print_P(str_intro);
   Serial.print_P(str_usage);
-  driveA.load((char *)"BOOT.IMG");   //if there is "BOOT.IMG" on SD load it
-  nItems = scan_files((char *)DISK_DIR); //get number of files on SD
+  driveA.load((char *)s_bootfile);   //if there is "BOOT.IMG" on SD load it
+  nItems = scan_files((char *)s_diskdir); //get number of files on SD
   init_ADC(); //prep ADC
   reqADC(ADC_PIN); //request ADC reading on ADC_PIN
    

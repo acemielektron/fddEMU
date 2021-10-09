@@ -52,6 +52,4 @@
 #define SET_WRITEPROT_LOW()    DDRC |= (1 << PIN_WRITEPROT)
 #define SET_WRITEPROT_HIGH()   DDRC &= ~(1 << PIN_WRITEPROT)
 
-#define DISK_DIR "" //empty - root directory
-
 #endif  //FDDPINS_H

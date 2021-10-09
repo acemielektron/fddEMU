@@ -6,7 +6,7 @@ CC = avr-gcc
 CXX = avr-g++
 
 INCLUDES	= -I /usr/avr/include  -I libs/u8glib/csrc -I libs/petitfs -I .
-#ENABLE_DUAL_DRIVE = -DENABLE_DRIVE_B
+ENABLE_DUAL_DRIVE = -DENABLE_DRIVE_B
 ENABLE_DEBUG = -DDEBUG
 FLIP_SCREEN = -DFLIP_SCREEN
 

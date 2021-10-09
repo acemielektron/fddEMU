@@ -34,7 +34,7 @@ FRESULT get_file_info(FILINFO *pfno, char *filename)
   FRESULT res = FR_NO_FILE;
   DIR dir;
 
-  res = pf_opendir(&dir, (char *)DISK_DIR);
+  res = pf_opendir(&dir, (char *)s_diskdir);
   if (res == FR_OK)
   {
     for (;;) 

@@ -28,11 +28,15 @@
 	Serial.print_P(str_colon); \
 	Serial.print_P(x); }
 
+const char s_diskdir[] = {'\0'};		//Don't not make PROGMEM
+const char s_bootfile[] = "BOOT.IMG";	//Don't not make PROGMEM
 
 const char str_intro[]		PROGMEM = "\nfddEMU (c) 2021 Acemi Elektronikci\n";
 const char str_usage[]		PROGMEM = "\nS: Select drive\nP: Previous\nN: Next\nL: Load\nE: Eject\n\n";
 const char str_colon[]		PROGMEM = ": ";
+const char str_selected[]	PROGMEM = "Selected ";
 const char str_nodisk[]		PROGMEM = "No disk";
+const char str_nofile[]		PROGMEM = "NO FILE";
 const char str_eject[]		PROGMEM = "Ejected\n";
 const char str_cancel[]		PROGMEM = "Cancel\n";
 const char str_loading[]	PROGMEM = "Loading ";
