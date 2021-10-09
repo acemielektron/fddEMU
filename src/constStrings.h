@@ -29,6 +29,8 @@
 	Serial.print_P(x); }
 
 
+const char str_intro[]		PROGMEM = "\nfddEMU (c) 2021 Acemi Elektronikci\n";
+const char str_usage[]		PROGMEM = "\nS: Select drive\nP: Previous\nN: Next\nL: Load\nE: Eject\n\n";
 const char str_colon[]		PROGMEM = ": ";
 const char str_nodisk[]		PROGMEM = "No disk";
 const char str_eject[]		PROGMEM = "Ejected\n";

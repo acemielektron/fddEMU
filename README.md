@@ -1,10 +1,17 @@
 # fddEMU
-An AVR (atmega328p) based floppy emulator for PC
-
-fddEMU is a DIY floppy emulator. You can immediately begin testing fddEMU on serial terminal with an arduino nano, an SD adapter that converts 5 volts arduino power supply and signals to 3.3 volts suitable for SD card, an SD card,  and some jumper cables. 
+An AVR (atmega328p) based floppy drive emulator for PC
+<br>
+<br>
+![fddEMU on perfboard](/images/perfboard-2.png)
+<br>
+<br>
+fddEMU is a DIY floppy drive emulator. You can immediately begin testing fddEMU on serial terminal with an arduino nano, an SD adapter that converts 5 volts arduino power supply and signals to 3.3 volts suitable for SD card, an SD card,  and some jumper cables. 
 Standalone (using without usb serial connection) require SSD1306 i2c screen, buttons and a 5 volts power supply.
-<br><br>
-
+<br>
+<br>
+![fddEMU on breadboard](/images/breadboard.png)
+<br>
+<br>
 **Requirements**
 * Arduino nano (UNO will do but button inputs require ADC7, use serial commands instead)
 * Micro SD card adapter (converts 5 volts arduino power supply and signals to 3.3 volts)
@@ -161,5 +168,4 @@ After a drive is selected:<br>
 
 
 <br><br>
-Pictures and further documentation is coming ...
 
