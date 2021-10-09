@@ -67,8 +67,9 @@ void FDISPLAY::drawMenu(void)
       u8g_DrawBox(&u8g, 0, i*h+1, w, h);
       u8g_SetDefaultBackgroundColor(&u8g);
     }
-    u8g_DrawStr(&u8g, d, i*h, menu_strings[i]);
+    u8g_DrawStr(&u8g, d, i*h, menu_strings[i]);	
   }
+  u8g_SetDefaultForegroundColor(&u8g); //set color back to foreground color
 }
 
 void FDISPLAY::statusScreen()
@@ -77,12 +78,12 @@ void FDISPLAY::statusScreen()
 #define Y_OFS_A	4
 #define Y_OFS_B 35
 
-	if ( (page & (1 << BIT_BUSY)) && (page & (1 << BIT_DRIVEA)) )
+	if ( (drive & (1 << BIT_BUSY)) && (drive & (1 << BIT_DRIVEA)) )
 		u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_A, floppyar_width, floppyar_height, floppyar_bits);
 	else
 	{
 		u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_A, floppya_width, floppya_height, floppya_bits);
-		if (page & (1 << BIT_DRIVEA) )	//if selected draw frame
+		if (drive & (1 << BIT_DRIVEA) )	//if selected draw frame
 			u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_A-1, X_OFS+floppya_width+1,Y_OFS_A+floppya_height+1);	
 	}
 	drawStr(40, Y_OFS_A+1, driveA.fName);
@@ -90,12 +91,12 @@ void FDISPLAY::statusScreen()
 	drawStr(40, Y_OFS_A+14, infostring); //use itoabuf (defined in simpleUART)
 
 #ifdef ENABLE_DRIVE_B
-	if ( (page & (1 << BIT_BUSY)) && (page & (1 << BIT_DRIVEB)) )
+	if ( (drive & (1 << BIT_BUSY)) && (drive & (1 << BIT_DRIVEB)) )
 		u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_B, floppybr_width, floppybr_height, floppybr_bits);
 	else
 	{
 		u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_B, floppyb_width, floppyb_height, floppyb_bits);
-		if (page & (1 << BIT_DRIVEB) )	//if selected draw frame
+		if (drive & (1 << BIT_DRIVEB) )	//if selected draw frame
 			u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_B-1, X_OFS+floppyb_width+1,Y_OFS_B+floppyb_height+1);
 	}
 	drawStr(40, Y_OFS_B+1, driveB.fName);
@@ -140,26 +141,31 @@ void FDISPLAY::showNoticeP(const char *header, const char *message)
 {
 	notice_header = header;
 	notice_message = message;
-	FDISPLAY::setPage(PAGE_NOTICE);
+	setPage(PAGE_NOTICE);
 	notice_timer = NOTICE_TIMEOUT;
 	idle_timer = 0; //show ASAP
 }
 
-void FDISPLAY::setDriveBusy(uint8_t drive)
+void FDISPLAY::setDriveBusy(uint8_t r_drive)
 {	
-	page &= 0x0F;	//clear higher nibble	
-	page |= (drive << 6); //get two lsb bits
-	if (drive) page |= (1 << BIT_BUSY); //set busy bit
+	drive = r_drive;
+	if (drive) drive |= (1 << BIT_BUSY); //set busy bit
 	setPage(PAGE_STATUS);
 	idle_timer = 0; //update screen ASAP
 	update();
 }
 
 void FDISPLAY::setPage(uint8_t r_page)
-{
-	page &= 0xF0;	//clear lower nibble
-	page |= (r_page & 0x0F); //set requested page
-	if (sleep_timer == 0) FDISPLAY::wakeup();
+{	
+	page = r_page; //set requested page
+	if (sleep_timer == 0)
+	{
+		sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
+		FDISPLAY::wakeup();
+		Serial.print(F("Screen wakeup\n"));		
+		setDriveIdle();
+	}
+	notice_timer = 0; //cancel notice
 	sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
 }
 
@@ -173,20 +179,22 @@ menu_sel = 0;
 
 void FDISPLAY::drawPage()
 {
-switch(getPage())
+switch(page)
 	{
-	case PAGE_SPLASH:		
-		splashScreen();
-		break;
-	case PAGE_STATUS:
-		statusScreen();
-		break;
-	case PAGE_NOTICE:
-		noticeScreen();
-		break;
-	case PAGE_MENU:
-		drawMenu();
-		break;
+		case PAGE_STATUS:
+			statusScreen();
+			break;
+		case PAGE_SPLASH:		
+			splashScreen();
+			break;
+		case PAGE_NOTICE:
+			noticeScreen();
+			break;
+		case PAGE_MENU:
+			drawMenu();
+			break;				
+		default:
+			statusScreen();	
 	}
 }
 
@@ -197,19 +205,24 @@ void FDISPLAY::update()
 		if (notice_timer)
 		{
 			notice_timer --;
-			if (notice_timer == 0) FDISPLAY::setPage(PAGE_STATUS); //return to status page
+			if (notice_timer == 0) FDISPLAY::setDriveIdle(); //return to status page
 			sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
-		}
+		}		
 		if (sleep_timer)
 		{
-			sleep_timer --;
-			if (sleep_timer == 0) FDISPLAY::sleep();
-		}
-		//update page
-		u8g_FirstPage(&u8g);
-    	do	{
-      		drawPage();
+			//update page
+			u8g_FirstPage(&u8g);
+    		do	{
+    			drawPage();				
     		} while ( u8g_NextPage(&u8g) );
+
+			sleep_timer --;
+			if (sleep_timer == 0)
+			{
+				FDISPLAY::sleep();
+				Serial.print(F("Screen sleep\n"));
+			}
+		}
 	}
 	idle_timer++;
 }

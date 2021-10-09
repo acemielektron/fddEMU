@@ -26,19 +26,18 @@
 #define SLEEP_TIMEOUT	255
 
 
-//Higher nibble of page
-#define BIT_DRIVEB  7   //drive B is selected
-#define BIT_DRIVEA  6   //drive A is selected
-#define BIT_BUSY    5   //drive in use
+#define BIT_DRIVEA  0   //drive A is selected
+#define BIT_DRIVEB  1   //drive B is selected
+#define BIT_BUSY    7   //drive in use
 
 //Lower nibble of page
-#define PAGE_SPLASH	0
-#define PAGE_STATUS	1
-#define PAGE_NOTICE 2
-#define PAGE_MENU	3
+#define PAGE_STATUS	0
+#define PAGE_NOTICE 1
+#define PAGE_MENU	2
+#define PAGE_SPLASH	3
 
 #define FNAME_SIZE	13
-#define MENU_ITEMS	5
+#define MENU_ITEMS	6
 
 class FDISPLAY{
 private:
@@ -47,6 +46,7 @@ uint8_t idle_timer;
 uint8_t sleep_timer;
 uint8_t notice_timer;
 uint8_t page;
+uint8_t drive;
 const char *notice_header;
 const char *notice_message;
 void drawPage();
@@ -64,14 +64,14 @@ char menu_strings[MENU_ITEMS][FNAME_SIZE];
 int8_t menu_sel;	//menu index
 FDISPLAY();
 void setPage(uint8_t);
-uint8_t getPage() {return (page & 0x0F);}   //return lower nibble
+uint8_t getPage() {return page;} 
 void showNoticeP(const char *, const char *);
 void update();
 void setDriveBusy(uint8_t);
 void setDriveIdle() {setDriveBusy(0);}
-void selectDriveA() {page &= 0x0F; page |= (1 << BIT_DRIVEA); setPage(PAGE_STATUS);}
-void selectDriveB() {page &= 0x0F; page |= (1 << BIT_DRIVEB); setPage(PAGE_STATUS);}
-uint8_t getSelectedDrive() {return (page >> 6);} //2 MSB bits are selected drive
+void selectDriveA() {drive = 0; drive |= (1 << BIT_DRIVEA); setPage(PAGE_STATUS);}
+void selectDriveB() {drive = 0; drive |= (1 << BIT_DRIVEB); setPage(PAGE_STATUS);}
+uint8_t getSelectedDrive() {return (drive & 3);} 
 };
 
 extern class FDISPLAY disp;

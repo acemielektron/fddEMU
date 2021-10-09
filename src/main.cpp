@@ -135,7 +135,6 @@ void loadMenuStrings()
 {    
   DIR dir;
   FILINFO fno;
-  int i = 0;
 
   //Limit menu selection
   if (disp.menu_sel < 0) 
@@ -153,21 +152,14 @@ void loadMenuStrings()
   if (idx_sel < 0) idx_sel = 0;
   else if (idx_sel > (nItems - MENU_ITEMS)) idx_sel = nItems - MENU_ITEMS;
   //load menu strings
-  
-  get_first_file(&dir, &fno, (char *)s_diskdir);
-  for (int i=1; i < idx_sel; i++) 
-    get_next_file(&dir, &fno); //skip some files
-  while( (fno.fname[0] != 0) && (i < MENU_ITEMS) )
+    get_first_file(&dir, &fno, (char *)s_diskdir);
+  for (int i=0; i < idx_sel; i++) get_next_file(&dir, &fno); //skip some files
+  for (int i=0; (i < MENU_ITEMS) && (fno.fname[0] != 0); i++)   
   {
-    strcpy(disp.menu_strings[i], fno.fname);
+    memcpy(disp.menu_strings[i], fno.fname, 13);
     get_next_file(&dir, &fno);
-    i++;
   }   
   if (nItems == 0) strcpy_P(disp.menu_strings[0], str_nofile);  
-  //Output to serial  
-  Serial.print_P(str_selected);
-  Serial.print(disp.menu_strings[disp.menu_sel]);
-  Serial.write('\n');  
 }
 
 void buttonAction(int button)
@@ -196,53 +188,73 @@ void buttonAction(int button)
 		  }
       break;
     case  4:  //Next file
-      if (disp.getPage() == PAGE_MENU) disp.menu_sel++;
+      if (disp.getPage() == PAGE_MENU)
+      {
+        disp.menu_sel++;
+        loadMenuStrings();
+        //Output to serial  
+        Serial.print_P(str_selected);
+        Serial.print(disp.menu_strings[disp.menu_sel]);
+        Serial.write('\n');  
+      }
 		  else 
 			{
 			disp.menu_sel = 0;
       idx_sel = 0;
 			if ( disp.getSelectedDrive() ) //if a drive selected
         disp.setPage(PAGE_MENU);
-			}
-		loadMenuStrings();
+        loadMenuStrings();
+        //Output to serial  
+        Serial.print_P(str_selected);
+        Serial.print(disp.menu_strings[disp.menu_sel]);
+        Serial.write('\n');  
+			}		
     break;
   case  3:  //Previous file
-    if (disp.getPage() == PAGE_MENU) disp.menu_sel--;
+    if (disp.getPage() == PAGE_MENU)
+    {
+      disp.menu_sel--;
+      loadMenuStrings();
+    }
 		else 
 			{
 			disp.menu_sel = 0;
       idx_sel = 0;
 			if ( disp.getSelectedDrive() ) //if a drive selected
         disp.setPage(PAGE_MENU);
-			}
-		loadMenuStrings();
+        loadMenuStrings();
+			}		
 		break;
   case  2:  //load disk    
     if (disp.getPage() != PAGE_MENU) break; //if we are not in menu disable load
+    loadMenuStrings();
 		Serial.print_P(str_loading);
-		Serial.print(disp.menu_strings[disp.menu_sel]);
-		Serial.write('\n');
-		disp.setPage(PAGE_STATUS);
+		//Serial.print(disp.menu_strings[disp.menu_sel]);
+		Serial.write('\n');		
     if (disp.getSelectedDrive() == DRIVEA_SELECT) driveA.load(disp.menu_strings[disp.menu_sel]); 
   #ifdef ENABLE_DRIVE_B
     else if (disp.getSelectedDrive() == DRIVEB_SELECT) driveB.load(disp.menu_strings[disp.menu_sel]); 
-  #endif //ENABLE_DRIVE_B  
+  #endif //ENABLE_DRIVE_B      
+    disp.setDriveIdle();
 		break;		
   case  1:  //eject disk
-    switch(disp.getPage())
+    if (disp.getPage() == PAGE_MENU)  //behave as cancel
     {
-      case PAGE_MENU: //behave as cancel
-        disp.setPage(PAGE_STATUS);
-        Serial.print(str_cancel);
-        break;
-      case PAGE_STATUS: //behave as eject
-        if (disp.getSelectedDrive() == DRIVEA_SELECT)  driveA.eject();    
-      #ifdef ENABLE_DRIVE_B    
-        else if (disp.getSelectedDrive() == DRIVEB_SELECT) driveB.eject();
-      #endif //ENABLE_DRIVE_B  
-        Serial.print_P(str_eject);
-        break;
+      disp.setDriveIdle();
+      Serial.print(str_cancel);
     }
+    else
+    {
+      uint8_t s_drive = disp.getSelectedDrive();
+      if (s_drive) //behave as eject
+      {
+        Serial.print_P(str_eject);
+        if (disp.getSelectedDrive() == DRIVEA_SELECT)  Serial.write('A');
+        else if (disp.getSelectedDrive() == DRIVEB_SELECT)  Serial.write('B');
+        Serial.write('\n');
+      }
+    }
+    disp.setPage(PAGE_STATUS);
     break;
   }  
 }
@@ -289,6 +301,7 @@ int main(void)
   nItems = scan_files((char *)s_diskdir); //get number of files on SD
   init_ADC(); //prep ADC
   reqADC(ADC_PIN); //request ADC reading on ADC_PIN
+  disp.setPage(PAGE_SPLASH);
    
   for(;;)
   {   
