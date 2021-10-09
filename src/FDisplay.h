@@ -22,7 +22,7 @@
 
 #include "u8g.h"
 
-#define NOTICE_TIMEOUT	40
+#define NOTICE_TIMEOUT	20
 #define SLEEP_TIMEOUT	255
 
 

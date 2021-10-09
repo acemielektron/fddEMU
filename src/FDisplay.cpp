@@ -144,6 +144,7 @@ void FDISPLAY::showNoticeP(const char *header, const char *message)
 	setPage(PAGE_NOTICE);
 	notice_timer = NOTICE_TIMEOUT;
 	idle_timer = 0; //show ASAP
+	update();
 }
 
 void FDISPLAY::setDriveBusy(uint8_t r_drive)
@@ -164,8 +165,7 @@ void FDISPLAY::setPage(uint8_t r_page)
 		FDISPLAY::wakeup();
 		Serial.print(F("Screen wakeup\n"));		
 		setDriveIdle();
-	}
-	notice_timer = 0; //cancel notice
+	}	
 	sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
 }
 
@@ -175,6 +175,7 @@ init();
 notice_timer = NOTICE_TIMEOUT;
 sleep_timer = SLEEP_TIMEOUT;
 menu_sel = 0;
+setPage(PAGE_SPLASH);
 }
 
 void FDISPLAY::drawPage()
@@ -202,14 +203,15 @@ void FDISPLAY::update()
 {
 	if (idle_timer == 0)
 	{
-		if (notice_timer)
-		{
-			notice_timer --;
-			if (notice_timer == 0) FDISPLAY::setDriveIdle(); //return to status page
-			sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
-		}		
+
 		if (sleep_timer)
 		{
+			if (notice_timer)
+			{
+				notice_timer --;
+				sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
+				if (notice_timer == 0) setPage(PAGE_STATUS);
+			}
 			//update page
 			u8g_FirstPage(&u8g);
     		do	{

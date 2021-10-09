@@ -300,8 +300,7 @@ int main(void)
   driveA.load((char *)s_bootfile);   //if there is "BOOT.IMG" on SD load it
   nItems = scan_files((char *)s_diskdir); //get number of files on SD
   init_ADC(); //prep ADC
-  reqADC(ADC_PIN); //request ADC reading on ADC_PIN
-  disp.setPage(PAGE_SPLASH);
+  reqADC(ADC_PIN); //request ADC reading on ADC_PIN  
    
   for(;;)
   {   
