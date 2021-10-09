@@ -90,7 +90,7 @@ void FDISPLAY::statusScreen()
 	diskinfo(&driveA); //generate disk CHS info
 	drawStr(40, Y_OFS_A+14, infostring); //use itoabuf (defined in simpleUART)
 
-#ifdef ENABLE_DRIVE_B
+#if ENABLE_DRIVE_B == 1
 	if ( (drive & (1 << BIT_BUSY)) && (drive & (1 << BIT_DRIVEB)) )
 		u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_B, floppybr_width, floppybr_height, floppybr_bits);
 	else
@@ -130,9 +130,9 @@ void FDISPLAY::init()
 	u8g_SetPinInput(PN(2,5)); u8g_SetPinLevel(PN(2,5), 1); u8g_SetPinOutput(PN(2,5));
 	u8g_SetPinInput(PN(2,4)); u8g_SetPinLevel(PN(2,4), 1); u8g_SetPinOutput(PN(2,4));
 	u8g_InitI2C(&u8g, &u8g_dev_ssd1306_128x64_2x_i2c, U8G_I2C_OPT_NONE);
-#ifdef FLIP_SCREEN
+#if FLIP_SCREEN
 	u8g_SetRot180(&u8g);
-#endif //FLIP_SCREEN	
+#endif //FLIP_SCREEN
 	u8g_SetFont(&u8g, u8g_font_6x10);	//select font
 	u8g_SetFontPosTop(&u8g);	//set font position
 }
@@ -163,7 +163,9 @@ void FDISPLAY::setPage(uint8_t r_page)
 	{
 		sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
 		FDISPLAY::wakeup();
+	#if DEBUG	
 		Serial.print(F("Screen wakeup\n"));		
+	#endif //DEBUG
 		setDriveIdle();
 	}	
 	sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
@@ -222,7 +224,9 @@ void FDISPLAY::update()
 			if (sleep_timer == 0)
 			{
 				FDISPLAY::sleep();
+			#if DEBUG
 				Serial.print(F("Screen sleep\n"));
+			#endif //DEBUG
 			}
 		}
 	}

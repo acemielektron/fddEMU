@@ -6,16 +6,14 @@ CC = avr-gcc
 CXX = avr-g++
 
 INCLUDES	= -I /usr/avr/include  -I libs/u8glib/csrc -I libs/petitfs -I .
-#ENABLE_DUAL_DRIVE = -DENABLE_DRIVE_B
-ENABLE_DEBUG = -DDEBUG
-FLIP_SCREEN = -DFLIP_SCREEN
+DUAL = 0 #enable drive B
+DEBUG = 0
+FLIP = 1 #flip scren upside down
 
 CFLAGS = -Os -mmcu=$(MCU) -DF_CPU=$(OSC) -Wall $(INCLUDES)
-CFLAGS += $(ENABLE_DUAL_DRIVE) $(ENABLE_DEBUG) $(FLIP_SCREEN)
-#CFLAGS += -g -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
 CFLAGS += -ffunction-sections -fdata-sections -Wl,--gc-sections
 CXXFLAGS= -Os -mmcu=$(MCU) -DF_CPU=$(OSC) -Wall $(INCLUDES)
-CXXFLAGS += $(ENABLE_DUAL_DRIVE) $(ENABLE_DEBUG) $(FLIP_SCREEN)
+CXXFLAGS += -DENABLE_DUAL_DRIVE=$(DUAL) -DDEBUG=$(DEBUG) -DFLIP_SCREEN=$(FLIP)
 LINKERFLAG = -lm
 
 # Files

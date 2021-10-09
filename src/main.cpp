@@ -116,13 +116,13 @@ int adcButton()
     prevval = lastval;
     if (newval < 6) 
     {      
-      #ifdef DEBUG
+    #if DEBUG == 1
       Serial.print(F("Button: "));
       Serial.printHEX(newval);
       Serial.print(F(" value: "));
       Serial.printDEC(adcval);
       Serial.write('\n');
-      #endif
+    #endif //DEBUG
       return newval;  
     }
   }
@@ -176,7 +176,7 @@ void buttonAction(int button)
           disp.selectDriveA();			    
 			    Serial.print(F("Sel drive: A\n"));	          
 			    break;
-      #ifdef   ENABLE_DRIVE_B
+      #if ENABLE_DRIVE_B
 		    case 1:          
 			    disp.selectDriveB();          
 			    Serial.print(F("Sel drive: B\n"));          
@@ -232,9 +232,9 @@ void buttonAction(int button)
 		//Serial.print(disp.menu_strings[disp.menu_sel]);
 		Serial.write('\n');		
     if (disp.getSelectedDrive() == DRIVEA_SELECT) driveA.load(disp.menu_strings[disp.menu_sel]); 
-  #ifdef ENABLE_DRIVE_B
-    else if (disp.getSelectedDrive() == DRIVEB_SELECT) driveB.load(disp.menu_strings[disp.menu_sel]); 
-  #endif //ENABLE_DRIVE_B      
+  #if ENABLE_DRIVE_B
+    else if (disp.getSelectedDrive() == DRIVEB_SELECT) driveB.load(disp.menu_strings[disp.menu_sel]);   
+  #endif //ENABLE_DRIVE_B  
     disp.setDriveIdle();
 		break;		
   case  1:  //eject disk
@@ -249,8 +249,18 @@ void buttonAction(int button)
       if (s_drive) //behave as eject
       {
         Serial.print_P(str_eject);
-        if (disp.getSelectedDrive() == DRIVEA_SELECT)  Serial.write('A');
-        else if (disp.getSelectedDrive() == DRIVEB_SELECT)  Serial.write('B');
+        if (s_drive == DRIVEA_SELECT)
+        {
+          Serial.write('A');
+          driveA.eject();
+        }
+        else if (s_drive == DRIVEB_SELECT)
+        {          
+          Serial.write('B');
+        #if ENABLE_DRIVE_B
+          driveB.eject();
+        #endif  
+        }
         Serial.write('\n');
       }
     }
@@ -311,7 +321,7 @@ int main(void)
       driveA.run();
       disp.setDriveIdle();
     }    
-  #ifdef ENABLE_DRIVE_B  
+  #if ENABLE_DRIVE_B
     else if (drvSel == DRIVEB_SELECT)
     {
       disp.setDriveBusy(drvSel);

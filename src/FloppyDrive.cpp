@@ -35,7 +35,7 @@
 bool pinsInitialized = false;
 
 class FloppyDrive driveA;
-#ifdef ENABLE_DRIVE_B
+#if ENABLE_DRIVE_B
 class FloppyDrive driveB;
 #endif //ENABLE_DRIVE_B
 
@@ -55,7 +55,7 @@ ISR(INT0_vect) //int0 pin 2 of port D
 //and MOTORA pin is used for combined SELECTB & MOTORB
 ISR(PCINT2_vect) //pin change interrupt of port D
 {
-#ifdef ENABLE_DRIVE_B
+#if ENABLE_DRIVE_B
   if (!(PIND & (1 << PIN_SELECTA))) drvSel = DRIVEA_SELECT; //drive A is selected 
   else if (!(PIND & (1 << PIN_MOTORA))) drvSel = DRIVEB_SELECT; //drive B is selected   
 #else //Drive B not enabled
@@ -110,7 +110,7 @@ int FloppyDrive::getSectorData(int lba)
   int n = FR_DISK_ERR;
   uint8_t *pbuf=dataBuffer+1;  
   
-  #ifdef DEBUG 
+  #if DEBUG
   uint8_t head   = 0;
   uint8_t track  = lba / (numSec*2);
   uint8_t sector = lba % (numSec*2);
@@ -146,7 +146,7 @@ int FloppyDrive::setSectorData(int lba)
   }
   else errorMessage(err_fnopen);
   
-  #ifdef DEBUG
+  #if DEBUG
   uint8_t head   = 0;
   uint8_t track  = lba / (numSec*2);
   uint8_t sector = lba % (numSec*2);
