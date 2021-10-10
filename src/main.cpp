@@ -50,21 +50,26 @@ int scan_files (char* path)
     wdt_reset();
     res = pf_readdir(&dir, &fno);
     if (res != FR_OK) break;
-    if (fno.fattrib & AM_DIR) 
+    if (fno.fattrib & (AM_VOL | AM_LFN) );//skip
+    else if (fno.fattrib & AM_DIR) //skip
     {
+    #if DEBUG  
       Serial.print(path);
       Serial.write('[');
       Serial.print(fno.fname);                
       Serial.write(']');
       Serial.write('\n');
+    #endif  
     } 
-    else 
+    else //regular file
     {
-      n_files++;
+      if (fno.fname[0] != 0) n_files++;
+    #if DEBUG  
       Serial.print(path);
       Serial.write('/');
       Serial.print(fno.fname);                
       Serial.write('\n');
+    #endif  
     }     
   } while (fno.fname[0] != 0);
   return n_files;
@@ -135,26 +140,27 @@ void loadMenuStrings()
 {    
   DIR dir;
   FILINFO fno;
+  int8_t menu_max = MENU_ITEMS;
 
+  if (nItems < menu_max) menu_max = nItems;
   //Limit menu selection
   if (disp.menu_sel < 0) 
 	  {
 	  disp.menu_sel = 0;
 	  idx_sel--;
 	  }
-  else if (disp.menu_sel >= MENU_ITEMS) 
+  else if (disp.menu_sel >= menu_max) 
 	{
-	  disp.menu_sel = MENU_ITEMS - 1;
+	  disp.menu_sel = menu_max - 1;
 	  idx_sel++;
 	}
-  else if (disp.menu_sel >= nItems) disp.menu_sel = nItems - 1;
-  //Limit index selection
-  if (idx_sel < 0) idx_sel = 0;
-  else if (idx_sel > (nItems - MENU_ITEMS)) idx_sel = nItems - MENU_ITEMS;
+  //Limit index selection  
+  if (idx_sel > (nItems - MENU_ITEMS)) idx_sel = nItems - MENU_ITEMS;
+  else if (idx_sel < 0) idx_sel = 0;
   //load menu strings
     get_first_file(&dir, &fno, (char *)s_diskdir);
-  for (int i=0; i < idx_sel; i++) get_next_file(&dir, &fno); //skip some files
-  for (int i=0; (i < MENU_ITEMS) && (fno.fname[0] != 0); i++)   
+  for (int16_t i=0; i < idx_sel; i++) get_next_file(&dir, &fno); //skip some files
+  for (int16_t i=0; (i < MENU_ITEMS) && (fno.fname[0] != 0); i++)   
   {
     memcpy(disp.menu_strings[i], fno.fname, 13);
     get_next_file(&dir, &fno);
