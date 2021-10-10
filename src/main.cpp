@@ -63,13 +63,16 @@ int scan_files (char* path)
     } 
     else //regular file
     {
-      if (fno.fname[0] != 0) n_files++;
-    #if DEBUG  
-      Serial.print(path);
-      Serial.write('/');
-      Serial.print(fno.fname);                
-      Serial.write('\n');
-    #endif  
+      if (fno.fname[0] != 0)
+      {
+        n_files++;
+      #if DEBUG  
+        Serial.print(path);
+        Serial.write('/');
+        Serial.print(fno.fname);                
+        Serial.write('\n');
+      #endif  
+      }
     }     
   } while (fno.fname[0] != 0);
   return n_files;
