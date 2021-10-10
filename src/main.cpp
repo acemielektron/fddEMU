@@ -250,7 +250,7 @@ void buttonAction(int button)
     if (disp.getPage() == PAGE_MENU)  //behave as cancel
     {
       disp.setDriveIdle();
-      Serial.print(str_cancel);
+      Serial.print_P(str_cancel);
     }
     else
     {
