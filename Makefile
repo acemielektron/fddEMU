@@ -9,6 +9,7 @@ INCLUDES	= -I /usr/avr/include  -I libs/u8glib/csrc -I libs/petitfs -I .
 DUAL = 0 #disable drive B
 DEBUG = 0
 FLIP = 1 #flip scren upside down
+PORT = /dev/ttyUSB0
 
 CFLAGS = -Os -mmcu=$(MCU) -DF_CPU=$(OSC) -Wall $(INCLUDES)
 CFLAGS += -ffunction-sections -fdata-sections -Wl,--gc-sections
@@ -49,6 +50,6 @@ bin:
 size:
 	avr-size --mcu=$(MCU) -C -x $(TARGET).elf
 flash:
-	avrdude -p m328p -c arduino -P /dev/ttyUSB0 -U flash:w:$(TARGET).hex
+	avrdude -p m328p -c arduino -P $(PORT) -U flash:w:$(TARGET).hex
 clean :
 	rm $(TARGET).elf $(OBJECTS)

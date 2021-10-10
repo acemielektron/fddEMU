@@ -204,10 +204,6 @@ void buttonAction(int button)
 			if ( disp.getSelectedDrive() ) //if a drive selected
         disp.setPage(PAGE_MENU);
         loadMenuStrings();
-        //Output to serial  
-        Serial.print_P(str_selected);
-        Serial.print(disp.menu_strings[disp.menu_sel]);
-        Serial.write('\n');  
 			}		
     break;
   case  3:  //Previous file
@@ -215,6 +211,10 @@ void buttonAction(int button)
     {
       disp.menu_sel--;
       loadMenuStrings();
+      //Output to serial  
+      Serial.print_P(str_selected);
+      Serial.print(disp.menu_strings[disp.menu_sel]);
+      Serial.write('\n');  
     }
 		else 
 			{
@@ -229,7 +229,7 @@ void buttonAction(int button)
     if (disp.getPage() != PAGE_MENU) break; //if we are not in menu disable load
     loadMenuStrings();
 		Serial.print_P(str_loading);
-		//Serial.print(disp.menu_strings[disp.menu_sel]);
+		Serial.print(disp.menu_strings[disp.menu_sel]);
 		Serial.write('\n');		
     if (disp.getSelectedDrive() == DRIVEA_SELECT) driveA.load(disp.menu_strings[disp.menu_sel]); 
   #if ENABLE_DRIVE_B
@@ -303,7 +303,7 @@ switch(ch)
 
 int main(void)
 { 
-  wdt_enable(WDTO_1S);  
+  wdt_enable(WDTO_8S);  
   Serial.init(115200);
   Serial.print_P(str_intro);
   Serial.print_P(str_usage);

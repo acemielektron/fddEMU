@@ -66,10 +66,11 @@ int FloppyDisk::load(char *filename)
   uint16_t totalSectors;
     
   eject(); 
-  if (!sdInitialized) 
-  if  ( (rVal = initSD()) ) 
-    return rVal;
-  // open a file
+  if (!sdInitialized)
+  {
+    if  ( (rVal = initSD()) ) return rVal;
+  }    
+  // open requested file
   rVal = get_file_info(&fno, filename);  
   rVal = pf_open(filename);  
   if (rVal) 
@@ -116,21 +117,45 @@ int FloppyDisk::load(char *filename)
           errorMessage(err_invboot);
 		      return -1;
         }
-        disk_readp(wbuf, startSector, 54, 5); //FileSystemType@54
-        if ( (wbuf[0] != 'F') || (wbuf[0] != 'A') || (wbuf[0] != 'T') || (wbuf[0] != '1') || (wbuf[0] != '2') )
+        disk_readp(wbuf, startSector, 54, 18); //FileSystemType@54
+      #if DEBUG
+        Serial.print(F("FS: "));
+        for (int i=0; i < 5; i++) Serial.write(wbuf[i]);
+        Serial.write('\n');
+      #endif  
+        if ( (wbuf[0] != 'F') || (wbuf[1] != 'A') || (wbuf[2] != 'T') || (wbuf[3] != '1') || (wbuf[4] != '2') )
         {
           errorMessage(err_notfat12);
 		      return -1;
         }
-        disk_readp(wbuf, startSector, 11, 17);  //WbytesPerSector@11 WnumHeads@26 WsectorsPerTrack@24 
-        if ( (wbuf[0] != 0) || (wbuf[1] != 0x2) || (wbuf[15] != 0x2) || (wbuf[16] != 0) || (wbuf[14] != 0) )
+        disk_readp(wbuf, startSector, 11, 18);  //WbytesPerSector@11 WnumHeads@26 WsectorsPerTrack@24 
+        
+      #if DEBUG
+        Serial.print(F("BPS: "));
+        Serial.printDEC(*(int16_t *)wbuf);
+        Serial.print(F(" Heads: "));
+        Serial.printDEC(*(int16_t *)(wbuf+15));
+        Serial.print(F(" SPT: "));
+        Serial.printDEC(*(int16_t *)(wbuf+13));
+        Serial.print(F(" Total Sec: "));
+        Serial.printDEC( *(uint16_t *)(wbuf+8));
+        Serial.write('\n');
+      #endif  
+        if ( (*(int16_t *)wbuf != 512) || (*(int16_t *)(wbuf+15) > 2) || (*(int16_t *)(wbuf+13) > 255) )           
         {
           errorMessage(err_geometry);
 		      return -1;        
         }
-        totalSectors = (wbuf[9] << 8) & wbuf[8];  //WtotalSectors@19
-        numSec = (wbuf[14] << 8) & wbuf[13];     //WsectorsPerTrack@24
-        numTrack = totalSectors / (numSec*2);
+        totalSectors = (uint16_t) *(int16_t *)(wbuf+8);  //WtotalSectors@19
+        numSec = (uint8_t) *(int16_t *)(wbuf+13);     //WsectorsPerTrack@24
+        numTrack = (uint8_t) ( totalSectors / (numSec*2) );
+      #ifdef DEBUG
+        Serial.print(F("Geom: "));
+        Serial.printDEC(numTrack);
+        Serial.print(F("/2/"));
+        Serial.printDEC(numSec);
+        Serial.write('\n');
+      #endif  
     } //switch        
   flags |= FD_READY;  
   return rVal;
