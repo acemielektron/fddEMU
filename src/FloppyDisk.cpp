@@ -64,6 +64,7 @@ int FloppyDisk::load(char *filename)
   FILINFO fno;
   int rVal=FR_OK;
   uint16_t totalSectors;
+  uint8_t wbuf[18]; //working buffer;
     
   eject(); 
   if (!sdInitialized)
@@ -77,86 +78,93 @@ int FloppyDisk::load(char *filename)
   {
     errorMessage(err_fopen);
     return -1;
-  }
-  memcpy(fName, fno.fname, 13); 
-  if (fno.fattrib & AM_RDO) flags |= FD_READONLY;
+  }  
   startSector=get_start_sector();  
   if (!isContiguousFile())  //we will use direct sector access so we need a contiguous file
   {
     errorMessage(err_noncontig);
     return -1;
   }
-  totalSectors = fno.fsize >> 9;  //convert filesize to 512 byte sectors (filesize / 512)
-  switch(totalSectors)  //check filesize in sectors
-    { //Standart floppy: C*H*S*512
-      uint8_t wbuf[18]; //working buffer;
-      case (uint32_t)(80*2*18): //3.5" HD   1.440MB
+  if (disk_readp(wbuf, startSector, 510, 2)) //Read the boot record         
+  {	
+    errorMessage(err_diskread);
+	  return -1;
+  }
+  if ( (wbuf[0] != 0x55) || (wbuf[1] != 0xAA) ) //Invalid boot sector -> Raw disk image ?
+  {
+    totalSectors = fno.fsize >> 9;  //convert filesize to 512 byte sectors (filesize / 512)
+    switch(totalSectors)  //check filesize in sectors
+    { //Standart floppy: C*H*S*512      
+      case (uint16_t)(80*2*18): //3.5" HD   1.440MB
         numTrack = 80;
         numSec = 18;
         break;
-      case (uint32_t)(80*2*9):  //3.5" DD   720KB
+      case (uint16_t)(80*2*9):  //3.5" DD   720KB
         numTrack = 80;
         numSec = 9;
         break;
-      case (uint32_t)(80*2*15): //5.25" HD  1.2MB
+      case (uint16_t)(80*2*15): //5.25" HD  1.2MB
         numTrack = 80;
         numSec = 15;
         break;
-      case (uint32_t)(40*2*9):  //5.25" DD  360KB
+      case (uint16_t)(40*2*9):  //5.25" DD  360KB
         numTrack = 40;
         numSec = 9;
         break;
-      default:  //non-standart image - check C/H/S for FAT images
-        if (disk_readp(wbuf, startSector, 510, 2)) //Read the boot record         
-        {	
-          errorMessage(err_diskread);
-		      return -1;
-        }
-        if ( (wbuf[0] != 0x55) || (wbuf[1] != 0xAA) )
-        {
-          errorMessage(err_invboot);
-		      return -1;
-        }
-        disk_readp(wbuf, startSector, 54, 18); //FileSystemType@54
-      #if DEBUG
-        Serial.print(F("FS: "));
-        for (int i=0; i < 5; i++) Serial.write(wbuf[i]);
-        Serial.write('\n');
-      #endif  
-        if ( (wbuf[0] != 'F') || (wbuf[1] != 'A') || (wbuf[2] != 'T') || (wbuf[3] != '1') || (wbuf[4] != '2') )
-        {
-          errorMessage(err_notfat12);
-		      return -1;
-        }
-        disk_readp(wbuf, startSector, 11, 18);  //WbytesPerSector@11 WnumHeads@26 WsectorsPerTrack@24 
-        
-      #if DEBUG
-        Serial.print(F("BPS: "));
-        Serial.printDEC(*(int16_t *)wbuf);
-        Serial.print(F(" Heads: "));
-        Serial.printDEC(*(int16_t *)(wbuf+15));
-        Serial.print(F(" SPT: "));
-        Serial.printDEC(*(int16_t *)(wbuf+13));
-        Serial.print(F(" Total Sec: "));
-        Serial.printDEC( *(uint16_t *)(wbuf+8));
-        Serial.write('\n');
-      #endif  
-        if ( (*(int16_t *)wbuf != 512) || (*(int16_t *)(wbuf+15) > 2) || (*(int16_t *)(wbuf+13) > 255) )           
-        {
-          errorMessage(err_geometry);
-		      return -1;        
-        }
-        totalSectors = (uint16_t) *(int16_t *)(wbuf+8);  //WtotalSectors@19
-        numSec = (uint8_t) *(int16_t *)(wbuf+13);     //WsectorsPerTrack@24
-        numTrack = (uint8_t) ( totalSectors / (numSec*2) );
-      #ifdef DEBUG
-        Serial.print(F("Geom: "));
-        Serial.printDEC(numTrack);
-        Serial.print(F("/2/"));
-        Serial.printDEC(numSec);
-        Serial.write('\n');
-      #endif  
+      default:  //not a standart raw floppy image
+        errorMessage(err_invboot);
+	      return -1;
     } //switch        
+  }
+  else  //Valid boot signature
+  {    
+    disk_readp(wbuf, startSector, 54, 18); //FileSystemType@54
+  #if DEBUG
+    Serial.print(F("FS: "));
+    for (int i=0; i < 5; i++) Serial.write(wbuf[i]);
+    Serial.write('\n');
+  #endif  
+    if ( (wbuf[0] != 'F') || (wbuf[1] != 'A') || (wbuf[2] != 'T') || (wbuf[3] != '1') || (wbuf[4] != '2') )
+    {
+      errorMessage(err_notfat12);
+	    return -1;
+    }
+    disk_readp(wbuf, startSector, 11, 18);  //WbytesPerSector@11 WnumHeads@26 WsectorsPerTrack@24        
+  #if DEBUG
+    Serial.print(F("BPS: "));
+    Serial.printDEC(*(int16_t *)wbuf);
+    Serial.print(F(" Heads: "));
+    Serial.printDEC(*(int16_t *)(wbuf+15));
+    Serial.print(F(" SPT: "));
+    Serial.printDEC(*(int16_t *)(wbuf+13));
+    Serial.print(F(" Total Sec: "));
+    Serial.printDEC( *(uint16_t *)(wbuf+8));
+    Serial.write('\n');
+  #endif  
+    if ( (*(int16_t *)wbuf != 512) || (*(int16_t *)(wbuf+15) > 2) || (*(int16_t *)(wbuf+13) > 255) )           
+    {
+      errorMessage(err_geometry);
+	    return -1;        
+    }
+    totalSectors = (uint16_t) *(int16_t *)(wbuf+8);  //WtotalSectors@19
+    if (totalSectors > (fno.fsize >> 9))  
+    {
+      errorMessage(err_geombig);
+	    return -1;        
+    }
+    numSec = (uint8_t) *(int16_t *)(wbuf+13);     //WsectorsPerTrack@24
+    numTrack = (uint8_t) ( totalSectors / (numSec*2) );
+  #if DEBUG
+    Serial.print(F("Geom: "));
+    Serial.printDEC(numTrack);
+    Serial.print(F("/2/"));
+    Serial.printDEC(numSec);
+    Serial.write('\n');
+  #endif  
+  }
+  //After all the checks load image file
+  memcpy(fName, fno.fname, 13); 
+  if (fno.fattrib & AM_RDO) flags |= FD_READONLY;
   flags |= FD_READY;  
   return rVal;
 }

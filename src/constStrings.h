@@ -50,6 +50,7 @@ const char err_diskwrite[]	PROGMEM = "Write SD failed";
 const char err_invboot[]	PROGMEM = "Invalid boot record";
 const char err_notfat12[]	PROGMEM = "Not FAT12 image";
 const char err_geometry[] 	PROGMEM = "Incompat geometry";
+const char err_geombig[]	PROGMEM = "Geometry > file";
 const char err_test[]		PROGMEM = "Testing 1, 2, 3";
 
 //Images
