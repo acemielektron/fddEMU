@@ -33,7 +33,6 @@
 //PORTB
 #define PIN_READDATA   0  // must be pin 8 (ICP for timer1)
 #define PIN_WRITEDATA  1  // must be pin 9 (OCP for timer1)
-#define PIN_SD_CHIPSELECT 2 //digital pin 10
 //rest of PORTB pins are SPI
 
 //PORTC
@@ -43,13 +42,22 @@
 #define PIN_DSKCHANGE 3  // can be changed to different pin or commented out
 
 //Output commands
-#define SET_INDEX_LOW()    DDRD |= (1 << PIN_INDEX)
-#define SET_INDEX_HIGH()   DDRD &= ~(1 << PIN_INDEX)
-#define SET_TRACK0_LOW()    DDRC |= (1 << PIN_TRACK0)
-#define SET_TRACK0_HIGH()   DDRC &= ~(1 << PIN_TRACK0)
-#define SET_DSKCHANGE_LOW()    DDRC |= (1 << PIN_DSKCHANGE)
-#define SET_DSKCHANGE_HIGH()   DDRC &= ~(1 << PIN_DSKCHANGE)
-#define SET_WRITEPROT_LOW()    DDRC |= (1 << PIN_WRITEPROT)
-#define SET_WRITEPROT_HIGH()   DDRC &= ~(1 << PIN_WRITEPROT)
+#define SET_INDEX_LOW()    (DDRD |= (1 << PIN_INDEX))
+#define SET_INDEX_HIGH()   (DDRD &= ~(1 << PIN_INDEX))
+#define SET_TRACK0_LOW()    (DDRC |= (1 << PIN_TRACK0))
+#define SET_TRACK0_HIGH()   (DDRC &= ~(1 << PIN_TRACK0))
+#define SET_DSKCHANGE_LOW()    (DDRC |= (1 << PIN_DSKCHANGE))
+#define SET_DSKCHANGE_HIGH()   (DDRC &= ~(1 << PIN_DSKCHANGE))
+#define SET_WRITEPROT_LOW()    (DDRC |= (1 << PIN_WRITEPROT))
+#define SET_WRITEPROT_HIGH()   (DDRC &= ~(1 << PIN_WRITEPROT))
+
+//Inputs
+#define IS_WRITE()          ( !(PINC & (1 << PIN_WRITEGATE)) )
+#define SIDE()              (PIND & (1 << PIN_SIDE))
+#define STEPDIR()           (PIND & (1 << PIN_STEPDIR))
+#define IS_STEP()           ( !(PIND & (1 << PIN_STEP)) )
+#define IS_SELECTA()        ( !(PIND & (1 << PIN_SELECTA)) )
+#define IS_MOTORA()         ( !(PIND & (1 << PIN_MOTORA)) )
+#define IS_SELECTB()        ( !(PIND & (1 << PIN_MOTORA)) )
 
 #endif  //FDDPINS_H

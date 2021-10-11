@@ -46,8 +46,8 @@ volatile uint8_t drvSel = 0;
 //Interrupt routines
 ISR(INT0_vect) //int0 pin 2 of port D
 {
-  if (!(PIND & bit(PIN_STEP))) //debounce
-    iTrack = (PIND & bit(PIN_STEPDIR)) ? --iTrack : ++iTrack;
+  if (IS_STEP() ) //debounce
+    iTrack = (STEPDIR()) ? --iTrack : ++iTrack;
 }
 
 //Two drive mode requires SELECT and MOTOR pins combined trough an OR gate
@@ -56,10 +56,10 @@ ISR(INT0_vect) //int0 pin 2 of port D
 ISR(PCINT2_vect) //pin change interrupt of port D
 {
 #if ENABLE_DRIVE_B
-  if (!(PIND & (1 << PIN_SELECTA))) drvSel = DRIVEA_SELECT; //drive A is selected 
-  else if (!(PIND & (1 << PIN_MOTORA))) drvSel = DRIVEB_SELECT; //drive B is selected   
+  if ( IS_SELECTA() ) drvSel = DRIVEA_SELECT; //drive A is selected 
+  else if ( IS_SELECTB() ) drvSel = DRIVEB_SELECT; //drive B is selected   
 #else //Drive B not enabled
-  if ( (!(PIND & bit(PIN_SELECTA))) && (!(PIND & bit(PIN_MOTORA))) ) drvSel = DRIVEA_SELECT; //driveA is selected 
+  if ( IS_SELECTA() && IS_MOTORA() ) drvSel = DRIVEA_SELECT; //driveA is selected 
 #endif  //ENABLE_DRIVE_B
   else drvSel = 0;
 }
@@ -195,7 +195,7 @@ void FloppyDrive::run()
     {                                              
       wdt_reset();
       if (!drvSel) break; //if drive unselected exit loop      
-      side = (PIND & bit(PIN_SIDE)) ? 0:1; //check side
+      side = (SIDE()) ? 0:1; //check side
       if (track != iTrack) //if track changed
       {                     
         track = iTrack;
@@ -207,16 +207,25 @@ void FloppyDrive::run()
       }
       //start sector
       lba=(track*2+side)*18+sector;//LBA = (C × HPC + H) × SPT + (S − 1)
-      getSectorData(lba); //get sector from SD
+      getSectorData(lba); //get sector from SD      
       setup_timer1_for_write();
       genSectorID((uint8_t)track,side,sector);
       sector_start(bitLength);          
       if (track != iTrack) continue; //check track change
       //check WriteGate
       for (int i=0; i<20; i++) //wait 20X cycles for WRITEGATE
-        if (!(PINC & bit(PIN_WRITEGATE))) break;
-      if (PINC & bit(PIN_WRITEGATE))
-      {//write gate off                                  
+        if (IS_WRITE() ) break;
+      if (IS_WRITE() )  //write gate on               
+      {
+        setup_timer1_for_read();      
+        read_data(bitLength, dataBuffer, 515);                              
+        wdt_reset();
+        setup_timer1_for_write(); //Write-mode: arduinoFDC immediately tries to verify written sector
+        setSectorData(lba); //save sector to SD
+        while (!(PINC & bit(PIN_WRITEGATE)));//wait for write to finish
+      }
+      else  //write gate off                                  
+      {
         dataBuffer[0]   = 0xFB; // "data" id
         uint16_t crc = calc_crc(dataBuffer, 513);
         dataBuffer[513] = crc/256;
@@ -224,14 +233,6 @@ void FloppyDrive::run()
         dataBuffer[515] = 0x4E; // first byte of post-data gap        
         write_data(bitLength, dataBuffer, 516);                                      
       }
-      else
-      {//write gate on               
-      setup_timer1_for_read();      
-      read_data(bitLength, dataBuffer, 515);                              
-      wdt_reset();
-      setup_timer1_for_write(); //Write-mode: arduinoFDC immediately tries to verify written sector
-      setSectorData(lba); //save sector to SD
-      }      
     }//sectors             
   }//selected
   SET_DSKCHANGE_HIGH();
