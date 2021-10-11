@@ -102,12 +102,13 @@ SCL			|A3			|SCL
 
 **Limitations**
 <br>
-* fddEMU is not an cycle exact floppy emulator, it is more of a hack but it works because floppy controller integrated circuits have sensible timeouts and we take advantage of that
-* Uses raw floppy images (images prepared with dd or rawread) does not require or use a MFM file. Converts raw image sectors to MFM on the fly using [ArduinoFDC](https://github.com/dhansel/ArduinoFDC) library.
-* fddEMU supports fixed sector size of 512 bytes, other sector sizes are not supported
+* fddEMU is not an cycle exact floppy emulator , it is more of a hack (it's a bit slower than actual fdd) but it works because floppy controllers have sensible timeouts and we take advantage of that.
+* fddEMU is based on MFM encoding which is used by HD (High Density) disks so there is no DD (Double Density) support as of now. So unless host FDC supports HD it won't work. Most FDC chips support HD so this is not much of an issue.
+* fddEMU uses raw floppy images (images prepared with dd or rawread) does not require or use a MFM file. Converts raw image sectors to MFM on the fly using [ArduinoFDC](https://github.com/dhansel/ArduinoFDC) library.
+* fddEMU supports fixed sector size of 512 bytes, other sector sizes are not supported.
 * Requires a Floppy Drive Controller (FDC) on the PC side to communicate so it probably wont work with an Amiga.
 * Repeated write on same SD card sectors might lead to SD failure so use floppy images in read only mode (set read only attribute) when possible. Modern O.S. such as linux write and clear the dirty bit every mount/unmount even if you dont write anything to floppy image.
-* Multisector writes to floppy image works in FreeDOS v1.3 but fails in MS-DOS 6.22 
+* To protect screen currently a watchdog timer of 8 seconds is set (which is the longest duration for watchdog). Unfortunately contiguity check take longer than this for some large files (eg. 16MB) and this causes a mcu reset, and mcu (arduino) cant access SD card after this watchdog reset requring removing the sd card, waiting a few seconds, reinserting the card then resetting the mcu. 
 <br><br>
 
 **Acknowledgements**
