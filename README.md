@@ -103,7 +103,7 @@ SCL			|A3			|SCL
 **Limitations**
 <br>
 * fddEMU is not an cycle exact floppy emulator , it is more of a hack (it's a bit slower than actual fdd) but it works because floppy controllers have sensible timeouts and we take advantage of that.
-* fddEMU is based on MFM encoding which is used by HD (High Density) disks so there is no DD (Double Density) support as of now. So unless host FDC supports HD it won't work. Most FDC chips support HD so this is not much of an issue.
+* fddEMU is based on MFM encoding which is used by HD (High Density) disks so there is no DD (Double Density) support as of now. So unless host FDC supports HD it won't work. Most FDC chips support HD so this is not much of an issue. 
 * fddEMU uses raw floppy images (images prepared with dd or rawread) does not require or use a MFM file. Converts raw image sectors to MFM on the fly using [ArduinoFDC](https://github.com/dhansel/ArduinoFDC) library.
 * fddEMU supports fixed sector size of 512 bytes, other sector sizes are not supported.
 * Requires a Floppy Drive Controller (FDC) on the PC side to communicate so it probably wont work with an Amiga.
@@ -126,8 +126,9 @@ SCL			|A3			|SCL
 
 **How to use**<br>
 * fddEMU supports standart floppy image files of 360K, 720K, 1.2M and 1.44M. If selected image file size match one of these sizes the image is loaded as raw floppy image and number of tracks and sectors are selected accordingly. 
-* If selected image file size doesn't match one of the standart floppy sizes, fddEMU looks for a boot record on "sector 0" of the image. If the boot record reports that the image is formatted as "FAT12", sector size is 512, number of heads is 2 and number of tracks and number of sectors are less than 255 the image file is loaded with the settings provided by the boot record. To be able to read these custom FAT12 images host system should support provided number of tracks and sectors.
+* fddEMU looks for a boot record on "sector 0" of the image. If the boot record reports that the image is formatted as "FAT1?", sector size is 512, number of heads is 2 and number of tracks and number of sectors are less than 255 the image file is loaded with the settings provided by the boot record. To be able to read these custom FAT12 images host system should support provided number of tracks and sectors. If there is no boot record file size is compared to the standart floppy sizes (1.44M, 1.2M, 720K and 360K), if file size matches one of these sizes it is loaded as raw image.
 * Image file must be contiguous for fddEMU to be able to load, if the file is not contiguous an error message will be shown and loading will fail.
+* Contiguity check would take long for large files (> 2MB) during this check fddEMU can not be used.
 * For booting a host system, on startup fddEmu looks for "BOOT.IMG" on SD card. If there is a "BOOT.IMG" on the SD card fddEMU tries to load this file to drive A. 
 * To protect OLED screen fddEMU will put screen to sleep after some idle time, press "S1" (SELECT) button or "S" key inside serial terminal to wake screen up.
 * When host selected (reading/writing) one the emulated drives, the selected (active) drive's icon become inverted and stays this way till host unselects the drive. During this time fddEMU will not accept input.<br>*Warning: fddEMU will not put the screen to sleep while drive is active. If there is a hardware or software problem causing an emulated drive to go continuously active OLED screen might be damaged.*
