@@ -192,8 +192,10 @@ void FloppyDrive::run()
     SET_INDEX_HIGH();
     
     for (sector=0; (sector < numSec) && drvSel; sector++)
-    {                                              
+    {        
+    #if WDT_ENABLED                                        
       wdt_reset();
+    #endif  //WDT_ENABLED  
       if (!drvSel) break; //if drive unselected exit loop      
       side = (SIDE()) ? 0:1; //check side
       if (track != iTrack) //if track changed
@@ -218,8 +220,10 @@ void FloppyDrive::run()
       if (IS_WRITE() )  //write gate on               
       {
         setup_timer1_for_read();      
-        read_data(bitLength, dataBuffer, 515);                              
+        read_data(bitLength, dataBuffer, 515);
+      #if WDT_ENABLED                                
         wdt_reset();
+      #endif  //WDT_ENABLED  
         setup_timer1_for_write(); //Write-mode: arduinoFDC immediately tries to verify written sector
         setSectorData(lba); //save sector to SD
         while (!(PINC & bit(PIN_WRITEGATE)));//wait for write to finish

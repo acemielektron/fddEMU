@@ -21,7 +21,9 @@
 #include "FloppyDrive.h"
 #include "simpleUART.h"
 #include <avr/io.h>
-#include <avr/wdt.h>
+#if WDT_ENABLED
+  #include <avr/wdt.h>
+#endif  //WDT_ENABLED  
 #include "pff.h"
 #include "analog_read.h"
 #include "FDisplay.h"
@@ -47,7 +49,9 @@ int scan_files (char* path)
 
   do 
   {
+  #if WDT_ENABLED  
     wdt_reset();
+  #endif //WDT_ENABLED  
     res = pf_readdir(&dir, &fno);
     if (res != FR_OK) break;
     if (fno.fattrib & (AM_VOL | AM_LFN) );//skip
@@ -312,7 +316,9 @@ switch(ch)
 
 int main(void)
 { 
+#if WDT_ENABLED  
   wdt_enable(WDTO_8S);  
+#endif  //WDT_ENABLED
   Serial.init(115200);
   Serial.print_P(str_intro);
   Serial.print_P(str_usage);
@@ -323,7 +329,9 @@ int main(void)
    
   for(;;)
   {   
+  #if WDT_ENABLED  
     wdt_reset();
+  #endif //WDT_ENABLED  
     if (drvSel == DRIVEA_SELECT) 
     {
       disp.setDriveBusy(drvSel);

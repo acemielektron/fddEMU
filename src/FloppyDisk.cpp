@@ -124,7 +124,7 @@ int FloppyDisk::load(char *filename)
     for (int i=0; i < 5; i++) Serial.write(wbuf[i]);
     Serial.write('\n');
   #endif  
-    if ( (wbuf[0] != 'F') || (wbuf[1] != 'A') || (wbuf[2] != 'T') || (wbuf[3] != '1') || (wbuf[4] != '2') )
+    if ( (wbuf[0] != 'F') || (wbuf[1] != 'A') || (wbuf[2] != 'T') || (wbuf[3] != '1') )
     {
       errorMessage(err_notfat12);
 	    return -1;
@@ -154,13 +154,12 @@ int FloppyDisk::load(char *filename)
     }
     numSec = (uint8_t) *(int16_t *)(wbuf+13);     //WsectorsPerTrack@24
     numTrack = (uint8_t) ( totalSectors / (numSec*2) );
-  #if DEBUG
+    //Print info
     Serial.print(F("Geom: "));
     Serial.printDEC(numTrack);
     Serial.print(F("/2/"));
     Serial.printDEC(numSec);
-    Serial.write('\n');
-  #endif  
+    Serial.write('\n');  
   }
   //After all the checks load image file
   memcpy(fName, fno.fname, 13); 
