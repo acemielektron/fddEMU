@@ -108,7 +108,7 @@ SCL			|A3			|SCL
 * fddEMU supports fixed sector size of 512 bytes, other sector sizes are not supported.
 * Requires a Floppy Drive Controller (FDC) on the PC side to communicate so it probably wont work with an Amiga.
 * Repeated write on same SD card sectors might lead to SD failure so use floppy images in read only mode (set read only attribute) when possible. Modern O.S. such as linux write and clear the dirty bit every mount/unmount even if you dont write anything to floppy image.
-* To protect screen currently a watchdog timer of 8 seconds is set (which is the longest duration for watchdog). Unfortunately contiguity check take longer than this for some large files (eg. 16MB) and this causes a mcu reset, and mcu (arduino) cant access SD card after this watchdog reset requring removing the sd card, waiting a few seconds, reinserting the card then resetting the mcu. 
+* To protect screen currently a watchdog timer of 8 seconds is set (which is the longest duration for watchdog). Unfortunately mcu (arduino) cant access SD card after this watchdog reset requring removing the sd card, waiting a few seconds, reinserting the card then resetting the mcu. 
 <br><br>
 
 **Acknowledgements**
