@@ -87,7 +87,7 @@ void FDISPLAY::statusScreen()
 		else
 		{			
 			u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_A, floppym_width, floppym_height, floppya_bits);	
-			u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_A-1, X_OFS+floppym_width+1,Y_OFS_A+floppym_height+1);
+			u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_A-1, floppym_width+2,floppym_height+2);
 		}		
 	}
 	else u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_A, floppym_width, floppym_height, floppya_bits);
@@ -102,7 +102,7 @@ void FDISPLAY::statusScreen()
 		else 
 		{					
 			u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_B, floppym_width, floppym_height, floppyb_bits);
-			u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_B-1, X_OFS+floppym_width+1,Y_OFS_B+floppym_height+1);
+			u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_B-1, floppym_width+2,floppym_height+2);
 		}
 	}			
 	else u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_B, floppym_width, floppym_height, floppyb_bits);
