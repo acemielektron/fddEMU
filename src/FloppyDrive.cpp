@@ -33,21 +33,18 @@
 
 //Global variables
 bool pinsInitialized = false;
-
-class FloppyDrive driveA;
-#if ENABLE_DRIVE_B
-class FloppyDrive driveB;
-#endif //ENABLE_DRIVE_B
-
 static uint8_t dataBuffer[516];
 volatile int iTrack = 0;
-volatile uint8_t drvSel = 0;
+volatile uint8_t iFlags = 0;
+
+class FloppyDrive drive[N_DRIVE]; //will be used as extern
 
 //Interrupt routines
 ISR(INT0_vect) //int0 pin 2 of port D
 {
   if (IS_STEP() ) //debounce
     iTrack = (STEPDIR()) ? --iTrack : ++iTrack;
+  SET_TRACKCHANGED();  
 }
 
 //Two drive mode requires SELECT and MOTOR pins combined trough an OR gate
@@ -56,12 +53,12 @@ ISR(INT0_vect) //int0 pin 2 of port D
 ISR(PCINT2_vect) //pin change interrupt of port D
 {
 #if ENABLE_DRIVE_B
-  if ( IS_SELECTA() ) drvSel = DRIVEA_SELECT; //drive A is selected 
-  else if ( IS_SELECTB() ) drvSel = DRIVEB_SELECT; //drive B is selected   
+  if ( IS_SELECTA() ) SET_DRIVE0(); //drive A is selected 
+  else if ( IS_SELECTB() ) SET_DRIVE1(); //drive B is selected   
 #else //Drive B not enabled
-  if ( IS_SELECTA() && IS_MOTORA() ) drvSel = DRIVEA_SELECT; //driveA is selected 
+  if ( IS_SELECTA() && IS_MOTORA() ) SET_DRIVE0(); //driveA is selected 
 #endif  //ENABLE_DRIVE_B
-  else drvSel = 0;
+  else CLR_DRVSEL();
 }
 
 void initFDDpins()
@@ -184,22 +181,23 @@ void FloppyDrive::run()
   }
   (isReadonly()) ? SET_WRITEPROT_LOW() : SET_WRITEPROT_HIGH();  //check readonly  
   setup_timer1_for_write(); 
-  while(drvSel) //PCINT for SELECTA and MOTORA
+  while(GET_DRVSEL()) //PCINT for SELECTA and MOTORA
   {    
     //Start track with index signal
     SET_INDEX_LOW();
     track_start(bitLength);       
     SET_INDEX_HIGH();
     
-    for (sector=0; (sector < numSec) && drvSel; sector++)
+    for (sector=0; (sector < numSec) && GET_DRVSEL(); sector++)
     {        
     #if WDT_ENABLED                                        
       wdt_reset();
     #endif  //WDT_ENABLED  
-      if (!drvSel) break; //if drive unselected exit loop      
+      if (!GET_DRVSEL()) break; //if drive unselected exit loop      
       side = (SIDE()) ? 0:1; //check side
-      if (track != iTrack) //if track changed
-      {                     
+      if (IS_TRACKCHANGED()) //if track changed
+      {
+        CLR_TRACKCHANGED();             
         track = iTrack;
         if (track < 0) track=0; //Check if track valid
         else if (track >= numTrack) track = numTrack-1;          

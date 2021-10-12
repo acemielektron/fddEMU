@@ -20,14 +20,13 @@
 #ifndef FDISPLAY_H
 #define FDISPLAY_H
 
+#include "FloppyDrive.h" //BIT_DRIVE0 & BIT_DRIVE1
 #include "u8g.h"
 
 #define NOTICE_TIMEOUT	20
 #define SLEEP_TIMEOUT	255
 
 
-#define BIT_DRIVEA  0   //drive A is selected
-#define BIT_DRIVEB  1   //drive B is selected
 #define BIT_BUSY    7   //drive in use
 
 //Lower nibble of page
@@ -46,7 +45,7 @@ uint8_t idle_timer;
 uint8_t sleep_timer;
 uint8_t notice_timer;
 uint8_t page;
-uint8_t drive;
+uint8_t drive_sel;
 const char *notice_header;
 const char *notice_message;
 void drawPage();
@@ -69,9 +68,11 @@ void showNoticeP(const char *, const char *);
 void update();
 void setDriveBusy(uint8_t);
 void setDriveIdle() {setDriveBusy(0);}
-void selectDriveA() {drive = 0; drive |= (1 << BIT_DRIVEA); setPage(PAGE_STATUS);}
-void selectDriveB() {drive = 0; drive |= (1 << BIT_DRIVEB); setPage(PAGE_STATUS);}
-uint8_t getSelectedDrive() {return (drive & 3);} 
+void selectDrive(uint8_t r_drive) {drive_sel = r_drive & ((1 << BIT_DRIVE0)|(1 << BIT_DRIVE1));}
+uint8_t getSelectedDrive() {return (drive_sel & ((1 << BIT_DRIVE0)|(1 << BIT_DRIVE1)) );} 
+uint8_t isDrive0() {return drive_sel & (1 << BIT_DRIVE0);}
+uint8_t isDrive1() {return drive_sel & (1 << BIT_DRIVE1);}
+uint8_t isBusy() {return drive_sel & (1 << BIT_BUSY);}
 };
 
 extern class FDISPLAY disp;

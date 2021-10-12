@@ -186,12 +186,12 @@ void buttonAction(int button)
       switch (disp.getSelectedDrive())
 		  {
 		    case 0:
-          disp.selectDriveA();			    
+          disp.selectDrive(1 << BIT_DRIVE0);			    
 			    Serial.print(F("Sel drive: A\n"));	          
 			    break;
       #if ENABLE_DRIVE_B
 		    case 1:          
-			    disp.selectDriveB();          
+			    disp.selectDrive(1 << BIT_DRIVE1);          
 			    Serial.print(F("Sel drive: B\n"));          
 			    break;
       #endif //ENABLE_DRIVE_B  
@@ -244,10 +244,7 @@ void buttonAction(int button)
 		Serial.print_P(str_loading);
 		Serial.print(disp.menu_strings[disp.menu_sel]);
 		Serial.write('\n');		
-    if (disp.getSelectedDrive() == DRIVEA_SELECT) driveA.load(disp.menu_strings[disp.menu_sel]); 
-  #if ENABLE_DRIVE_B
-    else if (disp.getSelectedDrive() == DRIVEB_SELECT) driveB.load(disp.menu_strings[disp.menu_sel]);   
-  #endif //ENABLE_DRIVE_B  
+    drive[disp.getSelectedDrive() - 1].load(disp.menu_strings[disp.menu_sel]); 
     disp.setDriveIdle();
 		break;		
   case  1:  //eject disk
@@ -257,24 +254,14 @@ void buttonAction(int button)
       Serial.print_P(str_cancel);
     }
     else
-    {
-      uint8_t s_drive = disp.getSelectedDrive();
-      if (s_drive) //behave as eject
+    {      
+      if (disp.getSelectedDrive()) //if a drive is selected behave as eject
       {
         Serial.print_P(str_eject);
-        if (s_drive == DRIVEA_SELECT)
-        {
-          Serial.write('A');
-          driveA.eject();
-        }
-        else if (s_drive == DRIVEB_SELECT)
-        {          
-          Serial.write('B');
-        #if ENABLE_DRIVE_B
-          driveB.eject();
-        #endif  
-        }
+        if (disp.isDrive0()) Serial.write('A');
+        else if (disp.isDrive1()) Serial.write('B');;
         Serial.write('\n');
+        drive[disp.getSelectedDrive() - 1].eject();
       }
     }
     disp.setPage(PAGE_STATUS);
@@ -322,7 +309,7 @@ int main(void)
   Serial.init(115200);
   Serial.print_P(str_intro);
   Serial.print_P(str_usage);
-  driveA.load((char *)s_bootfile);   //if there is "BOOT.IMG" on SD load it
+  drive[0].load((char *)s_bootfile);   //if there is "BOOT.IMG" on SD load it
   nItems = scan_files((char *)s_diskdir); //get number of files on SD
   init_ADC(); //prep ADC
   reqADC(ADC_PIN); //request ADC reading on ADC_PIN  
@@ -332,20 +319,12 @@ int main(void)
   #if WDT_ENABLED  
     wdt_reset();
   #endif //WDT_ENABLED  
-    if (drvSel == DRIVEA_SELECT) 
+    if (GET_DRVSEL() )
     {
-      disp.setDriveBusy(drvSel);
-      driveA.run();
+      disp.setDriveBusy(GET_DRVSEL());
+      drive[GET_DRVSEL() - 1].run();
       disp.setDriveIdle();
     }    
-  #if ENABLE_DRIVE_B
-    else if (drvSel == DRIVEB_SELECT)
-    {
-      disp.setDriveBusy(drvSel);
-      driveB.run();
-      disp.setDriveIdle();    
-    }
-  #endif //ENABLE_DRIVE_B  
     if (adcReady) buttonAction(adcButton());    
 	  if (rxReady) readRx();
 	  disp.update();

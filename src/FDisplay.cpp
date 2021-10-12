@@ -28,22 +28,23 @@ class FDISPLAY disp; //will use as extern
 char infostring[12]; //drive C/H/S info string
 
 
-void diskinfo(class FloppyDrive *pdrv)	//Generate disk CHS info string in itoabuf (defined in simpleUART)
+char *diskinfo(uint8_t r_drive)	//Generate disk CHS info string in itoabuf (defined in simpleUART)
 {
 	char convbuf[4];
 	
-	if (pdrv->fName[0] == 0)
+	if (drive[r_drive].fName[0] == 0)
 	{
 		strcpy_P(infostring, str_nodisk);
-		return;
+		return infostring;
 	}		
 	infostring[0] = 'C';
 	infostring[1] = 0;
-	itoa(pdrv->numTrack, convbuf, 10); //max 255 -> 3 digits
+	itoa(drive[r_drive].numTrack, convbuf, 10); //max 255 -> 3 digits
 	strcat(infostring, convbuf);
 	strcat(infostring, "H2S");
-	itoa(pdrv->numSec, convbuf, 10); //max 255 -> 3 digits
+	itoa(drive[r_drive].numSec, convbuf, 10); //max 255 -> 3 digits
 	strcat(infostring, convbuf);
+	return infostring;
 }
 
 //https://github.com/olikraus/u8glib/blob/master/sys/arm/examples/menu/menu.c
@@ -75,33 +76,39 @@ void FDISPLAY::drawMenu(void)
 void FDISPLAY::statusScreen()
 {
 #define X_OFS	1
-#define Y_OFS_A	4
-#define Y_OFS_B 35
+#define Y_OFS_A	3
+#define Y_OFS_B 33
 
-	if ( (drive & (1 << BIT_BUSY)) && (drive & (1 << BIT_DRIVEA)) )
-		u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_A, floppyar_width, floppyar_height, floppyar_bits);
-	else
+	u8g_SetDefaultForegroundColor(&u8g);	//set color white	
+	//Draw drive0		
+	if (isDrive0() ) 	
 	{
-		u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_A, floppya_width, floppya_height, floppya_bits);
-		if (drive & (1 << BIT_DRIVEA) )	//if selected draw frame
-			u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_A-1, X_OFS+floppya_width+1,Y_OFS_A+floppya_height+1);	
+		if (isBusy() ) u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_A, floppym_width, floppym_height, floppyar_bits);
+		else
+		{			
+			u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_A, floppym_width, floppym_height, floppya_bits);	
+			u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_A-1, X_OFS+floppym_width+1,Y_OFS_A+floppym_height+1);
+		}		
 	}
-	drawStr(40, Y_OFS_A+1, driveA.fName);
-	diskinfo(&driveA); //generate disk CHS info
-	drawStr(40, Y_OFS_A+14, infostring); //use itoabuf (defined in simpleUART)
-
-#if ENABLE_DRIVE_B == 1
-	if ( (drive & (1 << BIT_BUSY)) && (drive & (1 << BIT_DRIVEB)) )
-		u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_B, floppybr_width, floppybr_height, floppybr_bits);
-	else
+	else u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_A, floppym_width, floppym_height, floppya_bits);
+	//Disk0 info
+	drawStr(40, Y_OFS_A+1, drive[0].fName);	
+	drawStr(40, Y_OFS_A+14, diskinfo(0));
+#if ENABLE_DRIVE_B
+	//Draw drive1	
+	if (isDrive1() ) 
 	{
-		u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_B, floppyb_width, floppyb_height, floppyb_bits);
-		if (drive & (1 << BIT_DRIVEB) )	//if selected draw frame
-			u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_B-1, X_OFS+floppyb_width+1,Y_OFS_B+floppyb_height+1);
-	}
-	drawStr(40, Y_OFS_B+1, driveB.fName);
-	diskinfo(&driveB); //generate disk CHS info
-	drawStr(40, Y_OFS_B+14, infostring);
+		if (isBusy() ) u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_B, floppym_width, floppym_height, floppybr_bits);
+		else 
+		{					
+			u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_B, floppym_width, floppym_height, floppyb_bits);
+			u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_B-1, X_OFS+floppym_width+1,Y_OFS_B+floppym_height+1);
+		}
+	}			
+	else u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_B, floppym_width, floppym_height, floppyb_bits);
+	//Disk1 info	
+	drawStr(40, Y_OFS_B+1, drive[1].fName);	
+	drawStr(40, Y_OFS_B+14, diskinfo(1));
 #endif //ENABLE_DRIVE_B
 }
 
@@ -149,8 +156,8 @@ void FDISPLAY::showNoticeP(const char *header, const char *message)
 
 void FDISPLAY::setDriveBusy(uint8_t r_drive)
 {	
-	drive = r_drive;
-	if (drive) drive |= (1 << BIT_BUSY); //set busy bit
+	selectDrive(r_drive);
+	if (drive_sel) drive_sel |= (1 << BIT_BUSY); //set busy bit
 	setPage(PAGE_STATUS);
 	idle_timer = 0; //update screen ASAP
 	update();

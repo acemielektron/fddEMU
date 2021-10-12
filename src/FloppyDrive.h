@@ -18,13 +18,10 @@
 // -----------------------------------------------------------------------------
 
 #ifndef FLOPPYDRIVE_H
-#define PLOPPYDRIVE_H
+#define FLOPPYDRIVE_H
 
 #include "FloppyDisk.h"
 #include <stdint.h>
-
-#define DRIVEA_SELECT   1
-#define DRIVEB_SELECT   2
 
 class FloppyDrive : public FloppyDisk
 {
@@ -37,12 +34,29 @@ class FloppyDrive : public FloppyDisk
     void run();
 };
 
-extern volatile uint8_t drvSel;
+extern volatile uint8_t iFlags; //flags set by interrupt
+#define BIT_TRACKCHANGE 7
+#define BIT_DRIVE0      0
+#define BIT_DRIVE1      1
 
-extern class FloppyDrive driveA;
-#ifdef ENABLE_DRIVE_B
-extern class FloppyDrive driveB;
+#define SET_TRACKCHANGED()  (iFlags |= (1 << BIT_TRACKCHANGE))
+#define CLR_TRACKCHANGED()  (iFlags &= ~(1 << BIT_TRACKCHANGE))
+#define SET_DRIVE0()  (iFlags |= (1 << BIT_DRIVE0))
+#define SET_DRIVE1()  (iFlags |= (1 << BIT_DRIVE1))
+#define CLR_DRVSEL() (iFlags &= ~( (1 << BIT_DRIVE0)|(1 << BIT_DRIVE1)) )
+
+#define IS_TRACKCHANGED() (iFlags & (1 << BIT_TRACKCHANGE))
+#define IS_DRIVE0() (iFlags & (1 << BIT_DRIVE0))
+#define IS_DRIVE1() (iFlags & (1 << BIT_DRIVE1))
+#define GET_DRVSEL() (iFlags & ( (1 << BIT_DRIVE0)|(1 << BIT_DRIVE1)) )
+
+
+#if ENABLE_DRIVE_B
+    #define N_DRIVE 2
+#else
+    #define N_DRIVE 1
 #endif //ENABLE_DRIVE_B
 
+extern class FloppyDrive drive[N_DRIVE];
 
 #endif //PLOPPYDRIVE_H
