@@ -19,80 +19,33 @@
 
 #include "FloppyDisk.h"
 #include "simpleUART.h"
-#include "pff.h"
 #include "diskio.h"
 #include "constStrings.h"
 #include "FDisplay.h"
 #include "FDDpins.h"
-
-bool sdInitialized = false;
-FATFS fs; //petitfs
+#include "DiskFile.h"
 
 
-FRESULT get_file_info(FILINFO *pfno, char *filename)
-{
-  FRESULT res = FR_NO_FILE;
-  DIR dir;
-
-  res = pf_opendir(&dir, (char *)s_diskdir);
-  if (res == FR_OK)
-  {
-    for (;;) 
-    {
-      res = pf_readdir(&dir, pfno);
-      if (res != FR_OK || pfno->fname[0] == 0) break;
-      if (strcmp(pfno->fname, filename) == 0) return res;
-    }
-  }
-  return res;
-}
-
-int initSD()
-{
-  int rVal;
-
-  sdInitialized = false;
-  // initialize the SD card
-  rVal = pf_mount(&fs);
-  if (rVal == FR_OK) sdInitialized = true;
-  if (rVal) errorMessage(err_initSD);
-  return rVal;    
-}
-
-int FloppyDisk::load(char *filename)
-{
-  FILINFO fno;
-  int rVal=FR_OK;
+bool FloppyDisk::load(char *filename)
+{  
   uint16_t totalSectors;
   uint8_t wbuf[18]; //working buffer;
     
   eject(); 
-  if (!sdInitialized)
-  {
-    if  ( (rVal = initSD()) ) return rVal;
-  }    
   // open requested file
-  rVal = get_file_info(&fno, filename);  
-  rVal = pf_open(filename);  
-  if (rVal) 
-  {
-    errorMessage(err_fopen);
-    return -1;
-  }  
-  startSector=get_start_sector();  
-  if (!isContiguousFile())  //we will use direct sector access so we need a contiguous file
-  {
-    errorMessage(err_noncontig);
-    return -1;
-  }
+  if ( sdfile.getFileInfo((char *)s_RootDir, filename) )
+    return false;
+  if ( ( startSector = sdfile.getStartSector() ) == 0)
+    return false;
+  if (sdfile.getReadOnly()) flags |= FD_READONLY;  
   if (disk_readp(wbuf, startSector, 510, 2)) //Read the boot record         
   {	
     errorMessage(err_diskread);
-	  return -1;
+	  return false;
   }
   if ( (wbuf[0] != 0x55) || (wbuf[1] != 0xAA) ) //Invalid boot sector -> Raw disk image ?
   {
-    totalSectors = fno.fsize >> 9;  //convert filesize to 512 byte sectors (filesize / 512)
+    totalSectors = sdfile.getFileSize() >> 9;  //convert filesize to 512 byte sectors (filesize / 512)
     switch(totalSectors)  //check filesize in sectors
     { //Standart floppy: C*H*S*512      
       case (uint16_t)(80*2*18): //3.5" HD   1.440MB
@@ -113,7 +66,7 @@ int FloppyDisk::load(char *filename)
         break;
       default:  //not a standart raw floppy image
         errorMessage(err_invboot);
-	      return -1;
+	      return false;
     } //switch        
   }
   else  //Valid boot signature
@@ -127,7 +80,7 @@ int FloppyDisk::load(char *filename)
     if ( (wbuf[0] != 'F') || (wbuf[1] != 'A') || (wbuf[2] != 'T') || (wbuf[3] != '1') )
     {
       errorMessage(err_notfat12);
-	    return -1;
+	    return false;
     }
     disk_readp(wbuf, startSector, 11, 18);  //WbytesPerSector@11 WnumHeads@26 WsectorsPerTrack@24        
   #if DEBUG
@@ -144,13 +97,13 @@ int FloppyDisk::load(char *filename)
     if ( (*(int16_t *)wbuf != 512) || (*(int16_t *)(wbuf+15) > 2) || (*(int16_t *)(wbuf+13) > 255) )           
     {
       errorMessage(err_geometry);
-	    return -1;        
+	    return false;        
     }
     totalSectors = (uint16_t) *(int16_t *)(wbuf+8);  //WtotalSectors@19
-    if (totalSectors > (fno.fsize >> 9))  
+    if (totalSectors > (sdfile.getFileSize() >> 9))  
     {
       errorMessage(err_geombig);
-	    return -1;        
+	    return false;        
     }
     numSec = (uint8_t) *(int16_t *)(wbuf+13);     //WsectorsPerTrack@24
     numTrack = (uint8_t) ( totalSectors / (numSec*2) );
@@ -162,10 +115,9 @@ int FloppyDisk::load(char *filename)
     Serial.write('\n');  
   }
   //After all the checks load image file
-  memcpy(fName, fno.fname, 13); 
-  if (fno.fattrib & AM_RDO) flags |= FD_READONLY;
+  memcpy(fName, filename, 13);   
   flags |= FD_READY;  
-  return rVal;
+  return true;
 }
 
 void FloppyDisk::eject(void)

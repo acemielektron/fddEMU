@@ -29,82 +29,11 @@
 #include "FDisplay.h"
 #include "constStrings.h"
 #include "FDDpins.h"
+#include "DiskFile.h"
 
 
 #define ADC_PIN 7 //ADC7
-
-int16_t nItems = 0;  //required for menu system
 int16_t idx_sel = 0; //where were we in the menu index ?
-
-
-int scan_files (char* path)
-{
-  FRESULT res;
-  FILINFO fno;
-  DIR dir;
-  int n_files = 0;
-    
-  res = pf_opendir(&dir, path);
-  if (res) return -1;
-
-  do 
-  {
-  #if WDT_ENABLED  
-    wdt_reset();
-  #endif //WDT_ENABLED  
-    res = pf_readdir(&dir, &fno);
-    if (res != FR_OK) break;
-    if (fno.fattrib & (AM_VOL | AM_LFN) );//skip
-    else if (fno.fattrib & AM_DIR) //skip
-    {
-    #if DEBUG  
-      Serial.print(path);
-      Serial.write('[');
-      Serial.print(fno.fname);                
-      Serial.write(']');
-      Serial.write('\n');
-    #endif  
-    } 
-    else //regular file
-    {
-      if (fno.fname[0] != 0)
-      {
-        n_files++;
-      #if DEBUG  
-        Serial.print(path);
-        Serial.write('/');
-        Serial.print(fno.fname);                
-        Serial.write('\n');
-      #endif  
-      }
-    }     
-  } while (fno.fname[0] != 0);
-  return n_files;
-}
-
- FRESULT get_first_file(DIR *pdir, FILINFO *pfno, char *path)
-{
-  FRESULT res;
-  
-  res = pf_opendir(pdir, path);
-  if (res == FR_OK)
-  {
-    res = pf_readdir(pdir, pfno);
-    if (pfno->fname[0] == 0) res = FR_NO_FILE;    
-  }
-  return res;  
-}
-
-FRESULT get_next_file(DIR *pdir, FILINFO *pfno)
-{
-  FRESULT res;
-  
-  do{
-    res = pf_readdir(pdir, pfno);
-    }while((pfno->fattrib & AM_DIR) && (pfno->fname[0] != 0)); //if file is directory skip
-  if (pfno->fname[0] == 0) res = FR_NO_FILE;    
-  return res;  
-}
 
 int adcButton()
 {
@@ -144,12 +73,10 @@ int adcButton()
 }
 
 void loadMenuStrings()
-{    
-  DIR dir;
-  FILINFO fno;
+{      
   int8_t menu_max = MENU_ITEMS;
 
-  if (nItems < menu_max) menu_max = nItems;
+  if (sdfile.nFiles < menu_max) menu_max = sdfile.nFiles;
   //Limit menu selection
   if (disp.menu_sel < 0) 
 	  {
@@ -162,17 +89,16 @@ void loadMenuStrings()
 	  idx_sel++;
 	}
   //Limit index selection  
-  if (idx_sel > (nItems - MENU_ITEMS)) idx_sel = nItems - MENU_ITEMS;
+  if (idx_sel > (sdfile.nFiles - MENU_ITEMS)) idx_sel = sdfile.nFiles - MENU_ITEMS;
   else if (idx_sel < 0) idx_sel = 0;
   //load menu strings
-    get_first_file(&dir, &fno, (char *)s_diskdir);
-  for (int16_t i=0; i < idx_sel; i++) get_next_file(&dir, &fno); //skip some files
-  for (int16_t i=0; (i < MENU_ITEMS) && (fno.fname[0] != 0); i++)   
-  {
-    memcpy(disp.menu_strings[i], fno.fname, 13);
-    get_next_file(&dir, &fno);
+  sdfile.openDir((char *)s_RootDir);
+  for (int16_t i=0; i < idx_sel; i++) sdfile.getNextFile(); //skip some files
+  for (int16_t i=0; (i < MENU_ITEMS) && sdfile.getNextFile() && (sdfile.getFileName()[0] != 0); i++)   
+  {    
+    memcpy(disp.menu_strings[i], sdfile.getFileName(), 13);    
   }   
-  if (nItems == 0) strcpy_P(disp.menu_strings[0], str_nofile);  
+  if (sdfile.nFiles == 0) strcpy_P(disp.menu_strings[0], str_nofile);  
 }
 
 void buttonAction(int button)
@@ -310,7 +236,7 @@ int main(void)
   Serial.print_P(str_intro);
   Serial.print_P(str_usage);
   drive[0].load((char *)s_bootfile);   //if there is "BOOT.IMG" on SD load it
-  nItems = scan_files((char *)s_diskdir); //get number of files on SD
+  sdfile.scanFiles((char *)s_RootDir); //get number of files on SD root Dir  
   init_ADC(); //prep ADC
   reqADC(ADC_PIN); //request ADC reading on ADC_PIN  
    

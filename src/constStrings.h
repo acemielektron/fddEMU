@@ -28,7 +28,7 @@
 	Serial.print_P(str_colon); \
 	Serial.print_P(x); }
 
-const char s_diskdir[] = {'\0'};		//Don't not make PROGMEM
+const char s_RootDir[] = {'\0'};		//Don't not make PROGMEM
 const char s_bootfile[] = "BOOT.IMG";	//Don't not make PROGMEM
 
 const char str_intro[]		PROGMEM = "\nfddEMU (c) 2021 Acemi Elektronikci\n";

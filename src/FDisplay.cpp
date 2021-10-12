@@ -79,8 +79,9 @@ void FDISPLAY::statusScreen()
 #define Y_OFS_A	3
 #define Y_OFS_B 33
 
-	u8g_SetDefaultForegroundColor(&u8g);	//set color white	
+	
 	//Draw drive0		
+	u8g_SetDefaultForegroundColor(&u8g); //set color back to foreground color
 	if (isDrive0() ) 	
 	{
 		if (isBusy() ) u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_A, floppym_width, floppym_height, floppyar_bits);
@@ -88,6 +89,8 @@ void FDISPLAY::statusScreen()
 		{			
 			u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_A, floppym_width, floppym_height, floppya_bits);	
 			u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_A-1, floppym_width+2,floppym_height+2);
+			u8g_DrawBox(&u8g, X_OFS+floppym_width+2, Y_OFS_A-1, 128-(X_OFS+floppym_width+2),floppym_height+2);
+			u8g_SetDefaultBackgroundColor(&u8g);	//set color black
 		}		
 	}
 	else u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_A, floppym_width, floppym_height, floppya_bits);
@@ -96,6 +99,7 @@ void FDISPLAY::statusScreen()
 	drawStr(40, Y_OFS_A+14, diskinfo(0));
 #if ENABLE_DRIVE_B
 	//Draw drive1	
+	u8g_SetDefaultForegroundColor(&u8g); //set color back to foreground color
 	if (isDrive1() ) 
 	{
 		if (isBusy() ) u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_B, floppym_width, floppym_height, floppybr_bits);
@@ -103,12 +107,15 @@ void FDISPLAY::statusScreen()
 		{					
 			u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_B, floppym_width, floppym_height, floppyb_bits);
 			u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_B-1, floppym_width+2,floppym_height+2);
+			u8g_DrawBox(&u8g, X_OFS+floppym_width+2, Y_OFS_B-1, 128-(X_OFS+floppym_width+2),floppym_height+2);
+			u8g_SetDefaultBackgroundColor(&u8g);	//set color black
 		}
 	}			
 	else u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_B, floppym_width, floppym_height, floppyb_bits);
 	//Disk1 info	
 	drawStr(40, Y_OFS_B+1, drive[1].fName);	
 	drawStr(40, Y_OFS_B+14, diskinfo(1));
+	u8g_SetDefaultForegroundColor(&u8g); //set color back to foreground color
 #endif //ENABLE_DRIVE_B
 }
 

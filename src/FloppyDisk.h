@@ -36,7 +36,7 @@ class FloppyDisk{
     long startSector;
     char fName[13];    
     FloppyDisk();
-    int load(char *);
+    bool load(char *);
     void eject();
     bool isReady(void) {return (flags & FD_READY);}
     bool isReadonly(void) {return (flags & FD_READONLY);}
