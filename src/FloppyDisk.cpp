@@ -33,7 +33,7 @@ bool FloppyDisk::load(char *filename)
     
   eject(); 
   // open requested file
-  if ( sdfile.getFileInfo((char *)s_RootDir, filename) )
+  if ( !sdfile.getFileInfo((char *)s_RootDir, filename) )
     return false;
   if ( ( startSector = sdfile.getStartSector() ) == 0)
     return false;
