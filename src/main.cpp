@@ -72,33 +72,30 @@ int adcButton()
   return 0;
 }
 
-void loadMenuStrings()
+void loadMenuFiles()
 {      
-  int8_t menu_max = MENU_ITEMS;
-
-  if (sdfile.nFiles < menu_max) menu_max = sdfile.nFiles;
+  disp.menu_max = MENU_ITEMS;
+  if (sdfile.nFiles < disp.menu_max) disp.menu_max = sdfile.nFiles;
   //Limit menu selection
   if (disp.menu_sel < 0) 
 	  {
 	  disp.menu_sel = 0;
 	  idx_sel--;
 	  }
-  else if (disp.menu_sel >= menu_max) 
+  else if (disp.menu_sel >= disp.menu_max) 
 	{
-	  disp.menu_sel = menu_max - 1;
+	  disp.menu_sel = disp.menu_max - 1;
 	  idx_sel++;
 	}
   //Limit index selection  
   if (idx_sel > (sdfile.nFiles - MENU_ITEMS)) idx_sel = sdfile.nFiles - MENU_ITEMS;
-  else if (idx_sel < 0) idx_sel = 0;
-  //load menu strings
-  sdfile.openDir((char *)s_RootDir);
+  else if (idx_sel < 0) idx_sel = 0;  
+  sdfile.openDir((char *)s_RootDir);  //open directory
   for (int16_t i=0; i < idx_sel; i++) sdfile.getNextFile(); //skip some files
-  for (int16_t i=0; (i < MENU_ITEMS) && sdfile.getNextFile() && (sdfile.getFileName()[0] != 0); i++)   
-  {    
-    memcpy(disp.menu_strings[i], sdfile.getFileName(), 13);    
-  }   
-  if (sdfile.nFiles == 0) strcpy_P(disp.menu_strings[0], str_nofile);  
+  for (int8_t i=0; i < disp.menu_max && sdfile.getNextFile(); i++)
+  {
+    memcpy(disp.menuFileNames[i], sdfile.getFileName(), 13);    
+  }
 }
 
 void buttonAction(int button)
@@ -112,12 +109,14 @@ void buttonAction(int button)
       switch (disp.getSelectedDrive())
 		  {
 		    case 0:
-          disp.selectDrive(1 << BIT_DRIVE0);			    
+          disp.selectDrive(1 << BIT_DRIVE0);	
+          disp.setPage(PAGE_STATUS);		    
 			    Serial.print(F("Sel drive: A\n"));	          
 			    break;
       #if ENABLE_DRIVE_B
 		    case 1:          
 			    disp.selectDrive(1 << BIT_DRIVE1);          
+          disp.setPage(PAGE_STATUS);
 			    Serial.print(F("Sel drive: B\n"));          
 			    break;
       #endif //ENABLE_DRIVE_B  
@@ -130,10 +129,10 @@ void buttonAction(int button)
       if (disp.getPage() == PAGE_MENU)
       {
         disp.menu_sel++;
-        loadMenuStrings();
+        loadMenuFiles();
         //Output to serial  
         Serial.print_P(str_selected);
-        Serial.print(disp.menu_strings[disp.menu_sel]);
+        Serial.print(disp.menuFileNames[disp.menu_sel]);
         Serial.write('\n');  
       }
 		  else 
@@ -142,17 +141,17 @@ void buttonAction(int button)
       idx_sel = 0;
 			if ( disp.getSelectedDrive() ) //if a drive selected
         disp.setPage(PAGE_MENU);
-        loadMenuStrings();
+        loadMenuFiles();
 			}		
     break;
   case  3:  //Previous file
     if (disp.getPage() == PAGE_MENU)
     {
       disp.menu_sel--;
-      loadMenuStrings();
+      loadMenuFiles();
       //Output to serial  
       Serial.print_P(str_selected);
-      Serial.print(disp.menu_strings[disp.menu_sel]);
+      Serial.print(disp.menuFileNames[disp.menu_sel]);
       Serial.write('\n');  
     }
 		else 
@@ -161,16 +160,15 @@ void buttonAction(int button)
       idx_sel = 0;
 			if ( disp.getSelectedDrive() ) //if a drive selected
         disp.setPage(PAGE_MENU);
-        loadMenuStrings();
+        loadMenuFiles();
 			}		
 		break;
   case  2:  //load disk    
-    if (disp.getPage() != PAGE_MENU) break; //if we are not in menu disable load
-    loadMenuStrings();
+    if (disp.getPage() != PAGE_MENU) break; //if we are not in menu disable load   
 		Serial.print_P(str_loading);
-		Serial.print(disp.menu_strings[disp.menu_sel]);
+		Serial.print(disp.menuFileNames[disp.menu_sel]);
 		Serial.write('\n');		
-    drive[disp.getSelectedDrive() - 1].load(disp.menu_strings[disp.menu_sel]); 
+    drive[disp.getSelectedDrive() - 1].load(disp.menuFileNames[disp.menu_sel]); 
     disp.setDriveIdle();
 		break;		
   case  1:  //eject disk

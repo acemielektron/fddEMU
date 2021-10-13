@@ -43,18 +43,14 @@ int16_t DiskFile::scanFiles(char *path)
     do 
     {
     #if WDT_ENABLED  
-        wdt_reset();
+      wdt_reset();
     #endif //WDT_ENABLED            
-        if ( !getNextFile() ) break;
-        if (fno.fattrib & (AM_VOL | AM_LFN | AM_DIR) ); //skip DIR, LFN, VOL entries
-        else
-        {
-            nFiles++;
-        #if DEBUG
-            printFileName();
-            Serial.write('\n');
-        #endif //DEBUG
-        }
+      if ( !getNextFile() ) break;
+      nFiles++;
+    #if DEBUG
+      printFileName();
+      Serial.write('\n');
+    #endif //DEBUG
     } while (fno.fname[0] != 0);
     return nFiles;
 }
@@ -72,13 +68,21 @@ bool DiskFile::openDir(char *path)
     return false;  
 }
 
-bool DiskFile::getNextFile()
+bool DiskFile::getNextEntry()
 {
   res = pf_readdir(&dir, &fno);  
   if (res != FR_OK) 
     return false;
   if (fno.fname[0] == 0) res = FR_NO_FILE;    
   return true;  
+}
+
+bool DiskFile::getNextFile()
+{
+  do  {
+      if ( !getNextEntry() ) return false;
+  } while (fno.fattrib & (AM_VOL | AM_LFN | AM_DIR) ); //skip DIR, LFN, VOL entries
+  return true;
 }
 
 bool DiskFile::getFileInfo(char *path, char *filename)

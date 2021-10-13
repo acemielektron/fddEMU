@@ -20,16 +20,17 @@
 #include "FDisplay.h"
 #include "FloppyDrive.h"
 #include "constStrings.h"
+#include "simpleUART.h" //debug
+#include "DiskFile.h"
 #include <string.h>
 #include <stdlib.h>
-#include "simpleUART.h" //debug
 
 class FDISPLAY disp; //will use as extern
-char infostring[12]; //drive C/H/S info string
 
 
 char *diskinfo(uint8_t r_drive)	//Generate disk CHS info string in itoabuf (defined in simpleUART)
 {
+	static char infostring[12]; //drive C/H/S info string
 	char convbuf[4];
 	
 	if (drive[r_drive].fName[0] == 0)
@@ -50,26 +51,25 @@ char *diskinfo(uint8_t r_drive)	//Generate disk CHS info string in itoabuf (defi
 //https://github.com/olikraus/u8glib/blob/master/sys/arm/examples/menu/menu.c
 void FDISPLAY::drawMenu(void) 
 {
-  uint8_t i, h;
-  u8g_uint_t w, d;
+	uint8_t i, h;
+	u8g_uint_t w, d;	
 
-  //u8g_SetFont(&u8g, u8g_font_6x10);
-  u8g_SetFontRefHeightText(&u8g);
-  //u8g_SetFontPosTop(&u8g);
-  
-  h = u8g_GetFontAscent(&u8g)-u8g_GetFontDescent(&u8g);
-  w = u8g_GetWidth(&u8g);
-  for( i = 0; i < MENU_ITEMS; i++ ) 
-  {
-    d = (w-u8g_GetStrWidth(&u8g, menu_strings[i]))/2;
-    u8g_SetDefaultForegroundColor(&u8g);
-    if ( i == menu_sel ) 
-    {
-      u8g_DrawBox(&u8g, 0, i*h+1, w, h);
-      u8g_SetDefaultBackgroundColor(&u8g);
-    }
-    u8g_DrawStr(&u8g, d, i*h, menu_strings[i]);	
-  }
+	//u8g_SetFont(&u8g, u8g_font_6x10);
+	u8g_SetFontRefHeightText(&u8g);
+	//u8g_SetFontPosTop(&u8g);
+  	h = u8g_GetFontAscent(&u8g)-u8g_GetFontDescent(&u8g);
+	w = u8g_GetWidth(&u8g);
+	for( i = 0; i < menu_max; i++ ) 
+	{
+    	d = (w-u8g_GetStrWidth(&u8g, menuFileNames[i]))/2;
+    	u8g_SetDefaultForegroundColor(&u8g);
+    	if ( i == menu_sel ) 
+    	{			
+      		u8g_DrawBox(&u8g, 0, i*h+1, w, h);
+      		u8g_SetDefaultBackgroundColor(&u8g);
+    	}
+    	u8g_DrawStr(&u8g, d, i*h, menuFileNames[i]);	
+  	}
   u8g_SetDefaultForegroundColor(&u8g); //set color back to foreground color
 }
 

@@ -58,9 +58,11 @@ void drawStrP(int x, int y, const char *str) {u8g_DrawStrP(&u8g, x, y,(const u8g
 void drawStr(int x, int y, char *str) {u8g_DrawStr(&u8g, x, y,(const char *)str);}
 void sleep() {u8g_SleepOn(&u8g);}
 void wakeup() {u8g_SleepOff(&u8g);}
+
 public:
-char menu_strings[MENU_ITEMS][FNAME_SIZE];
 int8_t menu_sel;	//menu index
+int8_t menu_max;
+char menuFileNames[MENU_ITEMS][FNAME_SIZE];
 FDISPLAY();
 void setPage(uint8_t);
 uint8_t getPage() {return page;} 
