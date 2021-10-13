@@ -88,7 +88,7 @@ void loadMenuFiles()
 	  idx_sel++;
 	}
   //Limit index selection  
-  if (idx_sel > (sdfile.nFiles - MENU_ITEMS)) idx_sel = sdfile.nFiles - MENU_ITEMS;
+  if (idx_sel >= (sdfile.nFiles - MENU_ITEMS)) idx_sel = sdfile.nFiles - MENU_ITEMS - 1;
   else if (idx_sel < 0) idx_sel = 0;  
   sdfile.openDir((char *)s_RootDir);  //open directory
   for (int16_t i=0; i < idx_sel; i++) sdfile.getNextFile(); //skip some files
@@ -126,42 +126,44 @@ void buttonAction(int button)
 		  }
       break;
     case  4:  //Next file
-      if (disp.getPage() == PAGE_MENU)
+      if ( disp.getSelectedDrive() ) //if a drive selected
       {
-        disp.menu_sel++;
+        if (disp.getPage() == PAGE_MENU)
+        {
+          disp.menu_sel++;
+        }
+        else
+        {
+			    disp.menu_sel = 0;
+          idx_sel = 0;			
+          disp.setPage(PAGE_MENU);
+        }
         loadMenuFiles();
         //Output to serial  
         Serial.print_P(str_selected);
         Serial.print(disp.menuFileNames[disp.menu_sel]);
         Serial.write('\n');  
       }
-		  else 
-			{
-			disp.menu_sel = 0;
-      idx_sel = 0;
-			if ( disp.getSelectedDrive() ) //if a drive selected
-        disp.setPage(PAGE_MENU);
-        loadMenuFiles();
-			}		
     break;
   case  3:  //Previous file
-    if (disp.getPage() == PAGE_MENU)
-    {
-      disp.menu_sel--;
-      loadMenuFiles();
-      //Output to serial  
-      Serial.print_P(str_selected);
-      Serial.print(disp.menuFileNames[disp.menu_sel]);
-      Serial.write('\n');  
-    }
-		else 
-			{
-			disp.menu_sel = 0;
-      idx_sel = 0;
-			if ( disp.getSelectedDrive() ) //if a drive selected
-        disp.setPage(PAGE_MENU);
+      if ( disp.getSelectedDrive() ) //if a drive selected
+      {
+        if (disp.getPage() == PAGE_MENU)
+        {
+          disp.menu_sel--;
+        }
+        else
+        {
+			    disp.menu_sel = 0;
+          idx_sel = 0;			
+          disp.setPage(PAGE_MENU);
+        }
         loadMenuFiles();
-			}		
+        //Output to serial  
+        Serial.print_P(str_selected);
+        Serial.print(disp.menuFileNames[disp.menu_sel]);
+        Serial.write('\n');  
+      }
 		break;
   case  2:  //load disk    
     if (disp.getPage() != PAGE_MENU) break; //if we are not in menu disable load   
