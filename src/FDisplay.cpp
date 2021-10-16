@@ -61,7 +61,7 @@ void FDISPLAY::drawMenu(void)
 	w = u8g_GetWidth(&u8g);
 	for( i = 0; i < menu_max; i++ ) 
 	{
-    	d = (w-u8g_GetStrWidth(&u8g, menuFileNames[i]))/2;
+    	d = (w-getStrWidth(menuFileNames[i]))/2;
     	u8g_SetDefaultForegroundColor(&u8g);
     	if ( i == menu_sel ) 
     	{			
@@ -74,69 +74,102 @@ void FDISPLAY::drawMenu(void)
 }
 
 void FDISPLAY::statusScreen()
-{
+{	
 #define X_OFS	1
 #define Y_OFS_A	3
 #define Y_OFS_B 33
-
 	
+	u8g_uint_t w = u8g_GetWidth(&u8g);
 	//Draw drive0		
 	u8g_SetDefaultForegroundColor(&u8g); //set color back to foreground color
 	if (isDrive0() ) 	
 	{
-		if (isBusy() ) u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_A, floppym_width, floppym_height, floppyar_bits);
-		else
-		{			
-			u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_A, floppym_width, floppym_height, floppya_bits);	
-			u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_A-1, floppym_width+2,floppym_height+2);
-			u8g_DrawBox(&u8g, X_OFS+floppym_width+2, Y_OFS_A-1, 128-(X_OFS+floppym_width+2),floppym_height+2);
-			u8g_SetDefaultBackgroundColor(&u8g);	//set color black
-		}		
+		drawXBMP(X_OFS, Y_OFS_A, floppym_width, floppym_height, floppya_bits);	
+		u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_A-1, floppym_width+2,floppym_height+2);
+		u8g_DrawBox(&u8g, X_OFS+floppym_width+2, Y_OFS_A-1, w-(X_OFS+floppym_width+2),floppym_height+2);
+		u8g_SetDefaultBackgroundColor(&u8g);	//set color black
 	}
-	else u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_A, floppym_width, floppym_height, floppya_bits);
-	//Disk0 info
-	drawStr(40, Y_OFS_A+1, drive[0].fName);	
-	drawStr(40, Y_OFS_A+14, diskinfo(0));
+	else drawXBMP(X_OFS, Y_OFS_A, floppym_width, floppym_height, floppya_bits);
+	//Disk0 info	
+	u8g_uint_t d = (w-floppym_width-getStrWidth(drive[0].fName))/2;
+	drawStr(floppym_width+d, Y_OFS_A+1, drive[0].fName);		
+	char *infostr = diskinfo(0);
+	d = (w-floppym_width-getStrWidth(infostr))/2;
+	drawStr(floppym_width+d, Y_OFS_A+14, infostr);
 #if ENABLE_DRIVE_B
 	//Draw drive1	
 	u8g_SetDefaultForegroundColor(&u8g); //set color back to foreground color
 	if (isDrive1() ) 
 	{
-		if (isBusy() ) u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_B, floppym_width, floppym_height, floppybr_bits);
-		else 
-		{					
-			u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_B, floppym_width, floppym_height, floppyb_bits);
-			u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_B-1, floppym_width+2,floppym_height+2);
-			u8g_DrawBox(&u8g, X_OFS+floppym_width+2, Y_OFS_B-1, 128-(X_OFS+floppym_width+2),floppym_height+2);
-			u8g_SetDefaultBackgroundColor(&u8g);	//set color black
-		}
+		drawXBMP(X_OFS, Y_OFS_B, floppym_width, floppym_height, floppyb_bits);
+		u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_B-1, floppym_width+2,floppym_height+2);
+		u8g_DrawBox(&u8g, X_OFS+floppym_width+2, Y_OFS_B-1, w-(X_OFS+floppym_width+2),floppym_height+2);
+		u8g_SetDefaultBackgroundColor(&u8g);	//set color black
 	}			
-	else u8g_DrawXBMP(&u8g, X_OFS, Y_OFS_B, floppym_width, floppym_height, floppyb_bits);
-	//Disk1 info	
-	drawStr(40, Y_OFS_B+1, drive[1].fName);	
-	drawStr(40, Y_OFS_B+14, diskinfo(1));
+	else drawXBMP(X_OFS, Y_OFS_B, floppym_width, floppym_height, floppyb_bits);
+	//Disk1 info
+	d = (w-floppym_width-getStrWidth(drive[1].name))/2;	
+	drawStr(floppym_width+d, Y_OFS_B+1, drive[1].fName);	
+	infostr = diskinfo(1);
+	d = (w-floppym_width-getStrWidth(infostr))/2;
+	drawStr(floppym_width+d, Y_OFS_B+14, infostr);
 	u8g_SetDefaultForegroundColor(&u8g); //set color back to foreground color
 #endif //ENABLE_DRIVE_B
 }
 
+void FDISPLAY::loadingScreen()
+{
+	u8g_uint_t w = u8g_GetWidth(&u8g);
+	u8g_uint_t d = (w-getStrWidthP(str_loading))/2;
+
+	if (isDrive0() )
+		drawXBMP( (w - floppym_width)/2, 0, floppym_width, floppym_height, floppya_bits);
+	else if (isDrive1() )	
+		drawXBMP( (w - floppym_width)/2, 0, floppym_width, floppym_height, floppyb_bits);
+
+	drawStrP(floppym_height + 5, d, str_loading);	
+	d = (w-getStrWidth(menuFileNames[menu_sel]))/2;
+	drawStr(floppym_height + 20, d, menuFileNames[menu_sel]);	
+}
+
+void FDISPLAY::busyScreen()
+{
+	u8g_uint_t w = u8g_GetWidth(&u8g);
+	u8g_uint_t d = (w-getStrWidthP(str_busy))/2;
+
+	if (isDrive0() )
+		drawXBMP( (w - floppym_width)/2, 0, floppym_width, floppym_height, floppya_bits);
+	else if (isDrive1() )	
+		drawXBMP ( (w - floppym_width)/2, 0, floppym_width, floppym_height, floppyb_bits);
+
+	drawStrP(floppym_height + 5, d, str_busy);	
+	d = (w-getStrWidth(drive[getSelectedDrive()-1].fName))/2;
+	drawStr(floppym_height + 20, d, drive[getSelectedDrive()-1].fName);	
+}
+
 void FDISPLAY::noticeScreen()
 {
-	u8g_DrawXBMP(&u8g, 0, 0, caution_width, caution_height, caution_bits);
-	u8g_SetFont(&u8g, u8g_font_6x10);
-	u8g_SetFontPosTop(&u8g);	
-	drawStrP(50, 10, notice_header);
-	drawStrP(0+0, 30, notice_message);
-	//drawStrP(0+0, 45, PSTR("on fdd emulation"));
+	u8g_uint_t w = u8g_GetWidth(&u8g);
+	u8g_uint_t d = (w-getStrWidthP(notice_header))/2;
+
+	drawXBMP( (w - caution_width)/2, 0, caution_width, caution_height, caution_bits);
+
+	drawStrP(caution_height + 5, d, notice_header);
+	d = (w-getStrWidthP(notice_message))/2;
+	drawStrP(caution_height + 20, d, notice_message);	
 }
 
 void FDISPLAY::splashScreen()
 {
-	u8g_DrawXBMP(&u8g, 1, 5, floppy_width, floppy_height, floppy_bits);
-	u8g_SetFont(&u8g, u8g_font_6x10);
-	u8g_SetFontPosTop(&u8g);	
-	drawStrP(50+10, 10, PSTR("(c) 2021"));
-	drawStrP(50+20, 25, PSTR("Acemi"));
-	drawStrP(50+5, 40, PSTR("Elektronikci"));
+	u8g_uint_t w = u8g_GetWidth(&u8g);
+	u8g_uint_t d = (w-floppy_width-getStrWidthP(str_2021))/2;
+
+	drawXBMP(1, 5, floppy_width, floppy_height, floppy_bits);
+	drawStrP(floppy_width+d, 10, str_2021);
+	d = (w-floppy_width-getStrWidthP(str_acemi))/2;
+	drawStrP(floppy_width+d, 25, str_acemi);
+	d = (w-floppy_width-getStrWidthP(str_elektron))/2;
+	drawStrP(floppy_width+d, 40, str_elektron);
 }
 
 void FDISPLAY::init()
@@ -161,11 +194,25 @@ void FDISPLAY::showNoticeP(const char *header, const char *message)
 	update();
 }
 
-void FDISPLAY::setDriveBusy(uint8_t r_drive)
+void FDISPLAY::showDriveIdle()
 {	
-	selectDrive(r_drive);
-	if (drive_sel) drive_sel |= (1 << BIT_BUSY); //set busy bit
+	selectDrive(0);	
 	setPage(PAGE_STATUS);
+	idle_timer = 0; //update screen ASAP
+	update();
+}
+
+void FDISPLAY::showDriveBusy(uint8_t r_drive)
+{	
+	selectDrive(r_drive);	
+	setPage(PAGE_BUSY);
+	idle_timer = 0; //update screen ASAP
+	update();
+}
+
+void FDISPLAY::showDriveLoading()
+{		
+	setPage(PAGE_LOADING);
 	idle_timer = 0; //update screen ASAP
 	update();
 }
@@ -176,11 +223,11 @@ void FDISPLAY::setPage(uint8_t r_page)
 	if (sleep_timer == 0)
 	{
 		sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
-		FDISPLAY::wakeup();
+		FDISPLAY::sleepOff();
 	#if DEBUG	
 		Serial.print(F("Screen wakeup\n"));		
 	#endif //DEBUG
-		setDriveIdle();
+		showDriveIdle();
 	}	
 	sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
 }
@@ -204,6 +251,12 @@ switch(page)
 		case PAGE_SPLASH:		
 			splashScreen();
 			break;
+		case PAGE_BUSY:
+			busyScreen();
+			break;
+		case PAGE_LOADING:
+			loadingScreen();
+			break;		
 		case PAGE_NOTICE:
 			noticeScreen();
 			break;
@@ -237,7 +290,7 @@ void FDISPLAY::update()
 			sleep_timer --;
 			if (sleep_timer == 0)
 			{
-				FDISPLAY::sleep();
+				FDISPLAY::sleepOn();
 			#if DEBUG
 				Serial.print(F("Screen sleep\n"));
 			#endif //DEBUG

@@ -28,30 +28,21 @@
 	Serial.print_P(str_colon); \
 	Serial.print_P(x); }
 
-#define busyMessage() { \
-      disp.setDriveBusy(GET_DRVSEL()); \
-      Serial.print_P(str_busy); }     //very short message, take too long and get drive read errors 
-
-#define idleMessage() { \      
-      Serial.print_P(str_drive); \
-      if (disp.isDrive0()) Serial.write('A'); \
-      else if (disp.isDrive1()) Serial.write('B'); \
-      Serial.print_P(str_idle); \
-      disp.setDriveIdle(); \
-      Serial.write('\n'); }
-
-
 const char s_RootDir[] = {'\0'};		//Don't not make PROGMEM
 const char s_bootfile[] = "BOOT.IMG";	//Don't not make PROGMEM
 
-const char str_intro[]		PROGMEM = "\nfddEMU (c) 2021 Acemi Elektronikci\n";
-const char str_usage[]		PROGMEM = "\nS: Select drive\nP: Previous\nN: Next\nL: Load\nE: Eject\n\n";
+const char str_fddEMU[]		PROGMEM = "fddEMU";
+const char str_2021[]         PROGMEM = "(c) 2021";
+const char str_acemi[]        PROGMEM = "Acemi";
+const char str_elektron[]     PROGMEM = "Elektronikci";
+const char str_usage[]		PROGMEM = "S: Select drive\nP: Previous\nN: Next\nL: Load\nE: Eject";
 const char str_colon[]		PROGMEM = ": ";
 const char str_drive[]		PROGMEM = "Drive ";
 const char str_busy[]		PROGMEM = "BUSY\n";
 const char str_idle[]		PROGMEM = " idle";
 const char str_selected[]	PROGMEM = "Selected ";
 const char str_nodisk[]		PROGMEM = "No disk";
+const char str_none[]         PROGMEM = "none";
 const char str_nofile[]		PROGMEM = "NO FILE";
 const char str_eject[]		PROGMEM = "Ejected ";
 const char str_cancel[]		PROGMEM = "Cancel\n";

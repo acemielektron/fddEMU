@@ -66,24 +66,28 @@ void buttonAction(int button)
   switch(button)
   {
     case  5:  //select drive     
+      Serial.print_P(str_selected);
+      Serial.print_P(str_drive);
+
       switch (disp.getSelectedDrive())
 		  {
 		    case 0:
           disp.selectDrive(1 << BIT_DRIVE0);	
           disp.setPage(PAGE_STATUS);		    
-			    Serial.print(F("Sel drive: A\n"));	          
+			    Serial.write('A');
 			    break;
       #if ENABLE_DRIVE_B
 		    case 1:          
 			    disp.selectDrive(1 << BIT_DRIVE1);          
           disp.setPage(PAGE_STATUS);
-			    Serial.print(F("Sel drive: B\n"));          
+			    Serial.write('B');
 			    break;
       #endif //ENABLE_DRIVE_B  
 		    default:
-			    disp.setDriveIdle();
-			    Serial.print(F("Sel drive: None\n"));          
+			    disp.showDriveIdle();
+			    Serial.print_P(str_none);          
 		  }
+      Serial.write('\n');
       break;
     case  4:  //Next file
       if ( disp.getSelectedDrive() ) //if a drive selected
@@ -127,16 +131,17 @@ void buttonAction(int button)
 		break;
   case  2:  //load disk    
     if (disp.getPage() != PAGE_MENU) break; //if we are not in menu disable load   
+    disp.showDriveLoading();
 		Serial.print_P(str_loading);
 		Serial.print(disp.menuFileNames[disp.menu_sel]);
 		Serial.write('\n');		
     drive[disp.getSelectedDrive() - 1].load(disp.menuFileNames[disp.menu_sel]); 
-    disp.setDriveIdle();
+    disp.showDriveIdle();
 		break;		
   case  1:  //eject disk
     if (disp.getPage() == PAGE_MENU)  //behave as cancel
     {
-      disp.setDriveIdle();
+      disp.showDriveIdle();
       Serial.print_P(str_cancel);
     }
     else
@@ -187,14 +192,31 @@ switch(ch)
 	}
 }
 
+void serialIntro()
+{
+  Serial.write('\n');
+  Serial.write('\n');
+  Serial.print_P(str_fddEMU);
+  Serial.write(' ');
+  Serial.print_P(str_2021);
+  Serial.write(' ');
+  Serial.print_P(str_acemi);
+  Serial.write(' ');
+  Serial.print_P(str_elektron);
+  Serial.write('\n');
+  Serial.write('\n');
+  Serial.print_P(str_usage);    
+  Serial.write('\n');
+  Serial.write('\n');
+}
+
 int main(void)
 { 
 #if WDT_ENABLED  
   wdt_enable(WDTO_8S);  
 #endif  //WDT_ENABLED
   Serial.init(115200);
-  Serial.print_P(str_intro);
-  Serial.print_P(str_usage);    
+  serialIntro();  
   drive[0].load((char *)s_bootfile);   //if there is "BOOT.IMG" on SD load it
    
   for(;;)
@@ -204,9 +226,15 @@ int main(void)
   #endif //WDT_ENABLED  
     if (GET_DRVSEL() )
     {
-      busyMessage();
+       disp.showDriveBusy(GET_DRVSEL());
+      Serial.print_P(str_busy); //very short message, take too long and get drive read errors 
       drive[GET_DRVSEL() - 1].run();      
-      idleMessage();
+      Serial.print_P(str_drive);
+      if (disp.isDrive0()) Serial.write('A');
+      else if (disp.isDrive1()) Serial.write('B');
+      Serial.print_P(str_idle);
+      disp.showDriveIdle();
+      Serial.write('\n');
     }    
     if (adcReady) buttonAction(abtn.read());    
 	  if (rxReady) readRx();

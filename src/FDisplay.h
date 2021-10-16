@@ -29,18 +29,33 @@
 
 #define BIT_BUSY    7   //drive in use
 
-//Lower nibble of page
-#define PAGE_STATUS	0
-#define PAGE_NOTICE 1
-#define PAGE_MENU	2
-#define PAGE_SPLASH	3
+//Higher nibble of page ?
+#define PAGE_STATUS	    0
+#define PAGE_NOTICE     1
+#define PAGE_MENU	    2
+#define PAGE_LOADING    3
+#define PAGE_BUSY       4
+#define PAGE_SPLASH	    5
 
 #define FNAME_SIZE	13
 #define MENU_ITEMS	6
 
-class FDISPLAY{
+class U8G{  //Encapsulate some u8g functions
+    protected:
+    u8g_t u8g;
+
+    public:
+    void drawStrP(int x, int y, const char *str) {u8g_DrawStrP(&u8g, x, y,(const u8g_pgm_uint8_t*)str);}
+    void drawStr(int x, int y, char *str) {u8g_DrawStr(&u8g, x, y,(const char *)str);}
+    void drawXBMP(u8g_uint_t x, u8g_uint_t y, u8g_uint_t w, u8g_uint_t h, const u8g_pgm_uint8_t *bitmap) {u8g_DrawXBMP(&u8g, x, y, w, h, bitmap);}
+    u8g_uint_t getStrWidthP(const char *str) {return u8g_GetStrWidthP(&u8g, (const u8g_pgm_uint8_t*)str);}
+    u8g_uint_t getStrWidth(char *str) {return u8g_GetStrWidthP(&u8g, (const u8g_pgm_uint8_t*)str);}
+    void sleepOn() {u8g_SleepOn(&u8g);}
+    void sleepOff() {u8g_SleepOff(&u8g);}
+};
+
+class FDISPLAY: public U8G {
 private:
-u8g_t u8g;
 uint8_t idle_timer;
 uint8_t sleep_timer;
 uint8_t notice_timer;
@@ -51,13 +66,11 @@ const char *notice_message;
 void drawPage();
 void init();
 void splashScreen();
+void loadingScreen();
+void busyScreen();
 void noticeScreen();
 void statusScreen();
 void drawMenu(void);
-void drawStrP(int x, int y, const char *str) {u8g_DrawStrP(&u8g, x, y,(const u8g_pgm_uint8_t*)str);}
-void drawStr(int x, int y, char *str) {u8g_DrawStr(&u8g, x, y,(const char *)str);}
-void sleep() {u8g_SleepOn(&u8g);}
-void wakeup() {u8g_SleepOff(&u8g);}
 
 public:
 int8_t menu_sel;	//menu index
@@ -68,8 +81,9 @@ void setPage(uint8_t);
 uint8_t getPage() {return page;} 
 void showNoticeP(const char *, const char *);
 void update();
-void setDriveBusy(uint8_t);
-void setDriveIdle() {setDriveBusy(0);}
+void showDriveBusy(uint8_t);
+void showDriveIdle();
+void showDriveLoading();
 void selectDrive(uint8_t r_drive) {drive_sel = r_drive & ((1 << BIT_DRIVE0)|(1 << BIT_DRIVE1));}
 uint8_t getSelectedDrive() {return (drive_sel & ((1 << BIT_DRIVE0)|(1 << BIT_DRIVE1)) );} 
 uint8_t isDrive0() {return drive_sel & (1 << BIT_DRIVE0);}
