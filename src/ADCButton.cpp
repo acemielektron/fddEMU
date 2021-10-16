@@ -19,30 +19,25 @@
 
 #include <avr/io.h>
 #include <util/delay.h>
+#include "ADCButton.h"
+#include "simpleUART.h" //debug
 
+class ADCButton abtn;
 
-void init_ADC()
+ADCButton::ADCButton()
+{
+  init();
+  requestADC(BUTTON_PIN);
+}
+
+void ADCButton::init()
 {
   PRR &= ~(1<<PRADC); //clear PRADC bit in Power Reduction Register
   ADMUX = (1<<REFS0);     //select AVCC as reference
   ADCSRA = (1<<ADEN) | (1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0);  //enable and prescale = 128 (16MHz/128 = 125kHz)
 }
 
-int waitReadADC(uint8_t channel) //request and read ADC - blocking function
-{  
-  uint8_t low, high;
-  
-  ADMUX=( (channel&0x0f)|(1<<REFS0) ); //Select channel and voltage reference, ADLAR is set so result is left justified ADCH register is sufficient
-  _delay_us(150);  
-  ADCSRA|=(1<<ADSC); // Start the AD conversion
-  while ( ADCSRA & (1<<ADSC) ); //wait for conversion to finish
-  low=ADCL;
-  high=ADCH;
-  //return ADCW;
-  return ( (high << 8) | low );
-}
-
-void reqADC(uint8_t channel) //request Analog to Digital Conversion on Channel
+void ADCButton::requestADC(uint8_t channel) //request Analog to Digital Conversion on Channel
 {
     ADMUX=( (channel&0x0f)|(1<<REFS0) ); //Select channel and voltage reference, if ADLAR is set result is left justified ADCH register is sufficient
     ADCSRA|=(1<<ADSC); // Start the AD conversion
@@ -54,7 +49,7 @@ void reqADC(uint8_t channel) //request Analog to Digital Conversion on Channel
     //First conversion takes 25 ADC cycles and subsequent conversions takes 13 ADC clock cycles
 }
 
-int readADC() //read ADC result
+int16_t ADCButton::readADC() //read ADC result
 {
     int result = 0;
     uint8_t low, high;
@@ -63,4 +58,43 @@ int readADC() //read ADC result
     result = (high << 8) | low;
     //return ADCW;
     return result;
+}
+
+
+
+int8_t ADCButton::read()
+{
+  static uint8_t prevval = 6; 
+  static uint8_t lastval = 6;  
+  uint8_t newval = 7;
+  uint16_t adcval;
+
+  if (adcBusy)  return 0;  
+  adcval = readADC();
+  requestADC(BUTTON_PIN);
+  if (adcval > 900) newval = 6;
+  else if ( (adcval >= 800) && (adcval < 870) ) newval = 5;
+  else if ( (adcval >= 600) && (adcval < 660) ) newval = 4;
+  else if ( (adcval >= 400) && (adcval < 450) ) newval = 3;
+  else if ( (adcval >= 190) && (adcval < 230) ) newval = 2;
+  else if (adcval == 0)  newval = 1;
+  
+  if  ( (prevval == 6) && (lastval == newval) ) //if dropped from max && stable value        
+  {
+    prevval = lastval;
+    if (newval < 6) 
+    {      
+    #if DEBUG == 1
+      Serial.print(F("Button: "));
+      Serial.printHEX(newval);
+      Serial.print(F(" value: "));
+      Serial.printDEC(adcval);
+      Serial.write('\n');
+    #endif //DEBUG
+      return newval;  
+    }
+  }
+  prevval = lastval; 
+  lastval = newval;  
+  return 0;
 }

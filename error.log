@@ -1,0 +1,35 @@
+In file included from src/DiskFile.cpp:23:
+src/constStrings.h:35:25: warning: backslash and newline separated by space
+   35 | #define idleMessage() { \
+      |                          
+In file included from src/FDisplay.cpp:22:
+src/constStrings.h:35:25: warning: backslash and newline separated by space
+   35 | #define idleMessage() { \
+      |                          
+In file included from src/FloppyDisk.cpp:23:
+src/constStrings.h:35:25: warning: backslash and newline separated by space
+   35 | #define idleMessage() { \
+      |                          
+In file included from src/FloppyDrive.cpp:26:
+src/constStrings.h:35:25: warning: backslash and newline separated by space
+   35 | #define idleMessage() { \
+      |                          
+In file included from src/main.cpp:29:
+src/constStrings.h:35:25: warning: backslash and newline separated by space
+   35 | #define idleMessage() { \
+      |                          
+libs/u8glib/csrc/u8g_dev_ssd1306_128x32.c:153:22: warning: 'u8g_dev_ssd1306_128x32_univision_init_seq' defined but not used [-Wunused-const-variable=]
+  153 | static const uint8_t u8g_dev_ssd1306_128x32_univision_init_seq[] PROGMEM = {
+      |                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+libs/u8glib/csrc/u8g_dev_ssd1306_128x32.c:83:22: warning: 'u8g_dev_ssd1306_128x32_adafruit2_init_seq' defined but not used [-Wunused-const-variable=]
+   83 | static const uint8_t u8g_dev_ssd1306_128x32_adafruit2_init_seq[] PROGMEM = {
+      |                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+libs/u8glib/csrc/u8g_dev_ssd1306_128x32.c:48:22: warning: 'u8g_dev_ssd1306_128x32_adafruit1_init_seq' defined but not used [-Wunused-const-variable=]
+   48 | static const uint8_t u8g_dev_ssd1306_128x32_adafruit1_init_seq[] PROGMEM = {
+      |                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+libs/u8glib/csrc/u8g_dev_ssd1306_128x64.c:146:22: warning: 'u8g_dev_ssd1306_128x64_univision_init_seq' defined but not used [-Wunused-const-variable=]
+  146 | static const uint8_t u8g_dev_ssd1306_128x64_univision_init_seq[] PROGMEM = {
+      |                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+libs/u8glib/csrc/u8g_dev_ssd1306_128x64.c:44:22: warning: 'u8g_dev_ssd1306_128x64_adafruit1_init_seq' defined but not used [-Wunused-const-variable=]
+   44 | static const uint8_t u8g_dev_ssd1306_128x64_adafruit1_init_seq[] PROGMEM = {
+      |                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

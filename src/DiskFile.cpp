@@ -30,7 +30,7 @@ DiskFile sdfile; //we will use as extern
 
 bool DiskFile::initSD()
 {  
-  // initialize the SD card
+  // initialize the SD card  
   res = pf_mount(&fs);
   if (res == FR_OK) sdInitialized = true;
   else
@@ -38,13 +38,15 @@ bool DiskFile::initSD()
     errorMessage(err_initSD);
     return false;
   }
+  nFiles = 0;
+  scanFiles((char *)s_RootDir); //get number of files on SD root Dir  
   return true;    
 }
 
 DiskFile::DiskFile()
 {
-    sdInitialized = false;
-    initSD();
+    sdInitialized = false;    
+    initSD();    
 }
 
 void DiskFile::printFileName()
@@ -100,7 +102,7 @@ bool DiskFile::getNextFile()
 {
   do  {
       if ( !getNextEntry() ) return false;
-  } while (fno.fattrib & (AM_VOL | AM_LFN | AM_DIR) ); //skip DIR, LFN, VOL entries
+  } while (fno.fattrib & (AM_DIR) ); //skip DIR, LFN, VOL entries
   return true;
 }
 
@@ -108,7 +110,7 @@ bool DiskFile::getFileInfo(char *path, char *filename)
 { 
   if ( !openDir(path) ) 
     return false;
-  while ( getNextFile() )
+  while ( getNextEntry() )
   {
       if (strcmp(fno.fname, filename) == 0) 
         return true;

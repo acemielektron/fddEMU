@@ -19,7 +19,6 @@
 
 
 #include "FloppyDrive.h"
-#include "FDDpins.h"
 #include "pff.h"
 #include "diskio.h"
 #include "simpleUART.h"

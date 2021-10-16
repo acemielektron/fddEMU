@@ -25,52 +25,12 @@
   #include <avr/wdt.h>
 #endif  //WDT_ENABLED  
 #include "pff.h"
-#include "analog_read.h"
 #include "FDisplay.h"
 #include "constStrings.h"
-#include "FDDpins.h"
 #include "DiskFile.h"
+#include "ADCButton.h"
 
-
-#define ADC_PIN 7 //ADC7
 int16_t idx_sel = 0; //where were we in the menu index ?
-
-int adcButton()
-{
-  static uint8_t prevval = 6; 
-  static uint8_t lastval = 6;  
-  uint8_t newval = 7;
-  uint16_t adcval;
-
-  if (adcBusy)  return 0;  
-  adcval = readADC();
-  reqADC(ADC_PIN);
-  if (adcval > 900) newval = 6;
-  else if ( (adcval >= 800) && (adcval < 870) ) newval = 5;
-  else if ( (adcval >= 600) && (adcval < 660) ) newval = 4;
-  else if ( (adcval >= 400) && (adcval < 450) ) newval = 3;
-  else if ( (adcval >= 190) && (adcval < 230) ) newval = 2;
-  else if (adcval == 0)  newval = 1;
-  
-  if  ( (prevval == 6) && (lastval == newval) ) //if dropped from max && stable value        
-  {
-    prevval = lastval;
-    if (newval < 6) 
-    {      
-    #if DEBUG == 1
-      Serial.print(F("Button: "));
-      Serial.printHEX(newval);
-      Serial.print(F(" value: "));
-      Serial.printDEC(adcval);
-      Serial.write('\n');
-    #endif //DEBUG
-      return newval;  
-    }
-  }
-  prevval = lastval; 
-  lastval = newval;  
-  return 0;
-}
 
 void loadMenuFiles()
 {      
@@ -234,11 +194,8 @@ int main(void)
 #endif  //WDT_ENABLED
   Serial.init(115200);
   Serial.print_P(str_intro);
-  Serial.print_P(str_usage);
+  Serial.print_P(str_usage);    
   drive[0].load((char *)s_bootfile);   //if there is "BOOT.IMG" on SD load it
-  sdfile.scanFiles((char *)s_RootDir); //get number of files on SD root Dir  
-  init_ADC(); //prep ADC
-  reqADC(ADC_PIN); //request ADC reading on ADC_PIN  
    
   for(;;)
   {   
@@ -247,11 +204,11 @@ int main(void)
   #endif //WDT_ENABLED  
     if (GET_DRVSEL() )
     {
-      disp.setDriveBusy(GET_DRVSEL());
-      drive[GET_DRVSEL() - 1].run();
-      disp.setDriveIdle();
+      busyMessage();
+      drive[GET_DRVSEL() - 1].run();      
+      idleMessage();
     }    
-    if (adcReady) buttonAction(adcButton());    
+    if (adcReady) buttonAction(abtn.read());    
 	  if (rxReady) readRx();
 	  disp.update();
   }

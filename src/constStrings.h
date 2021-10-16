@@ -28,12 +28,28 @@
 	Serial.print_P(str_colon); \
 	Serial.print_P(x); }
 
+#define busyMessage() { \
+      disp.setDriveBusy(GET_DRVSEL()); \
+      Serial.print_P(str_busy); }     //very short message, take too long and get drive read errors 
+
+#define idleMessage() { \      
+      Serial.print_P(str_drive); \
+      if (disp.isDrive0()) Serial.write('A'); \
+      else if (disp.isDrive1()) Serial.write('B'); \
+      Serial.print_P(str_idle); \
+      disp.setDriveIdle(); \
+      Serial.write('\n'); }
+
+
 const char s_RootDir[] = {'\0'};		//Don't not make PROGMEM
 const char s_bootfile[] = "BOOT.IMG";	//Don't not make PROGMEM
 
 const char str_intro[]		PROGMEM = "\nfddEMU (c) 2021 Acemi Elektronikci\n";
 const char str_usage[]		PROGMEM = "\nS: Select drive\nP: Previous\nN: Next\nL: Load\nE: Eject\n\n";
 const char str_colon[]		PROGMEM = ": ";
+const char str_drive[]		PROGMEM = "Drive ";
+const char str_busy[]		PROGMEM = "BUSY\n";
+const char str_idle[]		PROGMEM = " idle";
 const char str_selected[]	PROGMEM = "Selected ";
 const char str_nodisk[]		PROGMEM = "No disk";
 const char str_nofile[]		PROGMEM = "NO FILE";
@@ -47,8 +63,7 @@ const char err_fnopen[]		PROGMEM = "File not opened";
 const char err_noncontig[]	PROGMEM = "Non-contiguous file";
 const char err_diskread[]	PROGMEM = "Read SD failed";
 const char err_diskwrite[]	PROGMEM = "Write SD failed";
-const char err_invboot[]	PROGMEM = "Invalid boot record";
-const char err_notfat12[]	PROGMEM = "Not FAT12 image";
+const char err_invfile[]	PROGMEM = "Unrecognized image";
 const char err_geometry[] 	PROGMEM = "Incompat geometry";
 const char err_geombig[]	PROGMEM = "Geometry > file";
 const char err_test[]		PROGMEM = "Testing 1, 2, 3";

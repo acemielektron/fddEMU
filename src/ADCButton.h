@@ -17,23 +17,25 @@
 // Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 // -----------------------------------------------------------------------------
 
-#ifndef ANALOG_READ_H
-#define ANALOG_READ_H
-
-#ifdef __cplusplus
-extern "C"{
-#endif //__cplusplus
+#ifndef ADCBUTTON_H
+#define ADCBUTTON_H
 
 #define adcReady    (!(ADCSRA & (1<<ADSC)) )
 #define adcBusy     (ADCSRA & (1<<ADSC))
 
-void init_ADC();
-int waitReadADC(uint8_t channel); //request and read ADC - blocking function
-void reqADC(uint8_t channel); //request Analog to Digital Conversion on Channel
-int readADC(); //read ADC result
+#define BUTTON_PIN 7 //ADC7
 
-#ifdef __cplusplus
-} //extern "C"
-#endif //__cplusplus
+class ADCButton{
+    private:
+    void init();
+    void requestADC(uint8_t channel);
+    int16_t readADC();
+    
+    public:
+    ADCButton();        
+    int8_t read();
+};
 
-#endif //ANALOG_READ_H
+extern class ADCButton abtn;
+
+#endif //ADCBUTTON_H
