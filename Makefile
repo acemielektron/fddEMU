@@ -5,7 +5,7 @@ OSC = 16000000UL
 CC = avr-gcc
 CXX = avr-g++
 
-INCLUDES	= -I /usr/avr/include  -I libs/u8glib/csrc -I libs/petitfs -I .
+INCLUDES	= -I . -I libs/avrFlux -I libs/petitfs  -I /usr/avr/include -I libs/u8glib/csrc
 DUAL = 0	#enable drive B = 1
 DEBUG = 0	#enable debug = 1
 FLIP = 1	#flip scren upside down = 1
@@ -28,6 +28,7 @@ OBJECTS = \
 	$(patsubst %.$(EXT_C),%.o,$(wildcard src/*.$(EXT_C))) \
 	$(patsubst %.$(EXT_C++),%.o,$(wildcard src/*.$(EXT_C++))) \
 	$(patsubst %.$(EXT_ASM),%.o,$(wildcard src/*.$(EXT_ASM)))\
+	$(patsubst %.$(EXT_C),%.o,$(wildcard libs/avrFlux/*.$(EXT_C)))\
 	$(patsubst %.$(EXT_C),%.o,$(wildcard libs/petitfs/*.$(EXT_C)))\
 	$(patsubst %.$(EXT_C),%.o,$(wildcard libs/u8glib/csrc/*.$(EXT_C)))\
 	$(patsubst %.$(EXT_C),%.o,$(wildcard libs/u8glib/sfntsrc/*.$(EXT_C))) 	 	
