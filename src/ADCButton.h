@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// simple analog read
+// This file is part of fddEMU "Floppy Disk Drive Emulator"
 // Copyright (C) 2021 Acemi Elektronikci
 //
 // This program is free software; you can redistribute it and/or modify
