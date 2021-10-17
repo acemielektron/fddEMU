@@ -25,6 +25,7 @@
 #include "avrFlux.h"
 #include "constStrings.h"
 #include "FDisplay.h"
+#include "VirtualFloppyFS.h"
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -126,7 +127,7 @@ int FloppyDrive::getSectorData(int lba)
     n = disk_read_sector(pbuf, startSector+lba);
     if (n) errorMessage(err_diskread);
   }
-  else errorMessage(err_fnopen);
+  else vffs.readSector(pbuf, lba);
   return n;
 }
 
@@ -140,7 +141,7 @@ int FloppyDrive::setSectorData(int lba)
     n = disk_write_sector(pbuf, startSector+lba);
     if (n) errorMessage(err_diskwrite);
   }
-  else errorMessage(err_fnopen);
+  else vffs.writeSector(pbuf, lba);
   
   #if DEBUG
   uint8_t head   = 0;
@@ -202,7 +203,8 @@ void FloppyDrive::run()
         else if (track >= numTrack) track = numTrack-1;          
         (track == 0) ? SET_TRACK0_LOW() : SET_TRACK0_HIGH(); 
         iTrack = track;        
-        (isReady()) ? SET_DSKCHANGE_HIGH() : SET_DSKCHANGE_LOW(); //disk present ?
+        //(isReady()) ? SET_DSKCHANGE_HIGH() : SET_DSKCHANGE_LOW(); //disk present ?
+        SET_DSKCHANGE_HIGH();
       }
       //start sector
       lba=(track*2+side)*18+sector;//LBA = (C × HPC + H) × SPT + (S − 1)

@@ -157,6 +157,11 @@ void FDISPLAY::noticeScreen()
 	drawStrP(caution_height + 5, d, notice_header);
 	d = (w-getStrWidthP(notice_message))/2;
 	drawStrP(caution_height + 20, d, notice_message);	
+	//Output notice to serial
+	Serial.print_P(notice_header); \
+	Serial.print_P(str_colon); \
+	Serial.print_P(notice_message);
+	Serial.write('\n');
 }
 
 void FDISPLAY::splashScreen()
