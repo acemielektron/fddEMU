@@ -91,7 +91,7 @@ Pin			|Arduino Nano|0.96" OLED SSD1306
 GND         |GND        |GND
 VCC         |5V         |VCC
 SDA			|A4			|SDA
-SCL			|A3			|SCL
+SCL			|A5			|SCL
 
 <br><br>
 
@@ -103,7 +103,7 @@ SCL			|A3			|SCL
 **Limitations**
 <br>
 * fddEMU is not an cycle exact floppy emulator , it is more of a hack (it's a bit slower than actual fdd) but it works because floppy controllers have sensible timeouts and we take advantage of that.
-* fddEMU is based on MFM encoding which is used by HD (High Density) disks so there is no DD (Double Density) support as of now. So unless host FDC supports HD it won't work. Most FDC chips support HD so this is not much of an issue. 
+* fddEMU is based on MFM encoding which is used by HD (High Density) disks so there is no DD (Double Density - FM encoding) support as of now. So unless host FDC supports HD it won't work. Most FDC chips support HD so this is not much of an issue. It is also possible to implement FM encoding in the future.
 * fddEMU uses raw floppy images (images prepared with dd or rawread) does not require or use a MFM file. Converts raw image sectors to MFM on the fly using [ArduinoFDC](https://github.com/dhansel/ArduinoFDC) library.
 * fddEMU supports fixed sector size of 512 bytes, other sector sizes are not supported.
 * Requires a Floppy Drive Controller (FDC) on the PC side to communicate so it probably wont work with an Amiga.
