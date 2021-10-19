@@ -53,6 +53,14 @@ const char err_invfile[]	PROGMEM = "Unrecognized image";
 const char err_geometry[] 	PROGMEM = "Incompat geometry";
 const char err_geombig[]	PROGMEM = "Geometry > file";
 const char err_test[]		PROGMEM = "Testing 1, 2, 3";
+//Virtual floppy things
+const char str_label[]      PROGMEM = "FDDEMU";
+const char str_disks[]   PROGMEM = "DISKS";
+const char str_load0name[]  PROGMEM = "DRVA";
+const char str_load1name[]  PROGMEM = "DRVB";
+const char str_loadext[]    PROGMEM = "TXT";
+const char str_dot[]        PROGMEM = ".";
+const char str_2dot[]       PROGMEM = "..";
 //Boot sector things
 const uint8_t bs_jump[3]	PROGMEM = {0xEB, 0x3C, 0x90};
 const char bs_fsid[5]		PROGMEM = {'F','A','T','1','2'};

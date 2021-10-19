@@ -44,14 +44,35 @@ uint8_t		bootStrap[448]; //boot strap program
 uint16_t	signature;	//	0x55 0xAA
 };
 
-typedef struct FatBootRecord FatBS;
+struct __attribute__((__packed__)) DirEntry{
+uint8_t		name[8];//File name
+uint8_t		ext[3];	//File extension
+uint8_t		attr;	//File attributes
+uint16_t	rsvd1;	//NT reserved
+uint16_t	cTime;	//time created
+uint16_t	cDate;	//date created
+uint16_t	rsvd2;	//reserved
+uint16_t	clustHI;//First cluster high word
+uint16_t	mTime;	//Time Modified
+uint16_t	mDate;	//Date Modified
+uint16_t	clustLO;//First cluster low word
+uint32_t	fileSize;
+};
+
 typedef struct PartitionRecord PART;
 typedef struct MasterBootRecord MBR;
+typedef struct FatBootRecord FatBS;
+typedef struct DirEntry DIRE;
 
-class VirtualFloppyFS{
+class Fat12{
+    public:
+    void setCluster(uint16_t cluster, uint16_t next_cluster, uint8_t *buffer);
+    void genClusters(uint16_t firstCluster, int16_t n, uint8_t *buffer);
+};
+
+class VirtualFloppyFS: public Fat12{
     private:
-    uint32_t sdRootSect;
-    uint32_t findSDrootSector(uint8_t *buffer);
+    uint32_t sdRootSect;    
     void genBootSector(FatBS *pBS);
     void genFatSector(uint8_t *buffer, uint16_t sector);
     void genRootDir(uint8_t *buffer, uint16_t sector);
