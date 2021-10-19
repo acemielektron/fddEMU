@@ -167,6 +167,15 @@ int FloppyDrive::setSectorData(int lba)
   return n;
 }
 
+bool FloppyDrive::load(char *r_file) 
+{
+  if (FloppyDisk::load(r_file)) 
+    (numSec > 9) ? bitLength = 16 : bitLength = 32; //DD or HD
+  else 
+    return false;  
+  return true;  
+}
+
 void FloppyDrive::run()
 {
   static int track=0;
@@ -177,7 +186,8 @@ void FloppyDrive::run()
   if (isChanged()) 
   {
     SET_DSKCHANGE_LOW();
-    if (isReady()) clrChanged();//if a disk is loaded clear diskChange flag    
+    //if (isReady()) clrChanged();//if a disk is loaded clear diskChange flag    
+    clrChanged(); //if no disk is present virtual disk is inserted
   }
   (isReadonly()) ? SET_WRITEPROT_LOW() : SET_WRITEPROT_HIGH();  //check readonly  
   setup_timer1_for_write(); 
