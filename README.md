@@ -107,7 +107,7 @@ SCL			|A5			|SCL
 * fddEMU uses raw floppy images (images prepared with dd or rawread) does not require or use a MFM file. Converts raw image sectors to MFM on the fly using [ArduinoFDC](https://github.com/dhansel/ArduinoFDC) library.
 * fddEMU supports fixed sector size of 512 bytes, other sector sizes are not supported.
 * Requires a Floppy Drive Controller (FDC) on the PC side to communicate so it probably wont work with an Amiga.
-* To protect screen currently a watchdog timer of 8 seconds is set (which is the longest duration for watchdog). Unfortunately mcu (arduino) cant access SD card after this watchdog reset requring removing the sd card, waiting a few seconds, reinserting the card then resetting the mcu. 
+* If read data pin (D8) is disconnected or does not have sufficient external pullup fddEMU might hang up while reading data from host, which might cause a static image on screen. To protect the screen currently a watchdog timer of 8 seconds is set (which is the longest duration for watchdog timer). If mcu (arduino) can't access SD card after reset remove the sd card, wait a few seconds, reinsert the SD card then reset the arduino.
 <br><br>
 
 **Acknowledgements**
@@ -128,8 +128,10 @@ SCL			|A5			|SCL
 * Image file must be contiguous for fddEMU to be able to load, if the file is not contiguous an error message will be shown and loading will fail.
 * Contiguity check would take long for large files (> 2MB) during this check fddEMU can not be used.
 * For booting a host system, on startup fddEmu looks for "BOOT.IMG" on SD card. If there is a "BOOT.IMG" on the SD card fddEMU tries to load this file to drive A. 
+* if image file has "read only" attribute set, fddEMU will report "Write Protected" to host system.
 * To protect OLED screen fddEMU will put screen to sleep after some idle time, press "S1" (SELECT) button or "S" key inside serial terminal to wake screen up.
-* When host selected (reading/writing) one the emulated drives, the selected (active) drive's icon become inverted and stays this way till host unselects the drive. During this time fddEMU will not accept input.<br>*Warning: fddEMU will not put the screen to sleep while drive is active. If there is a hardware or software problem causing an emulated drive to go continuously active OLED screen might be damaged.*
+* When host is reading/writing one of the emulated drives, BUSY message will be shown on screen and serial, during this time fddEMU will not respond to input. *Warning: fddEMU will not put the screen to sleep while drive is active. If there is a hardware or software problem causing an emulated drive to go continuously active, OLED screen might be damaged.*
+* Virtual Floppy is floppy image dynamically built by mcu (atmega328p). If enabled (currently disabled in Makefile), the virtual floppy image will be inserted whenever a drive is ejected. Files in SD card are shown in "DISKS" directory of the virtual floppy, "DRVA.TXT" and "DRVB.TXT" files in the the virtual floppy contain currently loaded image file's filename. Writing filename of an image file (eg: DOS6DSK1.IMG) in these TXT files will result in loading requested image file to the selected emulated drive. Unfotunately disk cache might interfere with writing files and you might have to flush disk cache.
 
 <br><br>
 
@@ -167,7 +169,7 @@ After a drive is selected:<br>
 "P" key selects the previous file in the root directory listing. If the first file is selected, this file is reselected.<br>
 "L" key loads the selected image file to the selected drive.<br>
 "E" key ejects image file loaded to selected drive. If pressed during file selection, cancels file selection.<br>
-
-
+<br>
+**Note:**  Please report any errors on [github issues for fddEMU](https://github.com/acemielektron/fddEMU/issues). Suggestions for improvements could be posted on [fddEMU blog page](http://acemielektronikci.blogspot.com/2021/10/fddemu-disket-surucu-emulatoru.html)
 <br><br>
 
