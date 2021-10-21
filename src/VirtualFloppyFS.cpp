@@ -137,7 +137,7 @@ void VirtualFloppyFS::genBootSector(FatBS *pBS)
     memcpy_P(pBS->volumeLabel, str_label, 6);
     memcpy_P(pBS->fsID, bs_fsid, 5);
     memcpy_P(pBS->bootStrap, bs_bootStrap, 448); //448 bytes
-    pBS->signature = 0xAA55;
+    //pBS->signature = 0xAA55; //dont make bootabel till bootstrap is fixed
 }
 
 void VirtualFloppyFS::genFatSector(uint8_t *buffer, uint16_t sector)

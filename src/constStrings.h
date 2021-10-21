@@ -22,7 +22,12 @@
 
 #include <avr/pgmspace.h>
 
-#define errorMessage(x) {disp.showNoticeP(errHDR, x);}
+#define errorMessage(x) { \
+    disp.showNoticeP(errHDR, x); \
+	Serial.print_P(errHDR); \
+	Serial.print_P(str_colon); \
+	Serial.print_P(x); \
+	Serial.write('\n');}
 
 const char s_RootDir[] = {'\0'};		//Don't not make PROGMEM
 const char s_bootfile[] = "BOOT.IMG";	//Don't not make PROGMEM
@@ -53,6 +58,7 @@ const char err_invfile[]	PROGMEM = "Unrecognized image";
 const char err_geometry[] 	PROGMEM = "Incompat geometry";
 const char err_geombig[]	PROGMEM = "Geometry > file";
 const char err_test[]		PROGMEM = "Testing 1, 2, 3";
+
 //Virtual floppy things
 const char str_label[]      PROGMEM = "FDDEMU";
 const char str_disks[]   PROGMEM = "DISKS";

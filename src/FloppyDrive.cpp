@@ -127,7 +127,9 @@ int FloppyDrive::getSectorData(int lba)
     n = disk_read_sector(pbuf, startSector+lba);
     if (n) errorMessage(err_diskread);
   }
+#if VFFS_ENABLED  
   else vffs.readSector(pbuf, lba);
+#endif //VFFS_ENABLED    
   return n;
 }
 
@@ -141,7 +143,9 @@ int FloppyDrive::setSectorData(int lba)
     n = disk_write_sector(pbuf, startSector+lba);
     if (n) errorMessage(err_diskwrite);
   }
+#if VFFS_ENABLED    
   else vffs.writeSector(pbuf, lba);
+#endif //VFFS_ENABLED    
   
   #if DEBUG
   uint8_t head   = 0;
@@ -186,8 +190,11 @@ void FloppyDrive::run()
   if (isChanged()) 
   {
     SET_DSKCHANGE_LOW();
-    //if (isReady()) clrChanged();//if a disk is loaded clear diskChange flag    
+  #if VFFS_ENABLED  
     clrChanged(); //if no disk is present virtual disk is inserted
+  #else  
+    if (isReady()) clrChanged();//if a disk is loaded clear diskChange flag    
+  #endif VFFS_ENABLED  
   }
   (isReadonly()) ? SET_WRITEPROT_LOW() : SET_WRITEPROT_HIGH();  //check readonly  
   setup_timer1_for_write(); 
@@ -212,9 +219,12 @@ void FloppyDrive::run()
         if (track < 0) track=0; //Check if track valid
         else if (track >= numTrack) track = numTrack-1;          
         (track == 0) ? SET_TRACK0_LOW() : SET_TRACK0_HIGH(); 
-        iTrack = track;        
-        //(isReady()) ? SET_DSKCHANGE_HIGH() : SET_DSKCHANGE_LOW(); //disk present ?
+        iTrack = track;
+      #if VFFS_ENABLED
         SET_DSKCHANGE_HIGH();
+      #else          
+        (isReady()) ? SET_DSKCHANGE_HIGH() : SET_DSKCHANGE_LOW(); //disk present ?
+      #endif //VFFS_ENABLED            
       }
       //start sector
       lba=(track*2+side)*18+sector;//LBA = (C × HPC + H) × SPT + (S − 1)

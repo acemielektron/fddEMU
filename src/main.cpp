@@ -186,9 +186,11 @@ switch(ch)
 	  case 'E':
       buttonAction(1);
 		  break;
+  #if DEBUG    
 	  case 'x':
 	  case 'X':
 		  disp.showNoticeP(errHDR, err_test);
+  #endif //DEBUG    
 	}
 }
 

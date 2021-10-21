@@ -108,7 +108,7 @@ void FDISPLAY::statusScreen()
 	}			
 	else drawXBMP(X_OFS, Y_OFS_B, floppym_width, floppym_height, floppyb_bits);
 	//Disk1 info
-	d = (w-floppym_width-getStrWidth(drive[1].name))/2;	
+	d = (w-floppym_width-getStrWidth(drive[1].fName))/2;	
 	drawStr(floppym_width+d, Y_OFS_B+1, drive[1].fName);	
 	infostr = diskinfo(1);
 	d = (w-floppym_width-getStrWidth(infostr))/2;
@@ -127,9 +127,9 @@ void FDISPLAY::loadingScreen()
 	else if (isDrive1() )	
 		drawXBMP( (w - floppym_width)/2, 0, floppym_width, floppym_height, floppyb_bits);
 
-	drawStrP(floppym_height + 5, d, str_loading);	
+	drawStrP(d, floppym_height + 5, str_loading);	
 	d = (w-getStrWidth(menuFileNames[menu_sel]))/2;
-	drawStr(floppym_height + 20, d, menuFileNames[menu_sel]);	
+	drawStr(d, floppym_height + 20, menuFileNames[menu_sel]);	
 }
 
 void FDISPLAY::busyScreen()
@@ -142,9 +142,9 @@ void FDISPLAY::busyScreen()
 	else if (isDrive1() )	
 		drawXBMP ( (w - floppym_width)/2, 0, floppym_width, floppym_height, floppyb_bits);
 
-	drawStrP(floppym_height + 5, d, str_busy);	
+	drawStrP(d, floppym_height + 5, str_busy);	
 	d = (w-getStrWidth(drive[getSelectedDrive()-1].fName))/2;
-	drawStr(floppym_height + 20, d, drive[getSelectedDrive()-1].fName);	
+	drawStr(d, floppym_height + 20, drive[getSelectedDrive()-1].fName);	
 }
 
 void FDISPLAY::noticeScreen()
@@ -154,14 +154,9 @@ void FDISPLAY::noticeScreen()
 
 	drawXBMP( (w - caution_width)/2, 0, caution_width, caution_height, caution_bits);
 
-	drawStrP(caution_height + 5, d, notice_header);
+	drawStrP(d, caution_height + 5, notice_header);
 	d = (w-getStrWidthP(notice_message))/2;
-	drawStrP(caution_height + 20, d, notice_message);	
-	//Output notice to serial
-	Serial.print_P(notice_header); \
-	Serial.print_P(str_colon); \
-	Serial.print_P(notice_message);
-	Serial.write('\n');
+	drawStrP(d, caution_height + 20, notice_message);	
 }
 
 void FDISPLAY::splashScreen()

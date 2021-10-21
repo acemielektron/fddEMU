@@ -49,7 +49,7 @@ class U8G{  //Encapsulate some u8g functions
     void drawStr(int x, int y, char *str) {u8g_DrawStr(&u8g, x, y,(const char *)str);}
     void drawXBMP(u8g_uint_t x, u8g_uint_t y, u8g_uint_t w, u8g_uint_t h, const u8g_pgm_uint8_t *bitmap) {u8g_DrawXBMP(&u8g, x, y, w, h, bitmap);}
     u8g_uint_t getStrWidthP(const char *str) {return u8g_GetStrWidthP(&u8g, (const u8g_pgm_uint8_t*)str);}
-    u8g_uint_t getStrWidth(char *str) {return u8g_GetStrWidthP(&u8g, (const u8g_pgm_uint8_t*)str);}
+    u8g_uint_t getStrWidth(char *str) {return u8g_GetStrWidth(&u8g, (const char*)str);}
     void sleepOn() {u8g_SleepOn(&u8g);}
     void sleepOff() {u8g_SleepOff(&u8g);}
 };
