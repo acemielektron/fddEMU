@@ -22,12 +22,12 @@ Standalone (using without usb serial connection) require SSD1306 i2c screen, but
 
 **Optional**
 * 0.96" i2c OLED (SSD1306) screen (for output)
-* 5 1kOhm resistors (for making ADC buttons)
+* 4 or 5 1kOhm resistors (for making ADC buttons)
 * 1 100kOhm resistor (ADC7 has no pullup, so an external pullup required)
-* 5 push buttons (required for ADC input obviously)
+* 4 or 5 push buttons (required for ADC input obviously)
 * 5 volts power supply (Computer PSU 5v pins or an external PSU can be used)
 * Female to female jumper wires (for connecting SD adapter to arduino nano)
-* Breadboard (for placing pullups and ADC buttons)
+* Breadboard or perfboard (for placing pullups and ADC buttons)
 <br><br>
 
 **Programming**
@@ -131,24 +131,22 @@ SCL			|A5			|SCL
 * if image file has "read only" attribute set, fddEMU will report "Write Protected" to host system.
 * To protect OLED screen fddEMU will put screen to sleep after some idle time, press "S1" (SELECT) button or "S" key inside serial terminal to wake screen up.
 * When host is reading/writing one of the emulated drives, BUSY message will be shown on screen and serial, during this time fddEMU will not respond to input. *Warning: fddEMU will not put the screen to sleep while drive is active. If there is a hardware or software problem causing an emulated drive to go continuously active, OLED screen might be damaged.*
-* Virtual Floppy is floppy image dynamically built by mcu (atmega328p). If enabled (currently disabled in Makefile), the virtual floppy image will be inserted whenever a drive is ejected. Files in SD card are shown in "DISKS" directory of the virtual floppy, "DRVA.TXT" and "DRVB.TXT" files in the the virtual floppy contain currently loaded image file's filename. Writing filename of an image file (eg: DOS6DSK1.IMG) in these TXT files will result in loading requested image file to the selected emulated drive. Unfotunately disk cache might interfere with writing files and you might have to flush disk cache.
-
 <br><br>
 
-fddEMU button interface:
-* S1: Select
-* S2: Next file
-* S3: Previous file
-* S4: Load selected file
+**fddEMU button interface:**
+* S1: Load Virtual Disk
+* S2: Next
+* S3: Previous
+* S4: Open file selection Menu / Load selected file
 * S5: Eject selected disk / Cancel loading file
 
-On the main screen, drive A and if enabled drive B are displayed. To use any of the functions a drive must first be selected through "S1" button then a box frame will be shown around the selected drive.<br>
+On the main screen, drive 0 "A" and -if enabled- drive 1 "B" are displayed. To use any of the functions a drive must first be selected through "S2" or "S3" buttons.<br>
 After a drive is selected:<br>
-"S1" button selects the next drive or if last drive in the list is selected deselects drive<br>
-"S2" button opens the file selection menu on the screen. Pressing again selects next file in the menu. If end of the menu is reached last file selected.<br>
-"S3" button opens the file selection menu on the screen. Pressing again selects previous file in the menu. If start of the menu is reached first file is selected.<br>
-"S4" button loads the image file selected inte menu to the selected drive.<br>
-"S5" button ejects image file loaded to the selected drive. If pressed during file selection menu, cancels file selection menu and returns to main screen.<br>
+"S1" button: in main status screen, if virtual disk is enabled, loads the virtual disk to selected drive.<br>
+"S2" button: in main status screen selects drive down, in file selection menu selects file down.<br>
+"S3" button: in main status screen selects drive up, in file selection menu selects file up.<br>
+"S4" button: in main status screen opens file selection menu, in file section menu loads the selected image file to the selected drive.<br>
+"S5" button: in main status screen ejects image file loaded to the selected drive, in file section menu cancels file selection and returns to main status screen.<br>
 
 <br><br>
 **How to use (Serial)**
@@ -164,12 +162,39 @@ fddEMU serial interface is used through keys
 
 To use any of the functions a drive must first be selected through "S" key then serial terminal will report "Sel drive: A" or if drive B is selected "Sel drive: B".<br>
 After a drive is selected:<br>
-"S" key selects the next drive or if last drive in the list is selected deselects drive<br>
-"N" key selects next file in root directory. If the last file in the root directory is selected this file is reselected.<br>
-"P" key selects the previous file in the root directory listing. If the first file is selected, this file is reselected.<br>
-"L" key loads the selected image file to the selected drive.<br>
-"E" key ejects image file loaded to selected drive. If pressed during file selection, cancels file selection.<br>
+"S" key: shows serial status information and selects next drive.<br>
+"N" key: selects next image file. If virtul disk is enabled and if the last file in the directory is reached selects virtual disk .<br>
+"P" key: selects the previous image file. If the first file is selected, this file is reselected.<br>
+"L" key: loads selected image file to the selected drive.<br>
+"E" key: ejects image file loaded to selected drive. If pressed during file selection, cancels file selection.<br>
+
+<br><br>
+**How to use through host system (Virtual Disk)**
 <br>
-**Note:**  Please report any errors on [github issues for fddEMU](https://github.com/acemielektron/fddEMU/issues). Suggestions for improvements could be posted on [fddEMU blog page](http://acemielektronikci.blogspot.com/2021/10/fddemu-disket-surucu-emulatoru.html)
+-if virtual disk is enabled and loaded- Virtual disk root directory contains a "DISKS" directory, a "DRVA.TXT" file and if DUAL drives enabled a "DRVB.TXT" file. If an SD card is inserted "DISKS" directory contains the file listing of inserted SD card's root directory otherwise it will be empty. "DRVA.TXT" would contain name of the image file loaded the "drive 0" and "DRVB.TXT" would contain name of the image file loaded to "drive 1". Writing the name of an image file to either "DRVA.TXT" or "DRVB.TXT" would result loading requested image file to respective emulated drive upon host releasing the drive. However disk write cache might interfere writing into these files and a cache flush might be required.
+<br>
+
+<br><br>
+**How to build (Makefile)**
+<br>
+Current Makefile assumes avr-gcc and avr-binutils are installed and are in the path, 
+avr specific includes are in "/usr/avr/include" and u8glib library is installed in 
+"libs/u8glib" (either install through git or extract downloaded "u8glib.zip" to "libs/" 
+directory). <br><br>
+**make:** builds binary with default options.<br>
+**build options:**
+* *GUI:* enables graphical user interface on OLED screen and ADC buttons (enabled default by Makefile). 
+* *SERIAL:* enables serial user interface and serial commands.
+* *VFFS:* enables virtual disk.
+* *DEBUG:* enables debug output on serial.
+* *FLIP:* flips the image on OLED screen 180 degrees (enabled default by Makefile).
+* *WDT:* enables watchdog timer (enabled default by Makefile).<br><br>
+These build options could either be switched on and off from Makefile or commandline 
+(eg.: 'make DUAL=1 GUI=1 VFFS=1 SERIAL=0 DEBUG=0').<br>
+Flashing the mcu could also be done by Makefile. "make flash" programs "fddEMU.hex" to 
+default serial port "/dev/ttyUSB0". If you want to use another serial port assign it to 
+PORT variable (eg.: "make flash PORT=/dev/ttyUSB2").<br><br>
+
+**Note:**  Please report any errors on [github issues for fddEMU](https://github.com/acemielektron/fddEMU/issues). Suggestions for improvements and feedback could be posted on [fddEMU blog page](http://acemielektronikci.blogspot.com/2021/10/fddemu-disket-surucu-emulatoru.html) Although the blog page is in turkish, feel free to write comments either in turkish or english.
 <br><br>
 
