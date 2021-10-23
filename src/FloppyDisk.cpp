@@ -30,12 +30,14 @@ bool FloppyDisk::load(char *filename)
   uint16_t totalSectors;
   uint8_t wbuf[18]; //working buffer;
     
-  eject(); 
-  // open requested file
+  if (isReady()) eject(); //if there is a disk
+  // open requested file  
   if ( !sdfile.getFileInfo((char *)s_RootDir, filename) )
-    return false;
-  if ( ( startSector = sdfile.getStartSector() ) == 0)
-    return false;
+    {
+    errorMessage(err_notfound);
+    return false;  
+    }
+  startSector = sdfile.getStartSector();  
   if (sdfile.getReadOnly()) flags |= FD_READONLY;  
 
   if ( disk_readp(wbuf, startSector, 54, 18) ) //FileSystemType@54
@@ -121,7 +123,7 @@ bool FloppyDisk::load(char *filename)
 void FloppyDisk::eject(void)
 {
   startSector = 0;  
-  fName[0] = '\0';  //clear disk file name
+  memset(fName, 0, 13); //clear disk file name  
   numTrack = 80; //default for 3.5" HD Floppy
   numSec = 18; //default for 3.5" HD Floppy
   flags = FD_CHANGED; //clear flags & set DISK CHANGED

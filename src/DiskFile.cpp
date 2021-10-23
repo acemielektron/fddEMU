@@ -61,18 +61,17 @@ int16_t DiskFile::scanFiles(char *path)
     nFiles = 0;    
     if ( !openDir(path) ) 
       return 0;
-    do 
+    while ( getNextFile() ) 
     {
     #if WDT_ENABLED  
       wdt_reset();
-    #endif //WDT_ENABLED            
-      if ( !getNextFile() ) break;
+    #endif //WDT_ENABLED                  
       nFiles++;
     #if DEBUG
       printFileName();
       Serial.write('\n');
     #endif //DEBUG
-    } while (fno.fname[0] != 0);
+    }
     return nFiles;
 }
 
@@ -92,9 +91,8 @@ bool DiskFile::openDir(char *path)
 bool DiskFile::getNextEntry()
 {
   res = pf_readdir(&dir, &fno);  
-  if (res != FR_OK) 
-    return false;
-  if (fno.fname[0] == 0) res = FR_NO_FILE;    
+  if (res != FR_OK) return false;
+  if (fno.fname[0] == 0) return false;
   return true;  
 }
 
@@ -112,8 +110,11 @@ bool DiskFile::getFileInfo(char *path, char *filename)
     return false;
   while ( getNextEntry() )
   {
-      if (strcmp(fno.fname, filename) == 0) 
-        return true;
+  #if WDT_ENABLED
+    wdt_reset();
+  #endif //WDT_ENABLED  
+    if (strcmp(fno.fname, filename) == 0) 
+      return true;
   }
   return false;
 }

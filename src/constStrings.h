@@ -54,6 +54,7 @@ const char err_fopen[] 		PROGMEM = "File open failed";
 const char err_noncontig[]	PROGMEM = "Non-contiguous file";
 const char err_diskread[]	PROGMEM = "Read SD failed";
 const char err_diskwrite[]	PROGMEM = "Write SD failed";
+const char err_notfound[]	PROGMEM = "Not found";
 const char err_invfile[]	PROGMEM = "Unrecognized image";
 const char err_geometry[] 	PROGMEM = "Incompat geometry";
 const char err_geombig[]	PROGMEM = "Geometry > file";
