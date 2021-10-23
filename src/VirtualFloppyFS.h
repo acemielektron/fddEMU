@@ -20,28 +20,62 @@ uint16_t	signature;	//0x55  0xAA
 };
 
 //source: http://www.tavi.co.uk/phobos/fat.html
-struct __attribute__((__packed__)) FatBootRecord{
-uint8_t 	bootStrap_jmp[3];	//jmp instruction of boot strap program
-uint8_t		desc[8];
-uint16_t 	bytesPerSector;
-uint8_t		sectorsPerCluster;
-uint16_t	reservedSectors;
-uint8_t		nFATs;
-uint16_t	nRootEntries;
-uint16_t	nSectors; //Total sectors on disk if > 65535 set to 0 and true size at offset 0x20
-uint8_t		mediaDescriptor;
-uint16_t	sectorsPerFAT;
-uint16_t	sectorsPerTrack;
-uint16_t	nHeads;
-uint32_t	nHiddenBlocks;	//Historical = 0
-uint32_t	nSectorsLong;   //Total sectors on disk
-uint16_t	driveNumber;
-uint8_t		extendedBootBlockSign;
-uint32_t	volumeSerial;
-uint8_t		volumeLabel[11];
-uint8_t		fsID[8];
-uint8_t		bootStrap[448]; //boot strap program
-uint16_t	signature;	//	0x55 0xAA
+struct __attribute__((__packed__)) fatbootinfo{
+uint8_t 	bootStrap_jmp[3];	//@0 jmp instruction of boot strap program
+uint8_t		description[8];		//@3
+uint16_t 	bytesPerSector;		//@11
+uint8_t		sectorsPerCluster;	//@13
+uint16_t	reservedSectors;	//@14
+uint8_t		nFATs;				//@16
+uint16_t	nRootEntries;		//@17
+uint16_t	nSectors;           //@19 Total sectors on disk if > 65535 set to 0 and true size at offset 0x20
+uint8_t		mediaDescriptor;	//@21
+uint16_t	sectorsPerFAT;		//@22
+uint16_t	sectorsPerTrack;	//@24
+uint16_t	nHeads;				//@26
+uint32_t	nHiddenBlocks;	    //@28 Historical = 0
+uint32_t	nSectorsLong;		//@32
+uint8_t		driveNumber;	    //@36
+uint8_t		ntFlags;		    //@37
+uint8_t		signature;	        //@38
+uint32_t	volumeSerial;	    //@39
+uint8_t		volumeLabel[11];	//@43
+uint8_t		fsID[8];			//@54
+uint8_t		bootStrap[448];     //@62 boot strap program
+uint16_t	bootSign;		    //@510 0x55 0xAA
+};
+
+//https://wiki.osdev.org/FAT#FAT_32
+struct __attribute__((__packed__)) fat32info{
+uint8_t 	bootStrap_jmp[3];	//@0 jmp instruction of boot strap program
+uint8_t		description[8];		//@3
+uint16_t 	bytesPerSector;		//@11
+uint8_t		sectorsPerCluster;	//@13
+uint16_t	reservedSectors;	//@14
+uint8_t		nFATs;				//@16
+uint16_t	nRootEntries_Old;	//@17 fat12-fat16 only
+uint16_t	nSectors_Old;		//@19 fat12-fat16 only
+uint8_t		mediaDescriptor;	//@21
+uint16_t	sectorsPerFAT_Old;	//@22 fat12-fat16 only
+uint16_t	sectorsPerTrack;	//@24
+uint16_t	nHeads;				//@26
+uint32_t	nHiddenBlocks;		//@28 LBA of the beginning of partition
+uint32_t	nSectors;			//@32
+uint32_t	sectorsPerFAT;		//@36
+uint16_t	flags;				//@40
+uint16_t	version;			//@42
+uint32_t	rootCluster;		//@44
+uint16_t	FSInfoSector;		//@48
+uint16_t	backupBootSector;   //@50
+uint8_t		reserved[12];		//@52
+uint8_t		driveNumber;		//@64
+uint8_t		ntFlags;			//@65
+uint8_t		signature;			//@66
+uint32_t	volumeSerial;		//@67
+char		volumeLabel[11];	//@71
+char		fsID[8];			//@82 Always "FAT32   "
+uint8_t		bootStrap[420];		//@90
+uint16_t	bootSign;			//@510 0x55 0xAA
 };
 
 struct __attribute__((__packed__)) DirEntry{
@@ -61,7 +95,8 @@ uint32_t	fileSize;
 
 typedef struct PartitionRecord PART;
 typedef struct MasterBootRecord MBR;
-typedef struct FatBootRecord FatBS;
+typedef struct fatbootinfo FatBS;
+typedef struct fat32info Fat32BS;
 typedef struct DirEntry DIRE;
 
 class Fat12{
@@ -70,17 +105,20 @@ class Fat12{
     void genClusters(uint16_t firstCluster, int16_t n, uint8_t *buffer);
 };
 
+#define F_EOFLIST   (1 << 0)
+
 class VirtualFloppyFS: public Fat12{
     private:
     uint32_t sdRootSect;    
-    void genBootSector(FatBS *pBS);
+    uint8_t flags;
+    void genBootSector(uint8_t *buffer);
     void genFatSector(uint8_t *buffer, uint16_t sector);
     void genRootDir(uint8_t *buffer, uint16_t sector);
-    void genDataSector(uint8_t *buffer, uint16_t sector);
+    void genDataSector(uint8_t *buffer, uint16_t sector);    
     public:    
     VirtualFloppyFS();
     void readSector(uint8_t *buffer, uint16_t sector);
-    void writeSector(uint8_t *buffer, uint16_t sector);
+    void writeSector(uint8_t *buffer, uint16_t sector);    
 };
 
 extern class VirtualFloppyFS vffs;

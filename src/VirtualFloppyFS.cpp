@@ -3,6 +3,7 @@
 #include "constStrings.h"
 #include "diskio.h" //direct SD access
 #include "simpleUART.h" //debug
+#include "FDisplay.h" //use disp.menuFileNames[0] as storage
 #include "pff.h" //file attributes
 #include <string.h>
 
@@ -39,11 +40,16 @@ uint32_t findSDrootSector(uint8_t *buffer)
 
     MBR *pMBR = (MBR *)buffer;
     FatBS *pBS = (FatBS *)buffer;
+    Fat32BS *p32BS = (Fat32BS *)buffer;
+
     if (disk_read_sector(buffer, 0)) 
         return 0;
     bootSect =  pMBR->part[0].startSector;
     disk_read_sector(buffer, bootSect);
-    rootSect = bootSect + pBS->reservedSectors + (pBS->nFATs*pBS->sectorsPerFAT);
+    if ( (pBS->fsID[0 == 'F']) && (pBS->fsID[0 == 'A']) )
+        rootSect = bootSect + pBS->reservedSectors + (pBS->nFATs*pBS->sectorsPerFAT);
+    else if ( (p32BS->fsID[0 == 'F']) && (p32BS->fsID[0 == 'A']) )
+        rootSect = bootSect + p32BS->reservedSectors + (p32BS->nFATs*p32BS->sectorsPerFAT) +( (p32BS->rootCluster -2)*p32BS->sectorsPerCluster );
 #if DEBUG    
     Serial.print(F("SD boot sect: "));
     Serial.printDEC(bootSect);
@@ -75,7 +81,7 @@ VirtualFloppyFS::VirtualFloppyFS()
 void VirtualFloppyFS::readSector(uint8_t *buffer, uint16_t sector)
 {
     if (sector == 0) 
-        genBootSector((FatBS *)buffer);
+        genBootSector(buffer);
     else if (sector >= FAT_SECTOR && sector < ROOT_SECTOR)
         genFatSector(buffer, sector);
     else if (sector >= ROOT_SECTOR && sector < DATA_SECTOR)    
@@ -99,7 +105,8 @@ void VirtualFloppyFS::writeSector(uint8_t *buffer, uint16_t sector)
             Serial.print((char *)buffer);
             Serial.write('\n');
         #endif //DEBUG   
-            drive[0].load((char *)buffer);
+            memcpy(disp.menuFileNames[0], buffer, 12); //store filename in menu strings[0]
+            disp.menuFileNames[0][12]='A'; //set 13th char A (should be 0)
         }
     #if ENABLE_DRIVE_B    
         else if (r_sector == DRV_B_SECTOR)
@@ -110,17 +117,23 @@ void VirtualFloppyFS::writeSector(uint8_t *buffer, uint16_t sector)
             Serial.print((char *)buffer);
             Serial.write('\n');
         #endif //DEBUG    
-            drive[1].load((char *)buffer);
+            memcpy(disp.menuFileNames[0], buffer, 12); //store filename in menu strings[0]
+            disp.menuFileNames[0][12]='B'; //set 13th char B (should be 0)        
         }
     #endif //ENABLE_DRIVE_B
     }        
 }
 
-void VirtualFloppyFS::genBootSector(FatBS *pBS)
+void VirtualFloppyFS::genBootSector(uint8_t *buffer)
 {
+    FatBS *pBS = (FatBS *)buffer;
+    //find root directory of SD card
+    if (sdRootSect == 0) 
+        sdRootSect = findSDrootSector(buffer);
+    //prepare virtual floppy boot sector
     memset(pBS, 0, 512); //fill boot sector buffer with zeroes
     memcpy_P(pBS->bootStrap_jmp, bs_jump, 3);    
-    memcpy_P(pBS->desc, str_fddEMU, 6);    
+    memcpy_P(pBS->description, str_fddEMU, 6);    
     pBS->bytesPerSector = BPS;
     pBS->sectorsPerCluster = SPC;
     pBS->reservedSectors = NRSV;
@@ -131,13 +144,13 @@ void VirtualFloppyFS::genBootSector(FatBS *pBS)
     pBS->sectorsPerFAT = SPFAT;
     pBS->sectorsPerTrack = SPT;
     pBS->nHeads = 2;
-    pBS->extendedBootBlockSign = 0x29;
+    pBS->signature = 0x29;
     pBS->volumeSerial = 0xF0D0D0E0;
     memset(pBS->volumeLabel, ' ', 11);
     memcpy_P(pBS->volumeLabel, str_label, 6);
     memcpy_P(pBS->fsID, bs_fsid, 5);
     memcpy_P(pBS->bootStrap, bs_bootStrap, 448); //448 bytes
-    //pBS->signature = 0xAA55; //dont make bootabel till bootstrap is fixed
+    pBS->bootSign = 0xAA55;     
 }
 
 void VirtualFloppyFS::genFatSector(uint8_t *buffer, uint16_t sector)
@@ -187,33 +200,38 @@ void VirtualFloppyFS::genDataSector(uint8_t *buffer, uint16_t sector)
     uint16_t r_sector = DATA_SECTOR;
     r_sector = sector - r_sector;
 
+    //Transfer SD root directory entries in DISKS directory of Virtual Floppy
     if ( (r_sector >= DISKS_START) && (r_sector < DISKS_END) )
     {                
         DIRE *pDir = (DIRE *) buffer;
-        r_sector -= DISKS_START;         
-        if  (sdRootSect == 0) sdRootSect = findSDrootSector(buffer);        
+        r_sector -= DISKS_START;                 
+
+        if (r_sector == 0) flags &= ~F_EOFLIST; //clear EOF flag;
         if (sdRootSect)
-        {               
-            disk_read_sector(buffer, sdRootSect + r_sector); //return SD card root sector            
+        {                    
+            if (flags & F_EOFLIST) memset(buffer, 0, 512);
+            else disk_read_sector(buffer, sdRootSect + r_sector); //return SD card root sector            
             for (uint8_t i=0; i< 512/sizeof(DIRE); i++)
             {
+                if (pDir[i].name[0] == 0) flags |= F_EOFLIST;
                 pDir[i]. clustHI = 0;
                 pDir[i]. clustLO = 0;
                 //pDir[i].fileSize = 0;
             }
         }       
         else memset(buffer, 0, 512);
+        
         if (r_sector == 0)
-        {   //overwrite fitst 2 entries with . and .. entries 
-            //volume label and first LFN record are owerwritten
+        {   //overwrite first 2 entries with . and .. entries 
+            //Probably volume label and first LFN record are overwritten
             makeDirEntryP(str_dot, NULL, AM_DIR, DISKS_START+FIRST_CLUSTER, 0, &pDir[0]);
             makeDirEntryP(str_2dot, NULL, AM_DIR, 0, 0, &pDir[1]);
         }
-    }
-    else if (r_sector == DRV_A_SECTOR)
+    }    
+    else if (r_sector == DRV_A_SECTOR)  //Drive0 currently loaded file
         memcpy(buffer, drive[0].fName, 13);
 #if ENABLE_DRIVE_B        
-    else if (r_sector == DRV_B_SECTOR)
+    else if (r_sector == DRV_B_SECTOR)  //Drive1 currently loaded file
         memcpy(buffer, drive[1].fName, 13);
 #endif //ENABLE_DRIVE_B        
     else memset(buffer, 0, 512); //fill buffer with zeroes

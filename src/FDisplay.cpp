@@ -35,7 +35,11 @@ char *diskinfo(uint8_t r_drive)	//Generate disk CHS info string in itoabuf (defi
 	
 	if (drive[r_drive].fName[0] == 0)
 	{
+	#if VFFS_ENABLED
+		strcpy_P(infostring, str_fddEMU);
+	#else	
 		strcpy_P(infostring, str_nodisk);
+	#endif //VFFS_ENABLED
 		return infostring;
 	}		
 	infostring[0] = 'C';

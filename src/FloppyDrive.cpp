@@ -194,7 +194,7 @@ void FloppyDrive::run()
     clrChanged(); //if no disk is present virtual disk is inserted
   #else  
     if (isReady()) clrChanged();//if a disk is loaded clear diskChange flag    
-  #endif VFFS_ENABLED  
+  #endif //VFFS_ENABLED  
   }
   (isReadonly()) ? SET_WRITEPROT_LOW() : SET_WRITEPROT_HIGH();  //check readonly  
   setup_timer1_for_write(); 

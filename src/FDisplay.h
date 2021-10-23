@@ -27,7 +27,8 @@
 #define SLEEP_TIMEOUT	255
 
 
-#define BIT_BUSY    7   //drive in use
+#define DRIVE0 (1 << BIT_DRIVE0)
+#define DRIVE1 (1 << BIT_DRIVE1)
 
 //Higher nibble of page ?
 #define PAGE_STATUS	    0
@@ -84,11 +85,10 @@ void update();
 void showDriveBusy(uint8_t);
 void showDriveIdle();
 void showDriveLoading();
-void selectDrive(uint8_t r_drive) {drive_sel = r_drive & ((1 << BIT_DRIVE0)|(1 << BIT_DRIVE1));}
-uint8_t getSelectedDrive() {return (drive_sel & ((1 << BIT_DRIVE0)|(1 << BIT_DRIVE1)) );} 
-uint8_t isDrive0() {return drive_sel & (1 << BIT_DRIVE0);}
-uint8_t isDrive1() {return drive_sel & (1 << BIT_DRIVE1);}
-uint8_t isBusy() {return drive_sel & (1 << BIT_BUSY);}
+void selectDrive(uint8_t r_drive) {drive_sel = r_drive & (DRIVE0 | DRIVE1);}
+uint8_t getSelectedDrive() {return (drive_sel & (DRIVE0 | DRIVE1) );} 
+uint8_t isDrive0() {return drive_sel & DRIVE0;}
+uint8_t isDrive1() {return drive_sel & DRIVE1;}
 };
 
 extern class FDISPLAY disp;

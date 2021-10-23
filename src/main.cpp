@@ -65,31 +65,27 @@ void buttonAction(int button)
 
   switch(button)
   {
-    case  5:  //select drive     
+    case  BTN_SELECT:  //select drive     
       Serial.print_P(str_selected);
       Serial.print_P(str_drive);
 
-      switch (disp.getSelectedDrive())
-		  {
-		    case 0:
-          disp.selectDrive(1 << BIT_DRIVE0);	
-          disp.setPage(PAGE_STATUS);		    
-			    Serial.write('A');
-			    break;
-      #if ENABLE_DRIVE_B
-		    case 1:          
-			    disp.selectDrive(1 << BIT_DRIVE1);          
-          disp.setPage(PAGE_STATUS);
-			    Serial.write('B');
-			    break;
-      #endif //ENABLE_DRIVE_B  
-		    default:
-			    disp.showDriveIdle();
-			    Serial.print_P(str_none);          
-		  }
+      if ( (disp.getSelectedDrive() == 0) || (disp.getSelectedDrive() == DRIVE1) )
+      {
+        disp.selectDrive(DRIVE0);	
+        Serial.write('A');
+      }
+    #if ENABLE_DRIVE_B  
+      else if (disp.getSelectedDrive() == DRIVE0)
+      {
+        disp.selectDrive(DRIVE1);	
+        Serial.write('B');
+      }
+    #else
+      else Serial.write('A');    
+    #endif //ENABLE_DRIVE_B
       Serial.write('\n');
       break;
-    case  4:  //Next file
+    case  BTN_NEXT:  //Next file
       if ( disp.getSelectedDrive() ) //if a drive selected
       {
         if (disp.getPage() == PAGE_MENU)
@@ -109,7 +105,7 @@ void buttonAction(int button)
         Serial.write('\n');  
       }
     break;
-  case  3:  //Previous file
+  case  BTN_PREV:  //Previous file
       if ( disp.getSelectedDrive() ) //if a drive selected
       {
         if (disp.getPage() == PAGE_MENU)
@@ -129,16 +125,23 @@ void buttonAction(int button)
         Serial.write('\n');  
       }
 		break;
-  case  2:  //load disk    
-    if (disp.getPage() != PAGE_MENU) break; //if we are not in menu disable load   
-    disp.showDriveLoading();
-		Serial.print_P(str_loading);
-		Serial.print(disp.menuFileNames[disp.menu_sel]);
-		Serial.write('\n');		
-    drive[disp.getSelectedDrive() - 1].load(disp.menuFileNames[disp.menu_sel]); 
-    disp.showDriveIdle();
+  case  BTN_LOAD:  //load disk    
+    if (disp.getPage() == PAGE_MENU) //if we are not in menu disable load   
+    {
+      disp.showDriveLoading();
+      Serial.print_P(str_loading);
+	    Serial.print(disp.menuFileNames[disp.menu_sel]);
+	    Serial.write('\n');
+      if (disp.isDrive0()) 
+        drive[0].load(disp.menuFileNames[disp.menu_sel]); 
+    #if ENABLE_DRIVE_B  
+      else if (disp.isDrive1()) 
+        drive[1].load(disp.menuFileNames[disp.menu_sel]); 
+    #endif //ENABLE_DRIVE_B  
+      disp.showDriveIdle();
+    }
 		break;		
-  case  1:  //eject disk
+  case  BTN_EJECT:  //eject disk
     if (disp.getPage() == PAGE_MENU)  //behave as cancel
     {
       disp.showDriveIdle();
@@ -168,23 +171,23 @@ switch(ch)
 	{
     case 'S':
     case 's':
-      buttonAction(5);
+      buttonAction(BTN_SELECT);
       break;
 	  case 'p':
 	  case 'P':
-      buttonAction(3);
+      buttonAction(BTN_PREV);
 		  break;
 	  case 'n':
 	  case 'N':
-      buttonAction(4);
+      buttonAction(BTN_NEXT);
 		  break;      
 	  case 'l':	//OK
 	  case 'L':
-      buttonAction(2);
+      buttonAction(BTN_LOAD);
 		  break;		
 	  case 'e':	//Cancel
 	  case 'E':
-      buttonAction(1);
+      buttonAction(BTN_EJECT);
 		  break;
   #if DEBUG    
 	  case 'x':
@@ -228,9 +231,23 @@ int main(void)
   #endif //WDT_ENABLED  
     if (GET_DRVSEL() )
     {
-       disp.showDriveBusy(GET_DRVSEL());
+      disp.showDriveBusy(GET_DRVSEL());
       Serial.print_P(str_busy); //very short message, take too long and get drive read errors 
-      drive[GET_DRVSEL() - 1].run();      
+      drive[GET_DRVSEL() - 1].run();     
+    #if VFFS_ENABLED  
+      if (disp.menuFileNames[0][12] != 0)  
+      {
+        if (disp.menuFileNames[0][12] == 'A') disp.selectDrive(DRIVE0);
+      #if ENABLE_DRIVE_B
+        else if (disp.menuFileNames[0][12] == 'B') disp.selectDrive(DRIVE1);
+      #endif //ENABLE_DRIVE_B  
+        disp.menuFileNames[0][12] = 0; 
+        for (int8_t i=0; i < 12; i++) //convert space, newline, return to 0
+          if (disp.menuFileNames[0][i] <= ' ') disp.menuFileNames[0][i]=0;
+        disp.setPage(PAGE_MENU);        
+        buttonAction(BTN_LOAD);
+      }
+    #endif //VFFS_ENABLED   
       Serial.print_P(str_drive);
       if (disp.isDrive0()) Serial.write('A');
       else if (disp.isDrive1()) Serial.write('B');
