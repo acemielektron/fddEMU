@@ -18,13 +18,13 @@
 // -----------------------------------------------------------------------------
 
 #include "DiskFile.h"
-#include "simpleUART.h"
+#include "SerialUI.h"
 #include "FDisplay.h"
 #include "constStrings.h"
 #include <string.h>
-#if WDT_ENABLED  
+#if ENABLE_WDT
   #include <avr/wdt.h>
-#endif //WDT_ENABLED  
+#endif //ENABLE_WDT
 
 DiskFile sdfile; //we will use as extern
 
@@ -33,11 +33,7 @@ bool DiskFile::initSD()
   // initialize the SD card  
   res = pf_mount(&fs);
   if (res == FR_OK) sdInitialized = true;
-  else
-  {
-    errorMessage(err_initSD);
-    return false;
-  }
+  else return false;
   nFiles = 0;
   scanFiles((char *)s_RootDir); //get number of files on SD root Dir  
   return true;    
@@ -51,9 +47,11 @@ DiskFile::DiskFile()
 
 void DiskFile::printFileName()
 {
+  #if ENABLE_SERIAL || DEBUG
     if (fno.fattrib & AM_DIR) Serial.write('[');
     Serial.print(fno.fname);                
     if (fno.fattrib & AM_DIR) Serial.write(']');    
+  #endif //ENABLE_SERIAL || DEBUG  
 }
 
 int16_t DiskFile::scanFiles(char *path)
@@ -63,9 +61,9 @@ int16_t DiskFile::scanFiles(char *path)
       return 0;
     while ( getNextFile() ) 
     {
-    #if WDT_ENABLED  
+    #if ENABLE_WDT
       wdt_reset();
-    #endif //WDT_ENABLED                  
+    #endif //ENABLE_WDT
       nFiles++;
     #if DEBUG
       printFileName();
@@ -110,9 +108,9 @@ bool DiskFile::getFileInfo(char *path, char *filename)
     return false;
   while ( getNextEntry() )
   {
-  #if WDT_ENABLED
+  #if ENABLE_WDT
     wdt_reset();
-  #endif //WDT_ENABLED  
+  #endif //ENABLE_WDT
     if (strcmp(fno.fname, filename) == 0) 
       return true;
   }

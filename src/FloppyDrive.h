@@ -77,20 +77,25 @@ class FloppyDrive : public FloppyDisk
 };
 
 extern volatile uint8_t iFlags; //flags set by interrupt
+//define bits of iFlags
 #define BIT_TRACKCHANGE 7
 #define BIT_DRIVE0      0
 #define BIT_DRIVE1      1
 
-#define SET_TRACKCHANGED()  (iFlags |= (1 << BIT_TRACKCHANGE))
-#define CLR_TRACKCHANGED()  (iFlags &= ~(1 << BIT_TRACKCHANGE))
-#define SET_DRIVE0()  (iFlags |= (1 << BIT_DRIVE0))
-#define SET_DRIVE1()  (iFlags |= (1 << BIT_DRIVE1))
-#define CLR_DRVSEL() (iFlags &= ~( (1 << BIT_DRIVE0)|(1 << BIT_DRIVE1)) )
+#define F_TRACKCHANGED  (1 << BIT_TRACKCHANGE)
+#define DRIVE0 (1 << BIT_DRIVE0)
+#define DRIVE1 (1 << BIT_DRIVE1)
+
+#define SET_TRACKCHANGED()  (iFlags |= F_TRACKCHANGED)
+#define CLR_TRACKCHANGED()  (iFlags &= ~F_TRACKCHANGED)
+#define SET_DRIVE0()  (iFlags |= DRIVE0)
+#define SET_DRIVE1()  (iFlags |= DRIVE1)
+#define CLR_DRVSEL() (iFlags &= ~(DRIVE0|DRIVE1) )
 
 #define IS_TRACKCHANGED() (iFlags & (1 << BIT_TRACKCHANGE))
-#define IS_DRIVE0() (iFlags & (1 << BIT_DRIVE0))
-#define IS_DRIVE1() (iFlags & (1 << BIT_DRIVE1))
-#define GET_DRVSEL() (iFlags & ( (1 << BIT_DRIVE0)|(1 << BIT_DRIVE1)) )
+#define IS_DRIVE0() (iFlags & DRIVE0)
+#define IS_DRIVE1() (iFlags & DRIVE1)
+#define GET_DRVSEL() (iFlags & (DRIVE0|DRIVE1) )
 
 
 #if ENABLE_DRIVE_B

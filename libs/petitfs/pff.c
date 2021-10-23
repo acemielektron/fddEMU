@@ -38,9 +38,9 @@
 #include "pff.h"		/* Petit FatFs configurations and declarations */
 #include "diskio.h"		/* Declarations of low level disk I/O functions */
 
-#if WDT_ENABLED		//AVR SPESIFIC ADDITON
+#if ENABLE_WDT		//AVR SPESIFIC ADDITON
 	#include <avr/wdt.h>
-#endif
+#endif //ENABLE_WDT
 
 
 /*--------------------------------------------------------------------------
@@ -1188,9 +1188,9 @@ int isContiguousFile()	//returns true if file fat blocks are contiguous ! use af
 
 	while(clst)
 	{
-	#if WDT_ENABLED	
+	#if ENABLE_WDT
 		wdt_reset();	//this check takes more than 8 seconds for large files
-	#endif	//WDT_ENABLED	
+	#endif	//ENABLE_WDT
 		CLUST oldclst = clst;
 		clst = get_fat(clst);		
 		if (clst >= fs->n_fatent) clst = 0; //end of clusterchain for file

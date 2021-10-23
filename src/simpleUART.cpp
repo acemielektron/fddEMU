@@ -22,7 +22,6 @@
 #include "simpleUART.h"
 #include <stdlib.h>
 
-class UART0 Serial;
 char itoabuf[12]; //DWORD 2^32 is 10 digits (in decimal) + sign + null terminating char
 const uint16_t MIN_2X_BAUD = F_CPU/(4*(2*0XFFF + 1)) + 1;
 

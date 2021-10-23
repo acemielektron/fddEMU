@@ -17,37 +17,22 @@
 // Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 // -----------------------------------------------------------------------------
 
-#ifndef FLOPPYDISK_H
-#define FLOPPYDISK_H
+#ifndef SERIALUI_H
+#define SERIALUI_H
 
-#include <stdint.h>
-#include <stdbool.h>
+#include "simpleUART.h"
 
-//define FLAGS
-#define FD_CHANGED  (1 << 0)
-#define FD_READY    (1 << 1)
-#define FD_READONLY (1 << 2)
-#define FD_VIRTUAL  (1 << 3)     
-
-class FloppyDisk{
+class SerialUI: public UART0{
     public:
-    uint8_t flags;
-    uint8_t numTrack;   //number of tracks
-    uint8_t numSec;     //sectors per track
-    long startSector;
-    char fName[13];    
-    FloppyDisk();
-    bool load(char *);
-    void eject();
-    void loadVirtualDisk();
-    bool isReady(void) {return (flags & FD_READY);}
-    bool isReadonly(void) {return (flags & FD_READONLY);}
-    bool isChanged(void) {return (flags & FD_CHANGED);}
-    bool isVirtual(void) {return (flags & FD_VIRTUAL);}
-    void clrChanged(void) {flags &= ~FD_CHANGED;}
+    uint8_t drv_sel;
+    int16_t file_index;  
+
+    SerialUI(void);
+    void intro();
+    void statusInfo();
+    void readRx();
 };
 
-void errorMessage(const char *errMessageProgmem);
-char *diskinfo(uint8_t r_drive);    //Generate disk CHS info string
+extern class SerialUI Serial;
 
-#endif  //FLOPPYDISK_H
+#endif //SERIALUI_H

@@ -22,37 +22,14 @@
 #include "constStrings.h"
 #include "simpleUART.h" //debug
 #include "DiskFile.h"
-#include <string.h>
-#include <stdlib.h>
+#include "ADCButton.h"
 
+#if ENABLE_GUI
 class FDISPLAY disp; //will use as extern
+#endif //ENABLE_GUI
 
 
-char *diskinfo(uint8_t r_drive)	//Generate disk CHS info string in itoabuf (defined in simpleUART)
-{
-	static char infostring[12]; //drive C/H/S info string
-	char convbuf[4];
-	
-	if (drive[r_drive].fName[0] == 0)
-	{
-	#if VFFS_ENABLED
-		strcpy_P(infostring, str_fddEMU);
-	#else	
-		strcpy_P(infostring, str_nodisk);
-	#endif //VFFS_ENABLED
-		return infostring;
-	}		
-	infostring[0] = 'C';
-	infostring[1] = 0;
-	itoa(drive[r_drive].numTrack, convbuf, 10); //max 255 -> 3 digits
-	strcat(infostring, convbuf);
-	strcat(infostring, "H2S");
-	itoa(drive[r_drive].numSec, convbuf, 10); //max 255 -> 3 digits
-	strcat(infostring, convbuf);
-	return infostring;
-}
-
-//https://github.com/olikraus/u8glib/blob/master/sys/arm/examples/menu/menu.c
+///https://github.com/olikraus/u8glib/blob/master/sys/arm/examples/menu/menu.c
 void FDISPLAY::drawMenu(void) 
 {
 	uint8_t i, h;
@@ -302,4 +279,107 @@ void FDISPLAY::update()
 		}
 	}
 	idle_timer++;
+}
+
+void FDISPLAY::loadMenuFiles()
+{      
+  menu_max = MENU_ITEMS;
+  if (sdfile.nFiles < menu_max) menu_max = sdfile.nFiles;
+  //Limit menu selection
+  if (menu_sel < 0) 
+	  {
+	  menu_sel = 0;
+	  idx_sel--;
+	  }
+  else if (menu_sel >= menu_max) 
+	{
+	  menu_sel = menu_max - 1;
+	  idx_sel++;
+	}
+  //Limit index selection  
+  if (idx_sel >= (sdfile.nFiles - MENU_ITEMS)) idx_sel = sdfile.nFiles - MENU_ITEMS - 1;
+  else if (idx_sel < 0) idx_sel = 0;  
+  sdfile.openDir((char *)s_RootDir);  //open directory
+  for (int16_t i=0; i < idx_sel; i++) sdfile.getNextFile(); //skip some files
+  for (int8_t i=0; i < menu_max && sdfile.getNextFile(); i++)
+  {
+    memcpy(menuFileNames[i], sdfile.getFileName(), 13);    
+  }
+}
+
+void FDISPLAY::buttonAction(int8_t button)
+{
+  if (button <= 0 ) //do nothing
+    return;
+
+  switch(button)
+  {
+    case  BTN_SELECT:  //load virtual disk to selected drive     
+      if (getPage() == PAGE_STATUS)  //behave as drive select
+      {
+        if (getSelectedDrive())
+        {        
+          drive[getSelectedDrive() -1].loadVirtualDisk();     
+          showDriveIdle();
+        }
+      }
+      break;
+    case  BTN_NEXT:  //Next file    
+      if (getPage() == PAGE_STATUS)  //behave as drive select+
+      {
+        if (getSelectedDrive() == 0)
+          selectDrive(DRIVE0);	
+      #if ENABLE_DRIVE_B  
+        else if (getSelectedDrive() == DRIVE0)
+          selectDrive(DRIVE1);	
+      #endif //ENABLE_DRIVE_B
+      }
+      else if (getPage() == PAGE_MENU) //behave as file select+
+      {
+        menu_sel++;
+        loadMenuFiles();
+      }     
+      break;
+    case  BTN_PREV:  //Previous file
+      if (getPage() == PAGE_STATUS)  //behave as drive select-
+      {
+        if (getSelectedDrive() == DRIVE1)
+          selectDrive(DRIVE0);	
+      }
+      else if (getPage() == PAGE_MENU) //behave as file select-
+      {
+        menu_sel++;
+        loadMenuFiles();
+      }    
+		  break;
+    case  BTN_LOAD:  //load disk    
+      if (getPage() == PAGE_STATUS) //if we are in STATUS page
+      {
+        if (getSelectedDrive()) //if a drive is selected open file selection menu
+        {
+  	      menu_sel = 0;
+          idx_sel = 0;			
+          setPage(PAGE_MENU);
+          loadMenuFiles();
+        }
+      }
+      else if (getPage() == PAGE_MENU) //if we are in file selection menu load selected file
+      {
+        showDriveLoading();
+        drive[getSelectedDrive() -1].load(menuFileNames[menu_sel]);     
+        setPage(PAGE_STATUS); //return to status
+      }
+		  break;		
+    case  BTN_EJECT:  //eject disk
+      if (getPage() == PAGE_MENU)  //behave as cancel
+      {
+        setPage(PAGE_STATUS); //return to status
+      }
+      else if (getPage() == PAGE_STATUS)
+      {      
+        if (getSelectedDrive()) //if a drive is selected behave as eject        
+          drive[getSelectedDrive() - 1].eject();        
+      }                  
+    break;
+  }  
 }

@@ -27,10 +27,6 @@
 #define SLEEP_TIMEOUT	255
 
 
-#define DRIVE0 (1 << BIT_DRIVE0)
-#define DRIVE1 (1 << BIT_DRIVE1)
-
-//Higher nibble of page ?
 #define PAGE_STATUS	    0
 #define PAGE_NOTICE     1
 #define PAGE_MENU	    2
@@ -74,6 +70,7 @@ void statusScreen();
 void drawMenu(void);
 
 public:
+int16_t idx_sel; //where were we in the menu index ?
 int8_t menu_sel;	//menu index
 int8_t menu_max;
 char menuFileNames[MENU_ITEMS][FNAME_SIZE];
@@ -89,6 +86,8 @@ void selectDrive(uint8_t r_drive) {drive_sel = r_drive & (DRIVE0 | DRIVE1);}
 uint8_t getSelectedDrive() {return (drive_sel & (DRIVE0 | DRIVE1) );} 
 uint8_t isDrive0() {return drive_sel & DRIVE0;}
 uint8_t isDrive1() {return drive_sel & DRIVE1;}
+void loadMenuFiles();
+void buttonAction(int8_t button);
 };
 
 extern class FDISPLAY disp;

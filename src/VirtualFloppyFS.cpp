@@ -1,3 +1,22 @@
+// -----------------------------------------------------------------------------
+// This file is part of fddEMU "Floppy Disk Drive Emulator"
+// Copyright (C) 2021 Acemi Elektronikci
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software Foundation,
+// Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+// -----------------------------------------------------------------------------
+
 #include "VirtualFloppyFS.h"
 #include "FloppyDrive.h"
 #include "constStrings.h"
@@ -7,7 +26,9 @@
 #include "pff.h" //file attributes
 #include <string.h>
 
+#if ENABLE_VFFS
 class VirtualFloppyFS vffs;
+#endif //ENABLE_VFFS
 
 #define BPS     512     //bytes per sector
 #define SPT     18      //sectors per track
@@ -76,9 +97,11 @@ entry->fileSize = fsize;
 VirtualFloppyFS::VirtualFloppyFS()
 {
     sdRootSect = 0;
+    memset(filename, 0, 13);
+    flags = 0;
 }
 
-void VirtualFloppyFS::readSector(uint8_t *buffer, uint16_t sector)
+uint16_t VirtualFloppyFS::readSector(uint8_t *buffer, uint16_t sector)
 {
     if (sector == 0) 
         genBootSector(buffer);
@@ -88,9 +111,10 @@ void VirtualFloppyFS::readSector(uint8_t *buffer, uint16_t sector)
         genRootDir(buffer, sector);
     else 
         genDataSector(buffer, sector);    
+    return 0; //on error return != 0    
 }
 
-void VirtualFloppyFS::writeSector(uint8_t *buffer, uint16_t sector)
+uint16_t VirtualFloppyFS::writeSector(uint8_t *buffer, uint16_t sector)
 {    
     if (sector >= DATA_SECTOR) 
     {
@@ -105,8 +129,8 @@ void VirtualFloppyFS::writeSector(uint8_t *buffer, uint16_t sector)
             Serial.print((char *)buffer);
             Serial.write('\n');
         #endif //DEBUG   
-            memcpy(disp.menuFileNames[0], buffer, 12); //store filename in menu strings[0]
-            disp.menuFileNames[0][12]='A'; //set 13th char A (should be 0)
+            memcpy(filename, buffer, 13); //store filename
+            flags |= DRIVE0;
         }
     #if ENABLE_DRIVE_B    
         else if (r_sector == DRV_B_SECTOR)
@@ -117,11 +141,12 @@ void VirtualFloppyFS::writeSector(uint8_t *buffer, uint16_t sector)
             Serial.print((char *)buffer);
             Serial.write('\n');
         #endif //DEBUG    
-            memcpy(disp.menuFileNames[0], buffer, 12); //store filename in menu strings[0]
-            disp.menuFileNames[0][12]='B'; //set 13th char B (should be 0)        
+            memcpy(filename, buffer, 13); //store filename
+            flags |= DRIVE1;
         }
     #endif //ENABLE_DRIVE_B
     }        
+    return 0; //on error return != 0    
 }
 
 void VirtualFloppyFS::genBootSector(uint8_t *buffer)

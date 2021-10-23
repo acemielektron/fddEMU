@@ -11,13 +11,16 @@ DEBUG = 0	#enable debug = 1
 FLIP = 1	#flip scren upside down = 1
 WDT = 1		#WDT enabled = 1
 VFFS = 0	#Virtual FLoppy Disabled
+GUI = 1		#Graphical User Interface enabled
+SERIAL = 0	#Serial disabled
 PORT = /dev/ttyUSB0
 
 CFLAGS = -Os -mmcu=$(MCU) -DF_CPU=$(OSC) -Wall $(INCLUDES)
 CFLAGS += -ffunction-sections -fdata-sections -Wl,--gc-sections
-CFLAGS += -DWDT_ENABLED=$(WDT)
+CFLAGS += -DENABLE_WDT=$(WDT)
 CXXFLAGS= -Os -mmcu=$(MCU) -DF_CPU=$(OSC) -Wall $(INCLUDES)
-CXXFLAGS += -DENABLE_DRIVE_B=$(DUAL) -DDEBUG=$(DEBUG) -DFLIP_SCREEN=$(FLIP) -DWDT_ENABLED=$(WDT) -DVFFS_ENABLED=$(VFFS)
+CXXFLAGS += -DENABLE_DRIVE_B=$(DUAL) -DDEBUG=$(DEBUG) -DFLIP_SCREEN=$(FLIP) -DENABLE_WDT=$(WDT) 
+CXXFLAGS += -DENABLE_VFFS=$(VFFS) -DENABLE_GUI=$(GUI) -DENABLE_SERIAL=$(SERIAL)
 LINKERFLAG = -lm
 
 # Files

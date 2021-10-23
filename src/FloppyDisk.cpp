@@ -18,19 +18,53 @@
 // -----------------------------------------------------------------------------
 
 #include "FloppyDisk.h"
-#include "simpleUART.h"
+#include "SerialUI.h"
 #include "diskio.h"
 #include "constStrings.h"
 #include "FDisplay.h"
 #include "DiskFile.h"
+#include <string.h> //for diskinfo
+#include <stdlib.h> //for diskinfo
 
+void errorMessage(const char *errMessageProgmem) 
+{
+#if ENABLE_GUI  
+  disp.showNoticeP(errHDR, errMessageProgmem);
+#endif //ENABLE_GUI
+#if ENABLE_SERIAL || DEBUG  
+	Serial.print_P(errHDR);
+	Serial.print_P(str_colon);
+	Serial.print_P(errMessageProgmem);
+	Serial.write('\n');
+#endif //ENABLE_SERIAL || DEBUG  
+}
+
+char *diskinfo(uint8_t r_drive)	//Generate disk CHS info string
+{
+	static char infostring[12]; //drive C/H/S info string
+	char convbuf[4];
+	
+	if (drive[r_drive].fName[0] == 0)
+	{
+		strcpy_P(infostring, str_nodisk);
+		return infostring;
+	}		
+	infostring[0] = 'C';
+	infostring[1] = 0;
+	itoa(drive[r_drive].numTrack, convbuf, 10); //max 255 -> 3 digits
+	strcat(infostring, convbuf);
+	strcat(infostring, "H2S");
+	itoa(drive[r_drive].numSec, convbuf, 10); //max 255 -> 3 digits
+	strcat(infostring, convbuf);
+	return infostring;
+}
 
 bool FloppyDisk::load(char *filename)
 {  
   uint16_t totalSectors;
   uint8_t wbuf[18]; //working buffer;
     
-  if (isReady()) eject(); //if there is a disk
+  if (isReady()) eject(); //if a disk is loaded, eject
   // open requested file  
   if ( !sdfile.getFileInfo((char *)s_RootDir, filename) )
     {
@@ -49,7 +83,7 @@ bool FloppyDisk::load(char *filename)
   Serial.print(F("FS: "));
   for (int i=0; i < 5; i++) Serial.write(wbuf[i]);
   Serial.write('\n');
-#endif  
+#endif //DEBUG 
   if ( (wbuf[0] != 'F') || (wbuf[1] != 'A') || (wbuf[2] != 'T') || (wbuf[3] != '1') ) //Not FAT. Raw image ?
   {
     totalSectors = sdfile.getFileSize() >> 9;  //convert filesize to 512 byte sectors (filesize / 512)
@@ -107,12 +141,6 @@ bool FloppyDisk::load(char *filename)
     }
     numSec = (uint8_t) *(int16_t *)(wbuf+13);     //WsectorsPerTrack@24
     numTrack = (uint8_t) ( totalSectors / (numSec*2) );
-    //Print info
-    Serial.print(F("Geom: "));
-    Serial.printDEC(numTrack);
-    Serial.print(F("/2/"));
-    Serial.printDEC(numSec);
-    Serial.write('\n');  
   }
   //After all the checks load image file
   memcpy(fName, filename, 13);   
@@ -132,4 +160,13 @@ void FloppyDisk::eject(void)
 FloppyDisk::FloppyDisk(void)
 {
   eject();
+}
+
+void FloppyDisk::loadVirtualDisk()
+{
+#if ENABLE_VFFS
+  if (isReady()) eject(); //if a disk is loaded, eject
+  memcpy_P(fName, str_label, 13); //set disk name to FDDEMU
+  flags |= FD_VIRTUAL;  
+#endif //ENABLE_VFFS
 }

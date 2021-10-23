@@ -29,11 +29,11 @@ class DiskFile
     private:    
     FATFS fs; //petitfs
     FILINFO fno;
-    DIR dir;
-    bool sdInitialized = false;
+    DIR dir;    
     bool initSD();
 
     public:
+    bool sdInitialized;
     FRESULT res;
     int16_t nFiles;
     DiskFile();   

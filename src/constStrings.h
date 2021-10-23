@@ -20,17 +20,15 @@
 #ifndef CONSTSTRINGS_H
 #define CONSTSTRINGS_H
 
+#if (!ENABLE_GUI) && (!ENABLE_SERIAL) //if no user interface
+    #undef ENABLE_VFFS
+    #define ENABLE_VFFS 1
+#endif //(!ENABLE_GUI) && (!ENABLE_SERIAL)
+
 #include <avr/pgmspace.h>
 
-#define errorMessage(x) { \
-    disp.showNoticeP(errHDR, x); \
-	Serial.print_P(errHDR); \
-	Serial.print_P(str_colon); \
-	Serial.print_P(x); \
-	Serial.write('\n');}
-
-const char s_RootDir[] = {'\0'};		//Don't not make PROGMEM
-const char s_bootfile[] = "BOOT.IMG";	//Don't not make PROGMEM
+const char s_RootDir[] = {'\0'};		//Don't make PROGMEM
+const char s_bootfile[] = "BOOT.IMG";	//Don't make PROGMEM
 
 const char str_fddEMU[]		PROGMEM = "fddEMU";
 const char str_2021[]       PROGMEM = "(c) 2021";
@@ -62,7 +60,7 @@ const char err_test[]		PROGMEM = "Testing 1, 2, 3";
 
 //Virtual floppy things
 const char str_label[]      PROGMEM = "FDDEMU";
-const char str_disks[]   PROGMEM = "DISKS";
+const char str_disks[]   	PROGMEM = "DISKS";
 const char str_load0name[]  PROGMEM = "DRVA";
 const char str_load1name[]  PROGMEM = "DRVB";
 const char str_loadext[]    PROGMEM = "TXT";

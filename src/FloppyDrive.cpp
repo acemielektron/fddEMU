@@ -107,7 +107,7 @@ int FloppyDrive::getSectorData(int lba)
   int n = FR_DISK_ERR;
   uint8_t *pbuf=dataBuffer+1;  
   
-  #if DEBUG
+#if DEBUG
   uint8_t head   = 0;
   uint8_t track  = lba / (numSec*2);
   uint8_t sector = lba % (numSec*2);
@@ -120,16 +120,17 @@ int FloppyDrive::getSectorData(int lba)
   Serial.write('/');
   Serial.printDEC(sector+1);
   Serial.write('\n');
-  #endif //DEBUG
+#endif //DEBUG
   
   if (isReady())
   {
     n = disk_read_sector(pbuf, startSector+lba);
     if (n) errorMessage(err_diskread);
   }
-#if VFFS_ENABLED  
-  else vffs.readSector(pbuf, lba);
-#endif //VFFS_ENABLED    
+#if ENABLE_VFFS
+  else if (isVirtual()) 
+    n = vffs.readSector(pbuf, lba);
+#endif //ENABLE_VFFS
   return n;
 }
 
@@ -143,11 +144,12 @@ int FloppyDrive::setSectorData(int lba)
     n = disk_write_sector(pbuf, startSector+lba);
     if (n) errorMessage(err_diskwrite);
   }
-#if VFFS_ENABLED    
-  else vffs.writeSector(pbuf, lba);
-#endif //VFFS_ENABLED    
+#if ENABLE_VFFS
+  else if (isVirtual()) 
+    n = vffs.readSector(pbuf, lba);
+#endif //ENABLE_VFFS
   
-  #if DEBUG
+#if DEBUG
   uint8_t head   = 0;
   uint8_t track  = lba / (numSec*2);
   uint8_t sector = lba % (numSec*2);
@@ -167,7 +169,7 @@ int FloppyDrive::setSectorData(int lba)
     Serial.write(' ');
     if ( (i&0xf) ==0xf ) Serial.write('\n');
   }
-  #endif //DEBUG
+#endif //DEBUG
   return n;
 }
 
@@ -190,11 +192,7 @@ void FloppyDrive::run()
   if (isChanged()) 
   {
     SET_DSKCHANGE_LOW();
-  #if VFFS_ENABLED  
-    clrChanged(); //if no disk is present virtual disk is inserted
-  #else  
-    if (isReady()) clrChanged();//if a disk is loaded clear diskChange flag    
-  #endif //VFFS_ENABLED  
+    if (isReady() || isVirtual()) clrChanged();//if a disk is loaded clear diskChange flag    
   }
   (isReadonly()) ? SET_WRITEPROT_LOW() : SET_WRITEPROT_HIGH();  //check readonly  
   setup_timer1_for_write(); 
@@ -207,9 +205,9 @@ void FloppyDrive::run()
     
     for (sector=0; (sector < numSec) && GET_DRVSEL(); sector++)
     {        
-    #if WDT_ENABLED                                        
+    #if ENABLE_WDT
       wdt_reset();
-    #endif  //WDT_ENABLED  
+    #endif  //ENABLE_WDT
       if (!GET_DRVSEL()) break; //if drive unselected exit loop      
       side = (SIDE()) ? 0:1; //check side
       if (IS_TRACKCHANGED()) //if track changed
@@ -220,11 +218,7 @@ void FloppyDrive::run()
         else if (track >= numTrack) track = numTrack-1;          
         (track == 0) ? SET_TRACK0_LOW() : SET_TRACK0_HIGH(); 
         iTrack = track;
-      #if VFFS_ENABLED
-        SET_DSKCHANGE_HIGH();
-      #else          
-        (isReady()) ? SET_DSKCHANGE_HIGH() : SET_DSKCHANGE_LOW(); //disk present ?
-      #endif //VFFS_ENABLED            
+        (isReady()) || isVirtual() ? SET_DSKCHANGE_HIGH() : SET_DSKCHANGE_LOW(); //disk present ?      
       }
       //start sector
       lba=(track*2+side)*18+sector;//LBA = (C × HPC + H) × SPT + (S − 1)
@@ -240,9 +234,9 @@ void FloppyDrive::run()
       {
         setup_timer1_for_read();      
         read_data(bitLength, dataBuffer, 515);
-      #if WDT_ENABLED                                
+      #if ENABLE_WDT  
         wdt_reset();
-      #endif  //WDT_ENABLED  
+      #endif  //ENABLE_WDT
         setup_timer1_for_write(); //Write-mode: arduinoFDC immediately tries to verify written sector
         setSectorData(lba); //save sector to SD
         while (!(PINC & bit(PIN_WRITEGATE)));//wait for write to finish
