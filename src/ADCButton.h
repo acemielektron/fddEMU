@@ -25,6 +25,12 @@
 
 #define BUTTON_PIN 7 //ADC7
 
+#define BTN_EJECT   1
+#define BTN_LOAD    2
+#define BTN_PREV    3
+#define BTN_NEXT    4
+#define BTN_SELECT  5     
+
 class ADCButton{
     private:
     void init();
