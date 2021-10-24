@@ -139,8 +139,7 @@ void SerialUI::statusInfo()
   SerialUI::write('\t');
   SerialUI::print(diskinfo(0));
   SerialUI::write('\n');    
-#if ENABLE_DRIVE_B    
-  SerialUI::write('\n');    
+#if ENABLE_DRIVE_B      
   SerialUI::write('B');
   SerialUI::print_P(str_colon);
   SerialUI::print(drive[1].fName);

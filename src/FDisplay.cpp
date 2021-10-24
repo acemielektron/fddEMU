@@ -20,7 +20,7 @@
 #include "FDisplay.h"
 #include "FloppyDrive.h"
 #include "constStrings.h"
-#include "simpleUART.h" //debug
+#include "SerialUI.h" //debug
 #include "DiskFile.h"
 #include "ADCButton.h"
 
@@ -297,7 +297,7 @@ void FDISPLAY::loadMenuFiles()
 	  idx_sel++;
 	}
   //Limit index selection  
-  if (idx_sel >= (sdfile.nFiles - MENU_ITEMS)) idx_sel = sdfile.nFiles - MENU_ITEMS - 1;
+  if (idx_sel > (sdfile.nFiles - MENU_ITEMS)) idx_sel = sdfile.nFiles - MENU_ITEMS;
   else if (idx_sel < 0) idx_sel = 0;  
   sdfile.openDir((char *)s_RootDir);  //open directory
   for (int16_t i=0; i < idx_sel; i++) sdfile.getNextFile(); //skip some files
@@ -305,6 +305,7 @@ void FDISPLAY::loadMenuFiles()
   {
     memcpy(menuFileNames[i], sdfile.getFileName(), 13);    
   }
+  if (sdfile.nFiles == 0) strcpy_P(menuFileNames[0], str_nodisk);
 }
 
 void FDISPLAY::buttonAction(int8_t button)
@@ -348,7 +349,7 @@ void FDISPLAY::buttonAction(int8_t button)
       }
       else if (getPage() == PAGE_MENU) //behave as file select-
       {
-        menu_sel++;
+        menu_sel--;
         loadMenuFiles();
       }    
 		  break;

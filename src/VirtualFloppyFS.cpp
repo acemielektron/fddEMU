@@ -21,7 +21,7 @@
 #include "FloppyDrive.h"
 #include "constStrings.h"
 #include "diskio.h" //direct SD access
-#include "simpleUART.h" //debug
+#include "SerialUI.h" //debug
 #include "FDisplay.h" //use disp.menuFileNames[0] as storage
 #include "pff.h" //file attributes
 #include <string.h>

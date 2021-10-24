@@ -21,7 +21,7 @@
 #include "FloppyDrive.h"
 #include "pff.h"
 #include "diskio.h"
-#include "simpleUART.h"
+#include "SerialUI.h"
 #include "avrFlux.h"
 #include "constStrings.h"
 #include "FDisplay.h"
