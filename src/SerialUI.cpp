@@ -102,13 +102,13 @@ void SerialUI::readRx()
         #if ENABLE_GUI && DEBUG 
 		    disp.showNoticeP(errHDR, err_test);
         #endif //ENABLE_GUI && DEBUG 
-            break;          
-        default:    
-            #if ENABLE_GUI    
-            //send keypresses 1-5 to button interface      
-            if ( (ch > '0') && (ch < '6') ) disp.buttonAction(ch);
-        #endif //ENABLE_GUI  
-            break;
+        break;          
+      default:    
+      #if ENABLE_GUI    
+        //send keypresses 1-5 to button interface      
+        if ( (ch > '0') && (ch < '6') ) disp.buttonAction(ch - '0');
+      #endif //ENABLE_GUI  
+        break;
 	}
 }
 

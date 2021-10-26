@@ -202,8 +202,7 @@ void FDISPLAY::setPage(uint8_t r_page)
 {	
 	page = r_page; //set requested page
 	if (sleep_timer == 0)
-	{
-		sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
+	{		
 		FDISPLAY::sleepOff();
 	#if DEBUG	
 		Serial.print(F("Screen wakeup\n"));		
@@ -284,7 +283,8 @@ void FDISPLAY::update()
 void FDISPLAY::loadMenuFiles()
 {      
   menu_max = MENU_ITEMS;
-  if (sdfile.nFiles < menu_max) menu_max = sdfile.nFiles;
+  if (sdfile.nFiles+1 < menu_max) menu_max = sdfile.nFiles+1;
+
   //Limit menu selection
   if (menu_sel < 0) 
 	  {
@@ -296,16 +296,24 @@ void FDISPLAY::loadMenuFiles()
 	  menu_sel = menu_max - 1;
 	  idx_sel++;
 	}
-  //Limit index selection  
-  if (idx_sel > (sdfile.nFiles - MENU_ITEMS)) idx_sel = sdfile.nFiles - MENU_ITEMS;
+  //Limit index selection (+1)add one more entry for "nodisk" or "virtual disk"
+  if (idx_sel > (sdfile.nFiles - MENU_ITEMS +1)) idx_sel = sdfile.nFiles - MENU_ITEMS +1;
   else if (idx_sel < 0) idx_sel = 0;  
   sdfile.openDir((char *)s_RootDir);  //open directory
   for (int16_t i=0; i < idx_sel; i++) sdfile.getNextFile(); //skip some files
-  for (int8_t i=0; i < menu_max && sdfile.getNextFile(); i++)
-  {
-    memcpy(menuFileNames[i], sdfile.getFileName(), 13);    
+  for (int8_t i=0; i < menu_max; i++)
+  {    
+	if (sdfile.getNextFile())  
+		memcpy(menuFileNames[i], sdfile.getFileName(), 13);   
+	else
+	{	
+	#if ENABLE_VFFS
+  		strcpy_P(menuFileNames[i], str_label);
+  	#else
+		strcpy_P(menuFileNames[i], str_nodisk);
+  	#endif //ENABLE_VFFS	
+	}
   }
-  if (sdfile.nFiles == 0) strcpy_P(menuFileNames[0], str_nodisk);
 }
 
 void FDISPLAY::buttonAction(int8_t button)
@@ -313,6 +321,9 @@ void FDISPLAY::buttonAction(int8_t button)
   if (button <= 0 ) //do nothing
     return;
 
+  if (sleep_timer == 0) //if screen asleep
+	setPage(PAGE_STATUS); //wake up screen @status
+  sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
   switch(button)
   {
     case  BTN_SELECT:  //load virtual disk to selected drive     
@@ -366,9 +377,14 @@ void FDISPLAY::buttonAction(int8_t button)
       }
       else if (getPage() == PAGE_MENU) //if we are in file selection menu load selected file
       {
+	    bool load_res = true;;
+
         showDriveLoading();
-        drive[getSelectedDrive() -1].load(menuFileNames[menu_sel]);     
-        setPage(PAGE_STATUS); //return to status
+		if (strcmp_P(menuFileNames[menu_sel], str_label) == 0)
+			drive[getSelectedDrive() -1].loadVirtualDisk();
+		else	
+        	load_res = drive[getSelectedDrive() -1].load(menuFileNames[menu_sel]);     
+        if (load_res) setPage(PAGE_STATUS); //return to status else show error message
       }
 		  break;		
     case  BTN_EJECT:  //eject disk

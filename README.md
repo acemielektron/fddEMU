@@ -145,7 +145,7 @@ After a drive is selected:<br>
 "S1" button: in main status screen, if virtual disk is enabled, loads the virtual disk to selected drive.<br>
 "S2" button: in main status screen selects drive down, in file selection menu selects file down.<br>
 "S3" button: in main status screen selects drive up, in file selection menu selects file up.<br>
-"S4" button: in main status screen opens file selection menu, in file section menu loads the selected image file to the selected drive.<br>
+"S4" button: in main status screen opens file selection menu, in file selection menu loads the selected image file to the selected drive.<br>
 "S5" button: in main status screen ejects image file loaded to the selected drive, in file section menu cancels file selection and returns to main status screen.<br>
 
 <br><br>
