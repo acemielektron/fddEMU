@@ -63,20 +63,6 @@
 #define IS_SELECTB()        ( !(PIND & (1 << PIN_MOTORA)) )
 // -------------------------------  Pin assignments for Arduino UNO/Nano/Pro Mini (Atmega328p)  ------------------------------
 
-class FloppyDrive : public FloppyDisk
-{
-    public:      
-    uint8_t bitLength;
-    FloppyDrive();
-    void init();
-    int getSectorData(int lba);
-    int setSectorData(int lba);
-    bool load(char *);
-    void eject() {FloppyDisk::eject(); bitLength = 16;}
-    void run();
-};
-
-extern volatile uint8_t iFlags; //flags set by interrupt
 //define bits of iFlags
 #define BIT_TRACKCHANGE 7
 #define BIT_DRIVE0      0
@@ -97,6 +83,19 @@ extern volatile uint8_t iFlags; //flags set by interrupt
 #define IS_DRIVE1() (iFlags & DRIVE1)
 #define GET_DRVSEL() (iFlags & (DRIVE0|DRIVE1) )
 
+class FloppyDrive : public FloppyDisk
+{
+    public:      
+    uint8_t bitLength;
+    FloppyDrive();
+    void init();
+    char *diskInfoStr();
+    int getSectorData(int lba);
+    int setSectorData(int lba);
+    bool load(char *);
+    void eject() {FloppyDisk::eject(); bitLength = 16;}
+    void run();
+};
 
 #if ENABLE_DRIVE_B
     #define N_DRIVE 2
@@ -104,6 +103,7 @@ extern volatile uint8_t iFlags; //flags set by interrupt
     #define N_DRIVE 1
 #endif //ENABLE_DRIVE_B
 
+extern volatile uint8_t iFlags; //flags set by interrupt
 extern class FloppyDrive drive[N_DRIVE];
 
 #endif //PLOPPYDRIVE_H

@@ -18,18 +18,21 @@
 // -----------------------------------------------------------------------------
 
 
+#include "constStrings.h"
 #include "FloppyDrive.h"
 #include "pff.h"
 #include "diskio.h"
-#include "SerialUI.h"
 #include "avrFlux.h"
-#include "constStrings.h"
-#include "FDisplay.h"
 #include "VirtualFloppyFS.h"
+#include "simpleUART.h" //DEBUG
+#include "UINotice.h" //msg.error
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
+#include <string.h> //for strcat,strcpy,...
+#include <stdlib.h> //for itoa
+
 
 //Global variables
 bool pinsInitialized = false;
@@ -100,7 +103,25 @@ FloppyDrive::FloppyDrive(void)
   init();
 }
 
-
+char *FloppyDrive::diskInfoStr()	//Generate disk CHS info string
+{
+	static char infostring[12]; //drive C/H/S info string
+	char convbuf[4];
+	
+	if (fName[0] == 0)
+	{
+		strcpy_P(infostring, str_nodisk);
+		return infostring;
+	}		
+	infostring[0] = 'C';
+	infostring[1] = 0;
+	itoa(numTrack, convbuf, 10); //max 255 -> 3 digits
+	strcat(infostring, convbuf);
+	strcat(infostring, "H2S");
+	itoa(numSec, convbuf, 10); //max 255 -> 3 digits
+	strcat(infostring, convbuf);
+	return infostring;
+}
 
 int FloppyDrive::getSectorData(int lba)
 {
@@ -125,7 +146,7 @@ int FloppyDrive::getSectorData(int lba)
   if (isReady())
   {
     n = disk_read_sector(pbuf, startSector+lba);
-    if (n) errorMessage(err_diskread);
+    if (n) msg.error(err_diskread);
   }
 #if ENABLE_VFFS
   else if (isVirtual()) 
@@ -142,7 +163,7 @@ int FloppyDrive::setSectorData(int lba)
   if (isReady())
   {
     n = disk_write_sector(pbuf, startSector+lba);
-    if (n) errorMessage(err_diskwrite);
+    if (n) msg.error(err_diskwrite);
   }
 #if ENABLE_VFFS
   else if (isVirtual()) 

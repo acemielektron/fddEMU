@@ -22,7 +22,9 @@
 #include "ADCButton.h"
 #include "SerialUI.h" //debug
 
+#if ENABLE_GUI
 class ADCButton abtn;
+#endif //ENABLE_GUI
 
 ADCButton::ADCButton()
 {

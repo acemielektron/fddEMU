@@ -17,8 +17,8 @@
 // Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 // -----------------------------------------------------------------------------
 
-#ifndef FDISPLAY_H
-#define FDISPLAY_H
+#ifndef GRAPHIC_UI_H
+#define GRAPHIC_UI_H
 
 #include "FloppyDrive.h" //BIT_DRIVE0 & BIT_DRIVE1
 #include "u8g.h"
@@ -51,7 +51,7 @@ class U8G{  //Encapsulate some u8g functions
     void sleepOff() {u8g_SleepOff(&u8g);}
 };
 
-class FDISPLAY: public U8G {
+class GraphicUI: public U8G {
 private:
 uint8_t idle_timer;
 uint8_t sleep_timer;
@@ -74,10 +74,11 @@ int16_t idx_sel; //where were we in the menu index ?
 int8_t menu_sel;	//menu index
 int8_t menu_max;
 char menuFileNames[MENU_ITEMS][FNAME_SIZE];
-FDISPLAY();
+GraphicUI();
 void setPage(uint8_t);
 uint8_t getPage() {return page;} 
 void showNoticeP(const char *, const char *);
+void showNotice(const char *, char *);
 void update();
 void showDriveBusy(uint8_t);
 void showDriveIdle();
@@ -90,6 +91,6 @@ void loadMenuFiles();
 void buttonAction(int8_t button);
 };
 
-extern class FDISPLAY disp;
+extern class GraphicUI disp;
 
-#endif //FDISPLAY_H
+#endif //GRAPHIC_UI_H

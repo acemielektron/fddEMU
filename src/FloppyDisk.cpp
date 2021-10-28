@@ -17,47 +17,13 @@
 // Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 // -----------------------------------------------------------------------------
 
-#include "FloppyDisk.h"
-#include "SerialUI.h"
-#include "diskio.h"
 #include "constStrings.h"
-#include "FDisplay.h"
+#include "FloppyDisk.h"
+#include "diskio.h"
 #include "DiskFile.h"
-#include <string.h> //for diskinfo
-#include <stdlib.h> //for diskinfo
+#include "simpleUART.h" //DEBUG
+#include "UINotice.h" //msg.error
 
-void errorMessage(const char *errMessageProgmem) 
-{
-#if ENABLE_GUI  
-  disp.showNoticeP(errHDR, errMessageProgmem);
-#endif //ENABLE_GUI
-#if ENABLE_SERIAL || DEBUG  
-	Serial.print_P(errHDR);
-	Serial.print_P(str_colon);
-	Serial.print_P(errMessageProgmem);
-	Serial.write('\n');
-#endif //ENABLE_SERIAL || DEBUG  
-}
-
-char *diskinfo(uint8_t r_drive)	//Generate disk CHS info string
-{
-	static char infostring[12]; //drive C/H/S info string
-	char convbuf[4];
-	
-	if (drive[r_drive].fName[0] == 0)
-	{
-		strcpy_P(infostring, str_nodisk);
-		return infostring;
-	}		
-	infostring[0] = 'C';
-	infostring[1] = 0;
-	itoa(drive[r_drive].numTrack, convbuf, 10); //max 255 -> 3 digits
-	strcat(infostring, convbuf);
-	strcat(infostring, "H2S");
-	itoa(drive[r_drive].numSec, convbuf, 10); //max 255 -> 3 digits
-	strcat(infostring, convbuf);
-	return infostring;
-}
 
 bool FloppyDisk::load(char *filename)
 {  
@@ -68,7 +34,7 @@ bool FloppyDisk::load(char *filename)
   // open requested file  
   if ( !sdfile.getFileInfo((char *)s_RootDir, filename) )
     {
-    errorMessage(err_notfound);
+    msg.error(err_notfound);
     return false;  
     }
   startSector = sdfile.getStartSector();  
@@ -76,7 +42,7 @@ bool FloppyDisk::load(char *filename)
 
   if ( disk_readp(wbuf, startSector, 54, 18) ) //FileSystemType@54
   {	
-    errorMessage(err_diskread);
+    msg.error(err_diskread);
 	  return false;
   }
 #if DEBUG
@@ -110,7 +76,7 @@ bool FloppyDisk::load(char *filename)
         numSec = 9;
         break;
       default:  //not a standart raw floppy image
-        errorMessage(err_invfile);
+        msg.error(err_invfile);
 	      return false;
     } //switch        
   }
@@ -130,13 +96,13 @@ bool FloppyDisk::load(char *filename)
   #endif  
     if ( (*(int16_t *)wbuf != 512) || (*(int16_t *)(wbuf+15) > 2) || (*(int16_t *)(wbuf+13) > 255) )           
     {
-      errorMessage(err_geometry);
+      msg.error(err_geometry);
 	    return false;        
     }
     totalSectors = (uint16_t) *(int16_t *)(wbuf+8);  //WtotalSectors@19
     if (totalSectors > (sdfile.getFileSize() >> 9))  
     {
-      errorMessage(err_geombig);
+      msg.error(err_geombig);
 	    return false;        
     }
     numSec = (uint8_t) *(int16_t *)(wbuf+13);     //WsectorsPerTrack@24

@@ -25,7 +25,7 @@
   #include <avr/wdt.h>
 #endif  //ENABLE_WDT
 #include "pff.h"
-#include "FDisplay.h"
+#include "GraphicUI.h"
 #include "constStrings.h"
 #include "DiskFile.h"
 #include "ADCButton.h"
@@ -39,7 +39,7 @@ int main(void)
 #endif  //ENABLE_WDT
 #if ENABLE_SERIAL || DEBUG
   Serial.init(115200);
-  Serial.intro();  
+  ser.intro();  
 #endif //ENABLE_SERIAL || DEBUG
   if (sdfile.sdInitialized)
     drive[0].load((char *)s_bootfile);   //if there is "BOOT.IMG" on SD load it  
@@ -62,14 +62,7 @@ int main(void)
     #endif //#if ENABLE_SERIAL || DEBUG  
       drive[GET_DRVSEL() - 1].run();     
     #if ENABLE_VFFS
-      if (vffs.flags & (DRIVE0|DRIVE1)) //check if a drive is flagged for VFFS load
-      {
-        if (vffs.flags & DRIVE0) drive[0].load(vffs.filename);
-      #if ENABLE_DRIVE_B
-        else if (vffs.flags & DRIVE1) drive[1].load(vffs.filename);
-      #endif //ENABLE_DRIVE_B  
-      vffs.flags = 0; //reset virtual floppy flags
-      }
+      vffs.loadImage(); //check if a drive is flagged for vffs load and load if it is
     #endif //ENABLE_VFFS
     #if ENABLE_GUI
       disp.showDriveIdle();
@@ -81,7 +74,7 @@ int main(void)
     #endif //ENABLE_SERIAL || DEBUG  
     }
   #if ENABLE_SERIAL
-	  if (rxReady) Serial.readRx();
+	  if (rxReady) ser.readRx();
   #endif //ENABLE_SERIAL
   #if ENABLE_GUI
     if (adcReady) disp.buttonAction(abtn.read());    

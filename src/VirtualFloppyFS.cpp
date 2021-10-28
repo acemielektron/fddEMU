@@ -22,7 +22,6 @@
 #include "constStrings.h"
 #include "diskio.h" //direct SD access
 #include "SerialUI.h" //debug
-#include "FDisplay.h" //use disp.menuFileNames[0] as storage
 #include "pff.h" //file attributes
 #include <string.h>
 
@@ -99,6 +98,18 @@ VirtualFloppyFS::VirtualFloppyFS()
     sdRootSect = 0;
     memset(filename, 0, 13);
     flags = 0;
+}
+
+void VirtualFloppyFS::loadImage()
+{
+    if (flags & (DRIVE0|DRIVE1)) //check if a drive is flagged for VFFS load
+      {
+        if (flags & DRIVE0) drive[0].load(filename);
+      #if ENABLE_DRIVE_B
+        else if (flags & DRIVE1) drive[1].load(filename);
+      #endif //ENABLE_DRIVE_B  
+      flags = 0; //reset virtual floppy flags
+      }
 }
 
 uint16_t VirtualFloppyFS::readSector(uint8_t *buffer, uint16_t sector)

@@ -54,4 +54,6 @@ class UART0 : public UART{
     int read(void);
 };
 
+extern class UART0 Serial;
+
 #endif //SIMPLE_UART_H

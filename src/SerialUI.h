@@ -22,7 +22,7 @@
 
 #include "simpleUART.h"
 
-class SerialUI: public UART0{
+class SerialUI{
     public:
     uint8_t drv_sel;
     int16_t file_index;  
@@ -33,6 +33,6 @@ class SerialUI: public UART0{
     void readRx();
 };
 
-extern class SerialUI Serial;
+extern class SerialUI ser;
 
 #endif //SERIALUI_H

@@ -17,16 +17,15 @@
 // Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 // -----------------------------------------------------------------------------
 
-#include "SerialUI.h"
 #include "constStrings.h"
-#include "FloppyDisk.h" //diskinfo
+#include "SerialUI.h"
 #include "FloppyDrive.h" //drive
 #include "DiskFile.h" //sdfile
-#include "FDisplay.h" //disp
+#include "GraphicUI.h" //disp
 
 
 #if ENABLE_SERIAL || DEBUG
-class SerialUI Serial;
+class SerialUI ser;
 #endif //ENABLE_SERIAL || DEBUG
 
 SerialUI::SerialUI(void)
@@ -37,7 +36,7 @@ SerialUI::SerialUI(void)
 
 void SerialUI::readRx()
 {
-  char ch = SerialUI::read();
+  char ch = Serial.read();
 
   switch(ch)
 	{
@@ -48,11 +47,11 @@ void SerialUI::readRx()
             else if (drv_sel == DRIVE0) drv_sel = DRIVE1;
         #endif //ENABLE_DRIVE_B  
             statusInfo();
-            SerialUI::print_P(str_selected);
-            SerialUI::print_P(str_drive);
-            if (drv_sel == DRIVE0) SerialUI::write('A');
-            else if (drv_sel== DRIVE1) SerialUI::write('B');
-            SerialUI::write('\n');               
+            Serial.print_P(str_selected);
+            Serial.print_P(str_drive);
+            if (drv_sel == DRIVE0) Serial.write('A');
+            else if (drv_sel== DRIVE1) Serial.write('B');
+            Serial.write('\n');               
             break;
 	    case 'p':
 	    case 'P':
@@ -64,10 +63,10 @@ void SerialUI::readRx()
             if (file_index >= sdfile.nFiles) file_index=sdfile.nFiles;      
             sdfile.openDir((char *)s_RootDir); //rewind directory
             for (int16_t i = 0; i <= file_index; i++) sdfile.getNextFile(); //skip files
-            SerialUI::print_P(str_selected);      
-            if (sdfile.getFileName()[0] != 0) SerialUI::print(sdfile.getFileName());
-            else SerialUI::print_P(str_label);
-            SerialUI::write('\n');  
+            Serial.print_P(str_selected);      
+            if (sdfile.getFileName()[0] != 0) Serial.print(sdfile.getFileName());
+            else Serial.print_P(str_label);
+            Serial.write('\n');  
 		    break;      
 	    case 'l':	//Load
 	    case 'L':
@@ -76,75 +75,73 @@ void SerialUI::readRx()
                 char filename[13];
                 
                 memcpy(filename, sdfile.getFileName(), 13);
-                SerialUI::print_P(str_loading);
-                if (filename[0] != 0) SerialUI::print(filename);
-                else SerialUI::print_P(str_label);
-                SerialUI::write('\n');              
+                Serial.print_P(str_loading);
+                if (filename[0] != 0) Serial.print(filename);
+                else Serial.print_P(str_label);
+                Serial.write('\n');              
                 if (filename[0] != 0) drive[drv_sel -1].load(filename);
                 else drive[drv_sel -1].loadVirtualDisk();
-                SerialUI::print(diskinfo(drv_sel -1));
-                SerialUI::write('\n');
+                Serial.print(drive[drv_sel -1].diskInfoStr());
+                Serial.write('\n');
             }
 		    break;		
 	    case 'e':	//Cancel
 	    case 'E':
             if (drv_sel) 
             {
-                SerialUI::print_P(str_eject);
-                if (drv_sel == DRIVE0) SerialUI::write('A');
-                else SerialUI::write('B');
-                SerialUI::write('\n');
+                Serial.print_P(str_eject);
+                if (drv_sel == DRIVE0) Serial.write('A');
+                else Serial.write('B');
+                Serial.write('\n');
                 drive[drv_sel -1].eject();
             }
-		    break;                  
+		    break; 
+    #if ENABLE_GUI                   
 	    case 'x':
-	    case 'X':      
-        #if ENABLE_GUI && DEBUG 
-		    disp.showNoticeP(errHDR, err_test);
-        #endif //ENABLE_GUI && DEBUG 
+	    case 'X':              
+		    disp.showNoticeP(str_error, err_test);        
         break;          
       default:    
-      #if ENABLE_GUI    
+          
         //send keypresses 1-5 to button interface      
         if ( (ch > '0') && (ch < '6') ) disp.buttonAction(ch - '0');
-      #endif //ENABLE_GUI  
-        break;
+    #endif //ENABLE_GUI    
 	}
 }
 
 void SerialUI::intro()
 {
-  SerialUI::write('\n');
-  SerialUI::write('\n');
-  SerialUI::print_P(str_fddEMU);
-  SerialUI::write(' ');
-  SerialUI::print_P(str_2021);
-  SerialUI::write(' ');
-  SerialUI::print_P(str_acemi);
-  SerialUI::write(' ');
-  SerialUI::print_P(str_elektron);
-  SerialUI::write('\n');
-  SerialUI::write('\n');
-  SerialUI::print_P(str_usage);    
-  SerialUI::write('\n');
-  SerialUI::write('\n');
+  Serial.write('\n');
+  Serial.write('\n');
+  Serial.print_P(str_fddEMU);
+  Serial.write(' ');
+  Serial.print_P(str_2021);
+  Serial.write(' ');
+  Serial.print_P(str_acemi);
+  Serial.write(' ');
+  Serial.print_P(str_elektron);
+  Serial.write('\n');
+  Serial.write('\n');
+  Serial.print_P(str_usage);    
+  Serial.write('\n');
+  Serial.write('\n');
 }
 
 void SerialUI::statusInfo()
 {
-  SerialUI::write('\n');    
-  SerialUI::write('A');
-  SerialUI::print_P(str_colon);
-  SerialUI::print(drive[0].fName);
-  SerialUI::write('\t');
-  SerialUI::print(diskinfo(0));
-  SerialUI::write('\n');    
+  Serial.write('\n');    
+  Serial.write('A');
+  Serial.print_P(str_colon);
+  Serial.print(drive[0].fName);
+  Serial.write('\t');
+  Serial.print(drive[0].diskInfoStr());
+  Serial.write('\n');    
 #if ENABLE_DRIVE_B      
-  SerialUI::write('B');
-  SerialUI::print_P(str_colon);
-  SerialUI::print(drive[1].fName);
-  SerialUI::write('\t');
-  SerialUI::print(diskinfo(1));
-  SerialUI::write('\n');    
+  Serial.write('B');
+  Serial.print_P(str_colon);
+  Serial.print(drive[1].fName);
+  Serial.write('\t');
+  Serial.print(drive[1].diskInfoStr());
+  Serial.write('\n');    
 #endif //ENABLE_DRIVE_B  
 }

@@ -17,10 +17,11 @@
 // Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 // -----------------------------------------------------------------------------
 
-#include "DiskFile.h"
-#include "SerialUI.h"
-#include "FDisplay.h"
 #include "constStrings.h"
+#include "DiskFile.h"
+#include "simpleUART.h" //DEBUG
+#include "UINotice.h" //msg.show
+
 #include <string.h>
 #if ENABLE_WDT
   #include <avr/wdt.h>
@@ -122,12 +123,12 @@ uint32_t DiskFile::getStartSector()
     res = pf_open(fno.fname);  
     if (res != FR_OK) 
     {
-        errorMessage(err_fopen);
+        msg.error(err_fopen);
         return 0;
     }   
     if (!isContiguousFile())  //we will use direct sector access so we need a contiguous file
     {
-        errorMessage(err_noncontig);
+        msg.error(err_noncontig);
         return 0;
     }
     return get_start_sector();  

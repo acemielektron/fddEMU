@@ -46,7 +46,8 @@ const char str_nofile[]		PROGMEM = "NO FILE";
 const char str_eject[]		PROGMEM = "Ejected ";
 const char str_cancel[]		PROGMEM = "Cancel\n";
 const char str_loading[]	PROGMEM = "Loading ";
-const char errHDR[] 		PROGMEM = "ERROR";
+const char str_error[]      PROGMEM = "ERROR";
+//Error strings
 const char err_initSD[]		PROGMEM = "Initialize SD card";
 const char err_fopen[] 		PROGMEM = "File open failed";
 const char err_noncontig[]	PROGMEM = "Non-contiguous file";

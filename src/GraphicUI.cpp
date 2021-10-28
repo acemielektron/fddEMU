@@ -17,7 +17,7 @@
 // Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 // -----------------------------------------------------------------------------
 
-#include "FDisplay.h"
+#include "GraphicUI.h"
 #include "FloppyDrive.h"
 #include "constStrings.h"
 #include "SerialUI.h" //debug
@@ -25,12 +25,12 @@
 #include "ADCButton.h"
 
 #if ENABLE_GUI
-class FDISPLAY disp; //will use as extern
+class GraphicUI disp; //will use as extern
 #endif //ENABLE_GUI
 
 
 ///https://github.com/olikraus/u8glib/blob/master/sys/arm/examples/menu/menu.c
-void FDISPLAY::drawMenu(void) 
+void GraphicUI::drawMenu(void) 
 {
 	uint8_t i, h;
 	u8g_uint_t w, d;	
@@ -54,7 +54,7 @@ void FDISPLAY::drawMenu(void)
   u8g_SetDefaultForegroundColor(&u8g); //set color back to foreground color
 }
 
-void FDISPLAY::statusScreen()
+void GraphicUI::statusScreen()
 {	
 #define X_OFS	1
 #define Y_OFS_A	3
@@ -74,7 +74,7 @@ void FDISPLAY::statusScreen()
 	//Disk0 info	
 	u8g_uint_t d = (w-floppym_width-getStrWidth(drive[0].fName))/2;
 	drawStr(floppym_width+d, Y_OFS_A+1, drive[0].fName);		
-	char *infostr = diskinfo(0);
+	char *infostr = drive[0].diskInfoStr();
 	d = (w-floppym_width-getStrWidth(infostr))/2;
 	drawStr(floppym_width+d, Y_OFS_A+14, infostr);
 #if ENABLE_DRIVE_B
@@ -91,14 +91,14 @@ void FDISPLAY::statusScreen()
 	//Disk1 info
 	d = (w-floppym_width-getStrWidth(drive[1].fName))/2;	
 	drawStr(floppym_width+d, Y_OFS_B+1, drive[1].fName);	
-	infostr = diskinfo(1);
+	infostr = drive[1].diskInfoStr();
 	d = (w-floppym_width-getStrWidth(infostr))/2;
 	drawStr(floppym_width+d, Y_OFS_B+14, infostr);
 	u8g_SetDefaultForegroundColor(&u8g); //set color back to foreground color
 #endif //ENABLE_DRIVE_B
 }
 
-void FDISPLAY::loadingScreen()
+void GraphicUI::loadingScreen()
 {
 	u8g_uint_t w = u8g_GetWidth(&u8g);
 	u8g_uint_t d = (w-getStrWidthP(str_loading))/2;
@@ -113,7 +113,7 @@ void FDISPLAY::loadingScreen()
 	drawStr(d, floppym_height + 20, menuFileNames[menu_sel]);	
 }
 
-void FDISPLAY::busyScreen()
+void GraphicUI::busyScreen()
 {
 	u8g_uint_t w = u8g_GetWidth(&u8g);
 	u8g_uint_t d = (w-getStrWidthP(str_busy))/2;
@@ -128,7 +128,7 @@ void FDISPLAY::busyScreen()
 	drawStr(d, floppym_height + 20, drive[getSelectedDrive()-1].fName);	
 }
 
-void FDISPLAY::noticeScreen()
+void GraphicUI::noticeScreen()
 {
 	u8g_uint_t w = u8g_GetWidth(&u8g);
 	u8g_uint_t d = (w-getStrWidthP(notice_header))/2;
@@ -140,7 +140,7 @@ void FDISPLAY::noticeScreen()
 	drawStrP(d, caution_height + 20, notice_message);	
 }
 
-void FDISPLAY::splashScreen()
+void GraphicUI::splashScreen()
 {
 	u8g_uint_t w = u8g_GetWidth(&u8g);
 	u8g_uint_t d = (w-floppy_width-getStrWidthP(str_2021))/2;
@@ -153,7 +153,7 @@ void FDISPLAY::splashScreen()
 	drawStrP(floppy_width+d, 40, str_elektron);
 }
 
-void FDISPLAY::init()
+void GraphicUI::init()
 {
 	u8g_SetPinInput(PN(2,5)); u8g_SetPinLevel(PN(2,5), 1); u8g_SetPinOutput(PN(2,5));
 	u8g_SetPinInput(PN(2,4)); u8g_SetPinLevel(PN(2,4), 1); u8g_SetPinOutput(PN(2,4));
@@ -165,7 +165,7 @@ void FDISPLAY::init()
 	u8g_SetFontPosTop(&u8g);	//set font position
 }
 
-void FDISPLAY::showNoticeP(const char *header, const char *message)
+void GraphicUI::showNoticeP(const char *header, const char *message)
 {
 	notice_header = header;
 	notice_message = message;
@@ -175,7 +175,7 @@ void FDISPLAY::showNoticeP(const char *header, const char *message)
 	update();
 }
 
-void FDISPLAY::showDriveIdle()
+void GraphicUI::showDriveIdle()
 {	
 	selectDrive(0);	
 	setPage(PAGE_STATUS);
@@ -183,7 +183,7 @@ void FDISPLAY::showDriveIdle()
 	update();
 }
 
-void FDISPLAY::showDriveBusy(uint8_t r_drive)
+void GraphicUI::showDriveBusy(uint8_t r_drive)
 {	
 	selectDrive(r_drive);	
 	setPage(PAGE_BUSY);
@@ -191,19 +191,19 @@ void FDISPLAY::showDriveBusy(uint8_t r_drive)
 	update();
 }
 
-void FDISPLAY::showDriveLoading()
+void GraphicUI::showDriveLoading()
 {		
 	setPage(PAGE_LOADING);
 	idle_timer = 0; //update screen ASAP
 	update();
 }
 
-void FDISPLAY::setPage(uint8_t r_page)
+void GraphicUI::setPage(uint8_t r_page)
 {	
 	page = r_page; //set requested page
 	if (sleep_timer == 0)
 	{		
-		FDISPLAY::sleepOff();
+		GraphicUI::sleepOff();
 	#if DEBUG	
 		Serial.print(F("Screen wakeup\n"));		
 	#endif //DEBUG
@@ -212,7 +212,7 @@ void FDISPLAY::setPage(uint8_t r_page)
 	sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
 }
 
-FDISPLAY::FDISPLAY()
+GraphicUI::GraphicUI()
 {
 init();
 notice_timer = NOTICE_TIMEOUT;
@@ -221,7 +221,7 @@ menu_sel = 0;
 setPage(PAGE_SPLASH);
 }
 
-void FDISPLAY::drawPage()
+void GraphicUI::drawPage()
 {
 switch(page)
 	{
@@ -248,7 +248,7 @@ switch(page)
 	}
 }
 
-void FDISPLAY::update()
+void GraphicUI::update()
 {
 	if (idle_timer == 0)
 	{
@@ -270,7 +270,7 @@ void FDISPLAY::update()
 			sleep_timer --;
 			if (sleep_timer == 0)
 			{
-				FDISPLAY::sleepOn();
+				GraphicUI::sleepOn();
 			#if DEBUG
 				Serial.print(F("Screen sleep\n"));
 			#endif //DEBUG
@@ -280,7 +280,7 @@ void FDISPLAY::update()
 	idle_timer++;
 }
 
-void FDISPLAY::loadMenuFiles()
+void GraphicUI::loadMenuFiles()
 {      
   menu_max = MENU_ITEMS;
   if (sdfile.nFiles+1 < menu_max) menu_max = sdfile.nFiles+1;
@@ -316,7 +316,7 @@ void FDISPLAY::loadMenuFiles()
   }
 }
 
-void FDISPLAY::buttonAction(int8_t button)
+void GraphicUI::buttonAction(int8_t button)
 {
   if (button <= 0 ) //do nothing
     return;

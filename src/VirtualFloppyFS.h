@@ -142,7 +142,8 @@ class VirtualFloppyFS: public Fat12{
     char filename[13];    
     VirtualFloppyFS();
     uint16_t readSector(uint8_t *buffer, uint16_t sector);
-    uint16_t writeSector(uint8_t *buffer, uint16_t sector);    
+    uint16_t writeSector(uint8_t *buffer, uint16_t sector);
+    void loadImage(); 
 };
 
 extern class VirtualFloppyFS vffs;
