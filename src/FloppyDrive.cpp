@@ -18,7 +18,7 @@
 // -----------------------------------------------------------------------------
 
 
-#include "constStrings.h"
+#include "fddEMU.h"
 #include "FloppyDrive.h"
 #include "pff.h"
 #include "diskio.h"
@@ -43,7 +43,12 @@ volatile uint8_t iFlags = 0;
 class FloppyDrive drive[N_DRIVE]; //will be used as extern
 
 //Interrupt routines
+#if defined (__AVR_ATmega328P__)
 ISR(INT0_vect) //int0 pin 2 of port D
+#endif //(__AVR_ATmega328P__)
+#if defined (__AVR_ATmega32U4__)
+ISR(INT2_vect) //int2
+#endif //(__AVR_ATmega32U4__)
 {
   if (IS_STEP() ) //debounce
     iTrack = (STEPDIR()) ? --iTrack : ++iTrack;
@@ -53,7 +58,12 @@ ISR(INT0_vect) //int0 pin 2 of port D
 //Two drive mode requires SELECT and MOTOR pins combined trough an OR gate
 //if two drive mode is enabled SELECTA pin is used for combined SELECTA & MOTORA
 //and MOTORA pin is used for combined SELECTB & MOTORB
+#if defined (__AVR_ATmega328P__)
 ISR(PCINT2_vect) //pin change interrupt of port D
+#endif //(__AVR_ATmega328P__)
+#if defined (__AVR_ATmega32U4__)
+ISR(PCINT0_vect) //pin change interrupt of port B
+#endif //(__AVR_ATmega32U4__)
 {
 #if ENABLE_DRIVE_B
   if ( IS_SELECTA() ) SET_DRIVE0(); //drive A is selected 
@@ -66,28 +76,56 @@ ISR(PCINT2_vect) //pin change interrupt of port D
 
 void initFDDpins()
 {
-  pinsInitialized = false;
-  //Set ports as input
+  //To emulate open collector outputs Output pins are set to LOW "0"
+  //To write a "1" to output pin, respective pin is set to input
+  //To write a "0" to output pin, respective pin is set to output
+  pinsInitialized = false;  
+#if defined (__AVR_ATmega328P__)
+  //Setup Input and Output pins as Inputs
   DDRD &= 0b00000011; //D0 and D1 is RX & TX
   DDRB &= 0b11000000; //B6 & B7 is XTAL1 & XTAL2
   DDRC &= 0b11110000; //C7 is nil, C6 is RST, C4 & C5 is SDA & SCL
-  //Outputs
-  PORTD &= ~bit(PIN_INDEX);//LOW "0"
-  PORTB &= ~bit(PIN_WRITEDATA);//LOW "0"
-  PORTC &= ~(bit(PIN_TRACK0)|bit(PIN_WRITEPROT)|bit(PIN_DSKCHANGE));//LOW "0"
-  //inputs
-  PORTD |= bit(PIN_MOTORA)|bit(PIN_SELECTA); //Enable Pull Up  
-  PORTD |= bit(PIN_STEP)|bit(PIN_STEPDIR)|bit(PIN_SIDE); //Enable Pull Up
-  PORTB |= bit(PIN_READDATA); //pullup "1"  
-  PORTC |= bit(PIN_WRITEGATE); //pullup
-  
-  //Setup Interrupts
+  //Assign Output pins LOW "0"
+  PORTD &= ~bit(PIN_INDEX);
+  PORTB &= ~bit(PIN_WRITEDATA);
+  PORTC &= ~(bit(PIN_TRACK0)|bit(PIN_WRITEPROT)|bit(PIN_DSKCHANGE));
+  //Assign Input pins HIGH "1" (Activate Pullups)
+  PORTD |= bit(PIN_MOTORA)|bit(PIN_SELECTA);
+  PORTD |= bit(PIN_STEP)|bit(PIN_STEPDIR)|bit(PIN_SIDE);
+  PORTB |= bit(PIN_READDATA);
+  PORTC |= bit(PIN_WRITEGATE);
+  //Setup Pin Change Interrupts
   EICRA &=~(bit(ISC01)|bit(ISC00)); //clear ISC00&ISC01 bits
   EICRA |= bit(ISC01); //set ISC01 "falling edge"
   EIMSK |= bit(INT0); //External Interrupt Mask Register enable INT0  
-  
+  //Setup External Interrupt
   PCMSK2 = bit(PIN_SELECTA)| bit(PIN_MOTORA); // Pin Change Mask Register 2 enable SELECTA&MOTORA
   PCICR |= bit(PCIE2); // Pin Change Interrupt Control Register enable port D    
+#endif //defined (__AVR_ATmega328P__)
+#if defined (__AVR_ATmega32U4__)
+  //Setup Input and Output pins as Inputs
+  DDRB &= ~((1 << PIN_MOTORA)|(1 << PIN_SELECTA)|(1 << PIN_READDATA)|(1 << PIN_WRITEDATA)); //PB0 RXLED, PB1 SCK, PB2 MOSI, PB3 MISO, PB4 MOTORA, PB5 OCP1, PB6 SELECTA
+  DDRC &= ~(1 << PIN_SIDE); //PC6 SIDE
+  DDRD &= ~((1 << PIN_STEP)|(1 << PIN_STEPDIR)|(1 << PIN_READDATA)|(1 << PIN_INDEX)); //PD0 SCL, PD1 SDA, PD5 TXLED, PD2 STEP, PD3 STEPDIR, PD4 ICP1, PD7 INDEX
+  DDRE &= ~(1 << PIN_WRITEGATE); //PE6 WRITEGATE
+  DDRF &= ~((1 << PIN_TRACK0)|(1 << PIN_WRITEPROT)|(1 << PIN_DSKCHANGE)); //PF4 TRACK0, PF5 WRITEPROT, PF6 DISKCHANGE, PF7 SS
+  //Assign Output pins LOW "0"
+  PORTB &= ~(1 << PIN_WRITEDATA);
+  PORTD &= ~(1 << PIN_INDEX);
+  PORTF &= ~((1 << PIN_TRACK0)|(1 << PIN_WRITEPROT)|(1 << PIN_DSKCHANGE));
+  //Assign Input pins HIGH "1" (Activate Pullups)
+  PORTB |= (1 << PIN_MOTORA)|(1 << PIN_SELECTA)|(1 << PIN_READDATA); //PB0 RXLED, PB1 SCK, PB2 MOSI, PB3 MISO, PB4 MOTORA, PB5 OCP1, PB6 SELECTA
+  PORTC |= (1 << PIN_SIDE); //PC6 SIDE
+  PORTD |= (1 << PIN_STEP)|(1 << PIN_STEPDIR)|(1 << PIN_READDATA); //PD0 SCL, PD1 SDA, PD5 TXLED, PD2 STEP, PD3 STEPDIR, PD4 ICP1, PD7 INDEX
+  PORTE |= (1 << PIN_WRITEGATE); //PE6 WRITEGATE
+  //Setup Pin Change Interrupts
+  EICRA &=~(bit(ISC21)|bit(ISC20)); //clear ISC20&ISC21 bits
+  EICRA |= bit(ISC21); //set ISC21 "falling edge"
+  EIMSK |= bit(INT2); //External Interrupt Mask Register enable INT2
+  //Setup External Interrupt
+  PCMSK0 = bit(PIN_SELECTA)| bit(PIN_MOTORA); // Pin Change Mask Register 2 enable SELECTA&MOTORA
+  PCICR |= bit(PCIE0); // Pin Change Interrupt Control Register enable port B
+#endif //defined (__AVR_ATmega32U4__)
   pinsInitialized = true; //done
   sei(); //Turn interrupts on
 }

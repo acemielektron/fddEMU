@@ -17,7 +17,7 @@
 // Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 // -----------------------------------------------------------------------------
 
-#include "constStrings.h"
+#include "fddEMU.h"
 #include "SerialUI.h"
 #include "FloppyDrive.h" //drive
 #include "DiskFile.h" //sdfile

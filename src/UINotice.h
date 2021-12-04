@@ -1,7 +1,7 @@
 #ifndef UINOTICE_H
 #define UINOTICE_H
 
-#include "constStrings.h" //str_error
+#include "fddEMU.h" //str_error
 
 class UINotice{
     public:
