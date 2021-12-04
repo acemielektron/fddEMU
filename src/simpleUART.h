@@ -27,8 +27,13 @@
 #include <stdio.h> //sprintf & printf
 #include <string.h> //strlen
 
-#define rxReady (UCSR0A & (1 << RXC0))
-
+#if defined (__AVR_ATmega328P__)
+    #define rxReady (UCSR0A & (1 << RXC0))
+#endif //defined (__ATmega328P__)
+#if defined (__AVR_ATmega32U4__)
+    #define rxReady (UCSR0A & (1 << RXC1))
+#endif //defined (__ATmega32U4__)
+    
 //https://forum.arduino.cc/t/what-does-the-f-do-exactly/89384
 class __PGMSTR;
 #define F(string_literal) (reinterpret_cast<const __PGMSTR *>(PSTR(string_literal)))
