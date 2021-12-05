@@ -45,8 +45,7 @@ class FloppyDrive drive[N_DRIVE]; //will be used as extern
 //Interrupt routines
 #if defined (__AVR_ATmega328P__)
 ISR(INT0_vect) //int0 pin 2 of port D
-#endif //(__AVR_ATmega328P__)
-#if defined (__AVR_ATmega32U4__)
+#elif defined (__AVR_ATmega32U4__)
 ISR(INT2_vect) //int2
 #endif //(__AVR_ATmega32U4__)
 {
@@ -60,8 +59,7 @@ ISR(INT2_vect) //int2
 //and MOTORA pin is used for combined SELECTB & MOTORB
 #if defined (__AVR_ATmega328P__)
 ISR(PCINT2_vect) //pin change interrupt of port D
-#endif //(__AVR_ATmega328P__)
-#if defined (__AVR_ATmega32U4__)
+#elif defined (__AVR_ATmega32U4__)
 ISR(PCINT0_vect) //pin change interrupt of port B
 #endif //(__AVR_ATmega32U4__)
 {
@@ -101,20 +99,19 @@ void initFDDpins()
   //Setup External Interrupt
   PCMSK2 = bit(PIN_SELECTA)| bit(PIN_MOTORA); // Pin Change Mask Register 2 enable SELECTA&MOTORA
   PCICR |= bit(PCIE2); // Pin Change Interrupt Control Register enable port D    
-#endif //defined (__AVR_ATmega328P__)
-#if defined (__AVR_ATmega32U4__)
+#elif defined (__AVR_ATmega32U4__)
   //Setup Input and Output pins as Inputs
-  DDRB &= ~((1 << PIN_MOTORA)|(1 << PIN_SELECTA)|(1 << PIN_READDATA)|(1 << PIN_WRITEDATA)); //PB0 RXLED, PB1 SCK, PB2 MOSI, PB3 MISO, PB4 MOTORA, PB5 OCP1, PB6 SELECTA
+  DDRB &= ~((1 << PIN_MOTORA)|(1 << PIN_SELECTA)|(1 << PIN_WRITEDATA)); //PB0 RXLED, PB1 SCK, PB2 MOSI, PB3 MISO, PB4 MOTORA, PB5 OCP1, PB6 SELECTA
   DDRC &= ~(1 << PIN_SIDE); //PC6 SIDE
-  DDRD &= ~((1 << PIN_STEP)|(1 << PIN_STEPDIR)|(1 << PIN_READDATA)|(1 << PIN_INDEX)); //PD0 SCL, PD1 SDA, PD5 TXLED, PD2 STEP, PD3 STEPDIR, PD4 ICP1, PD7 INDEX
+  DDRD &= ~((1 << PIN_STEP)|(1 << PIN_STEPDIR)|(1 << PIN_READDATA)|(1 << PIN_INDEX)|(1 << PIN_WRITEPROT)); //PD0 SCL, PD1 SDA, PD5 TXLED, PD2 STEP, PD3 STEPDIR, PD4 ICP1, PD7 INDEX
   DDRE &= ~(1 << PIN_WRITEGATE); //PE6 WRITEGATE
-  DDRF &= ~((1 << PIN_TRACK0)|(1 << PIN_WRITEPROT)|(1 << PIN_DSKCHANGE)); //PF4 TRACK0, PF5 WRITEPROT, PF6 DISKCHANGE, PF7 SS
+  DDRF &= ~((1 << PIN_TRACK0)|(1 << PIN_DSKCHANGE)); //PF4 TRACK0, PF5 WRITEPROT, PF6 DISKCHANGE, PF7 SS
   //Assign Output pins LOW "0"
   PORTB &= ~(1 << PIN_WRITEDATA);
-  PORTD &= ~(1 << PIN_INDEX);
-  PORTF &= ~((1 << PIN_TRACK0)|(1 << PIN_WRITEPROT)|(1 << PIN_DSKCHANGE));
+  PORTD &= ~(1 << PIN_INDEX)|(1 << PIN_WRITEPROT);
+  PORTF &= ~((1 << PIN_TRACK0)|(1 << PIN_DSKCHANGE));
   //Assign Input pins HIGH "1" (Activate Pullups)
-  PORTB |= (1 << PIN_MOTORA)|(1 << PIN_SELECTA)|(1 << PIN_READDATA); //PB0 RXLED, PB1 SCK, PB2 MOSI, PB3 MISO, PB4 MOTORA, PB5 OCP1, PB6 SELECTA
+  PORTB |= (1 << PIN_MOTORA)|(1 << PIN_SELECTA); //PB0 RXLED, PB1 SCK, PB2 MOSI, PB3 MISO, PB4 MOTORA, PB5 OCP1, PB6 SELECTA
   PORTC |= (1 << PIN_SIDE); //PC6 SIDE
   PORTD |= (1 << PIN_STEP)|(1 << PIN_STEPDIR)|(1 << PIN_READDATA); //PD0 SCL, PD1 SDA, PD5 TXLED, PD2 STEP, PD3 STEPDIR, PD4 ICP1, PD7 INDEX
   PORTE |= (1 << PIN_WRITEGATE); //PE6 WRITEGATE

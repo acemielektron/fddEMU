@@ -63,8 +63,7 @@
 #define IS_MOTORA()         ( !(PIND & (1 << PIN_MOTORA)) )
 #define IS_SELECTB()        ( !(PIND & (1 << PIN_MOTORA)) )
 // -------------------------------  Pin assignments for Arduino UNO/Nano/Pro Mini (Atmega328p)  ------------------------------
-#endif //defined (__AVR_ATmega328P__)
-#if defined (__AVR_ATmega32U4__)
+#elif defined (__AVR_ATmega32U4__)
 // -------------------------------  Pin assignments for Arduino (Atmega32U4)  ------------------------------
 //PORTD PD0(SCL) and PD1(SDA) I2C pins (D2 and D3 on pro micro)
 //PORTB PB0(SS), PB1(SCK), PB2(MISO), PB3(MOSI) SPI pins (D17, D15, D14, D16)  D17->TX led
@@ -83,7 +82,7 @@
 #define PIN_INDEX       7   //PD7-D6
 #define PIN_WRITEGATE   6   //PE6-INT6-D7
 #define PIN_TRACK0      4   //PF4-A3
-#define PIN_WRITEPROT   5   //PF5-A2
+#define PIN_WRITEPROT   5   //PD5-D24-TXLED
 #define PIN_DSKCHANGE   6   //PF6-A1
 
 //Output commands
@@ -93,8 +92,8 @@
 #define SET_TRACK0_HIGH()   (DDRF &= ~(1 << PIN_TRACK0))
 #define SET_DSKCHANGE_LOW()    (DDRF |= (1 << PIN_DSKCHANGE))
 #define SET_DSKCHANGE_HIGH()   (DDRF &= ~(1 << PIN_DSKCHANGE))
-#define SET_WRITEPROT_LOW()    (DDRF |= (1 << PIN_WRITEPROT))
-#define SET_WRITEPROT_HIGH()   (DDRF &= ~(1 << PIN_WRITEPROT))
+#define SET_WRITEPROT_LOW()    (DDRD |= (1 << PIN_WRITEPROT))
+#define SET_WRITEPROT_HIGH()   (DDRD &= ~(1 << PIN_WRITEPROT))
 
 //Inputs
 #define IS_WRITE()          ( !(PINF & (1 << PIN_WRITEGATE)) )

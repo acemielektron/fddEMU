@@ -29,8 +29,9 @@
 
 #if defined (__AVR_ATmega328P__)
     #define rxReady (UCSR0A & (1 << RXC0))
-#endif //defined (__ATmega328P__)
-#if defined (__AVR_ATmega32U4__)
+#elif defined (__AVR_ATmega32U4__)
+    #undef SERIAL_ENABLED
+    #define SERIAL_ENABLED 0 //disable serial on pins
     #define rxReady (UCSR0A & (1 << RXC1))
 #endif //defined (__ATmega32U4__)
     

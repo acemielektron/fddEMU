@@ -1,5 +1,6 @@
 TARGET = fddEMU
 MCU = atmega32u4
+#MCU = atmega328p
 OSC = 16000000UL
 
 CC = avr-gcc
@@ -14,11 +15,13 @@ VFFS = 0	#Virtual FLoppy Disabled
 GUI = 1		#Graphical User Interface enabled
 SERIAL = 0	#Serial disabled
 PORT = /dev/ttyUSB0
+#OPTIMIZATION=s
+OPTIMIZATION=3
 
-CFLAGS = -Os -mmcu=$(MCU) -DF_CPU=$(OSC) -Wall $(INCLUDES)
+CFLAGS = -O$(OPTIMIZATION) -mmcu=$(MCU) -DF_CPU=$(OSC) -Wall $(INCLUDES)
 CFLAGS += -ffunction-sections -fdata-sections -Wl,--gc-sections
 CFLAGS += -DENABLE_WDT=$(WDT)
-CXXFLAGS= -Os -mmcu=$(MCU) -DF_CPU=$(OSC) -Wall $(INCLUDES)
+CXXFLAGS= -O$(OPTIMIZATION) -mmcu=$(MCU) -DF_CPU=$(OSC) -Wall $(INCLUDES)
 CXXFLAGS += -DENABLE_DRIVE_B=$(DUAL) -DDEBUG=$(DEBUG) -DFLIP_SCREEN=$(FLIP) -DENABLE_WDT=$(WDT) 
 CXXFLAGS += -DENABLE_VFFS=$(VFFS) -DENABLE_GUI=$(GUI) -DENABLE_SERIAL=$(SERIAL)
 LINKERFLAG = -lm
@@ -57,6 +60,7 @@ bin:
 size:
 	avr-size --mcu=$(MCU) -C -x $(TARGET).elf
 flash:
-	avrdude -p m328p -c arduino -P $(PORT) -U flash:w:$(TARGET).hex
+	#avrdude -p m328p -c arduino -P $(PORT) -U flash:w:$(TARGET).hex
+	avrdude -p atmega32u4 -P $(PORT) -c avr109 -U flash:w:$(TARGET).hex
 clean :
 	rm $(TARGET).elf $(OBJECTS)

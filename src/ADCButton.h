@@ -24,10 +24,10 @@
 #define adcBusy     (ADCSRA & (1<<ADSC))
 
 #if defined (__AVR_ATmega328P__)
-    #define BUTTON_PIN 7 //ADC7
+    #define BUTTON_CHANNEL 7 //ADC7
 #endif //defined (__Atmega328p__)
 #if defined (__AVR_ATmega32U4__)
-    #define BUTTON_PIN -1 //disabled for now
+    #define BUTTON_CHANNEL 2 //ADC2
 #endif //defined (__Atmega32U4__)
 
 #define BTN_CANCEL  1
