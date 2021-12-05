@@ -24,7 +24,7 @@
 #define adcBusy     (ADCSRA & (1<<ADSC))
 
 #if defined (__AVR_ATmega328P__)
-    #define BUTTON_CHANNEL 7 //ADC7
+    #define BUTTON_CHANNEL 5 //ADC5
 #endif //defined (__Atmega328p__)
 #if defined (__AVR_ATmega32U4__)
     #define BUTTON_CHANNEL 2 //ADC2
