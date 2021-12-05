@@ -24,10 +24,10 @@
 #define adcBusy     (ADCSRA & (1<<ADSC))
 
 #if defined (__AVR_ATmega328P__)
-    #define BUTTON_CHANNEL 5 //ADC5
+    #define BUTTON_CHANNEL 7 //pin A7 (ADC7)
 #endif //defined (__Atmega328p__)
 #if defined (__AVR_ATmega32U4__)
-    #define BUTTON_CHANNEL 2 //ADC2
+    #define BUTTON_CHANNEL 5 //pin A2 (PF5-ADC5) Set as input in ADCButton::init()
 #endif //defined (__Atmega32U4__)
 
 #define BTN_CANCEL  1

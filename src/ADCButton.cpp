@@ -38,6 +38,7 @@ void ADCButton::init()
   PRR &= ~(1<<PRADC); //clear PRADC bit in Power Reduction Register
 #elif defined(__AVR_ATmega32U4__)
   PRR0 &= ~(1<<PRADC); //clear PRADC bit in Power Reduction Register
+  DDRF &= ~(1 << 5); //set pin A2 (PF5-ADC5) as INPUT for ADC_BUTTON
 #endif  
   ADMUX = (1<<REFS0);     //select AVCC as reference
   ADCSRA = (1<<ADEN) | (1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0);  //enable and prescale = 128 (16MHz/128 = 125kHz)

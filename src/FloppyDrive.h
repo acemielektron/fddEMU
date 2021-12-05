@@ -69,21 +69,24 @@
 //PORTB PB0(SS), PB1(SCK), PB2(MISO), PB3(MOSI) SPI pins (D17, D15, D14, D16)  D17->TX led
 
 //Unchangeable pins ICP&OCP for timer1
-#define PIN_READDATA    4   //PD4 must be pin 4 (ICP for timer1)
-#define PIN_WRITEDATA   5   //PB5 must be pin 9 (OCP for timer1)    
+#define PIN_READDATA    4   //PD4 must be pin4 (ICP for timer1)
+#define PIN_WRITEDATA   5   //PB5 must be pin9 (OCP for timer1)    
 //Pin Change Interrupt pins
-#define PIN_MOTORA      4   //PB4-PCINT4-D8
-#define PIN_SELECTA     6   //PB6-PCINT6-D10
+#define PIN_MOTORA      4   //PB4-PCINT4-pin8
+#define PIN_SELECTA     6   //PB6-PCINT6-pin10
 //External Interrupt pins
-#define PIN_STEP        2   //PD2-INT2-RX1-D1 will use external interrupt 2
+#define PIN_STEP        2   //PD2-INT2-RX1 will use external interrupt 2
 //Changeable pins
-#define PIN_STEPDIR     3   //PD3-INT3-TX1-D0
-#define PIN_SIDE        6   //PC6-D5
-#define PIN_INDEX       7   //PD7-D6
-#define PIN_WRITEGATE   6   //PE6-INT6-D7
-#define PIN_TRACK0      4   //PF4-A3
-#define PIN_WRITEPROT   5   //PD5-D24-TXLED
-#define PIN_DSKCHANGE   6   //PF6-A1
+#define PIN_STEPDIR     3   //PD3-INT3-TX1
+#define PIN_SIDE        6   //PC6-pin5
+#define PIN_INDEX       7   //PD7-pin6
+#define PIN_WRITEGATE   6   //PE6-INT6-pin7
+#define PIN_TRACK0      4   //PF4-pinA3
+#define PIN_WRITEPROT   5   //PD5-pin24-TXLED
+#define PIN_DSKCHANGE   6   //PF6-pinA1
+//SS pin for SD card is PF7-pinA0 for atmega32u4 (Arduino pro micro)
+//SS pin is set in "pffArduino.h" to change the pin 
+//also changing the macros in "pffArduino.h" is required.
 
 //Output commands
 #define SET_INDEX_LOW()    (DDRD |= (1 << PIN_INDEX))
@@ -96,7 +99,7 @@
 #define SET_WRITEPROT_HIGH()   (DDRD &= ~(1 << PIN_WRITEPROT))
 
 //Inputs
-#define IS_WRITE()          ( !(PINF & (1 << PIN_WRITEGATE)) )
+#define IS_WRITE()          ( !(PINE & (1 << PIN_WRITEGATE)) )
 #define SIDE()              (PINC & (1 << PIN_SIDE))
 #define STEPDIR()           (PIND & (1 << PIN_STEPDIR))
 #define IS_STEP()           ( !(PIND & (1 << PIN_STEP)) )

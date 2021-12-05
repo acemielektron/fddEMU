@@ -15,8 +15,8 @@ VFFS = 0	#Virtual FLoppy Disabled
 GUI = 1		#Graphical User Interface enabled
 SERIAL = 0	#Serial disabled
 PORT = /dev/ttyUSB0
-#OPTIMIZATION=s
-OPTIMIZATION=3
+OPTIMIZATION=s
+#OPTIMIZATION=3
 
 CFLAGS = -O$(OPTIMIZATION) -mmcu=$(MCU) -DF_CPU=$(OSC) -Wall $(INCLUDES)
 CFLAGS += -ffunction-sections -fdata-sections -Wl,--gc-sections

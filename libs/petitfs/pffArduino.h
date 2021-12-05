@@ -15,7 +15,7 @@
 #if (defined(__AVR_ATmega328P__)||defined(__AVR_ATmega168__)||defined(__AVR_ATmega168P__))
   #define SD_CS_PIN 10
 #elif (defined(__AVR_ATmega32U4__))||(defined(__AVR_ATmega16U2__))
-  #define SD_CS_PIN A0  //PF7 for Aduino pro micro
+  #define SD_CS_PIN A0  //PF7 (Arduino pro micro)
 #endif  
 
 // Use SPI SCK divisor of 2 if nonzero else 4.

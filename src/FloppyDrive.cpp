@@ -101,7 +101,8 @@ void initFDDpins()
   PCICR |= bit(PCIE2); // Pin Change Interrupt Control Register enable port D    
 #elif defined (__AVR_ATmega32U4__)
   //Setup Input and Output pins as Inputs
-  DDRB &= ~((1 << PIN_MOTORA)|(1 << PIN_SELECTA)|(1 << PIN_WRITEDATA)); //PB0 RXLED, PB1 SCK, PB2 MOSI, PB3 MISO, PB4 MOTORA, PB5 OCP1, PB6 SELECTA
+  DDRB |= (1 << PIN_WRITEDATA); //set WRITEDATA as OUTPUT (Not sure it is necessary but datasheet says so)
+  DDRB &= ~((1 << PIN_MOTORA)|(1 << PIN_SELECTA)); //PB0 RXLED, PB1 SCK, PB2 MOSI, PB3 MISO, PB4 MOTORA, PB5 OCP1, PB6 SELECTA
   DDRC &= ~(1 << PIN_SIDE); //PC6 SIDE
   DDRD &= ~((1 << PIN_STEP)|(1 << PIN_STEPDIR)|(1 << PIN_READDATA)|(1 << PIN_INDEX)|(1 << PIN_WRITEPROT)); //PD0 SCL, PD1 SDA, PD5 TXLED, PD2 STEP, PD3 STEPDIR, PD4 ICP1, PD7 INDEX
   DDRE &= ~(1 << PIN_WRITEGATE); //PE6 WRITEGATE
@@ -295,7 +296,7 @@ void FloppyDrive::run()
       #endif  //ENABLE_WDT
         setup_timer1_for_write(); //Write-mode: arduinoFDC immediately tries to verify written sector
         setSectorData(lba); //save sector to SD
-        while (!(PINC & bit(PIN_WRITEGATE)));//wait for write to finish
+        while (IS_WRITE());//wait for write to finish
       }
       else  //write gate off                                  
       {
