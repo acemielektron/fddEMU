@@ -54,20 +54,12 @@ const uint16_t MIN_2X_BAUD = F_CPU/(4*(2*0XFFF + 1)) + 1;
 
 int putchar_stream(char ch, FILE *stream) 
 {    
-    if (ch == '\n') //if ch == LF
-    {        
-        while(((UCSRA & (1<<UDRE)) == 0)); //wait for empty tx buffer
-        UDR = '\r';    //send CR        
-    }
-    while(((UCSRA & (1<<UDRE)) == 0)); //wait for empty tx buffer
-    UDR = ch;
-    return 0;
+    return Serial.write(ch);
 }
 
 int getchar_stream(FILE *stream) 
 {    
-    while((UCSRA & (1 << RXC)) == 0); //wait for rx buffer
-    return UDR;
+    return Serial.read();
 }
 
 
@@ -84,22 +76,24 @@ stdin = stdout = stderr = &UART_stdinout;
 #endif //_STDIO_H_ stdio streams
 }
 
+#if defined (__AVR_ATmega328p__)
+
 void UART0::init(uint32_t baud)
 {   //https://forum.arduino.cc/t/over-600-bytes-of-ram-for-serial-on-a-mega-gasp/71429
     uint16_t baud_setting;
     // don't worry, the compiler will squeeze out F_CPU != 16000000UL
 	if ((F_CPU != 16000000UL || baud != 57600) && baud > MIN_2X_BAUD) {      
-      UCSRA = 1 << U2X;   // Double the USART Transmission Speed
+      UCSR0A = 1 << U2X0;   // Double the USART Transmission Speed
       baud_setting = (F_CPU / 4 / baud - 1) / 2;
     } else {
       // hardcoded exception for compatibility with the bootloader shipped
       // with the Duemilanove and previous boards and the firmware on the 8U2
       // on the Uno and Mega 2560.
-      UCSRA = 0;
+      UCSR0A = 0;
       baud_setting = (F_CPU / 8 / baud - 1) / 2;
     }	
-    UBRR = baud_setting;   // assign the baud_setting	
-	UCSRB |= (1 << RXEN)|(1 << TXEN);    // Enable reciever and transmitter
+    UBRR0 = baud_setting;   // assign the baud_setting	
+	UCSR0B |= (1 << RXEN0)|(1 << TXEN0);    // Enable reciever and transmitter
 	init_UART_stdio();
 }
 
@@ -107,19 +101,57 @@ int UART0::write(char ch)
 {	
 	if (ch == '\n') //  ch == LF
     {        
-        while((UCSRA & (1<<UDRE)) == 0);  // wait for empty transmit buffer
-        UDR = '\r';    //  send CR        
+        while((UCSR0A & (1<<UDRE0)) == 0);  // wait for empty transmit buffer
+        UDR0 = '\r';    //  send CR        
     }
-    while((UCSRA & (1<<UDRE)) == 0);  // wait for empty transmit buffer
-    UDR = ch;  // send char to output register
+    while((UCSR0A & (1<<UDRE0)) == 0);  // wait for empty transmit buffer
+    UDR0 = ch;  // send char to output register
     return 0; //returns EOF on error
 }
 
 int UART0::read(void)
 {	
-	while((UCSRA & (1 << RXC)) == 0); // wait for data to be received	
-	return UDR;    // return output register
+	while((UCSR0A & (1 << RXC0)) == 0); // wait for data to be received	
+	return UDR0;    // return output register
 }
+
+bool UART0::receiveReady()
+{
+    return (UCSR0A & (1 << RXC0));
+}
+
+#elif defined (__AVR_ATmega32U4__)
+
+void UART0::init(uint32_t baud)
+{
+    SetupHardware();
+}
+
+int UART0::write(char ch)
+{	    
+    if (ch == '\n') //  ch == LF
+    {
+        if (RingBuffer_IsFull(&USARTtoUSB_Buffer))
+            return -1;
+        RingBuffer_Insert(&USARTtoUSB_Buffer, '\r'); //send CR
+        usb_cdc_loop();
+    }    
+    if (RingBuffer_IsFull(&USARTtoUSB_Buffer))
+        return -1;
+    RingBuffer_Insert(&USARTtoUSB_Buffer, ch);
+    usb_cdc_loop();
+    return 0;
+}
+
+int UART0::read(void)
+{	
+    usb_cdc_loop();
+    if (RingBuffer_IsEmpty(&USBtoUSART_Buffer))
+        return -1;
+    return RingBuffer_Remove(&USBtoUSART_Buffer);
+}
+
+#endif  //defined (__AVR_ATmega32U4__)
 
 void UART::print(char *str)
 {	

@@ -78,6 +78,7 @@ void initFDDpins()
   //To write a "1" to output pin, respective pin is set to input
   //To write a "0" to output pin, respective pin is set to output
   pinsInitialized = false;  
+  cli(); //disable interrupts
 #if defined (__AVR_ATmega328P__)
   //Setup Input and Output pins as Inputs
   DDRD &= 0b00000011; //D0 and D1 is RX & TX
@@ -265,6 +266,9 @@ void FloppyDrive::run()
     #if ENABLE_WDT
       wdt_reset();
     #endif  //ENABLE_WDT
+    #if defined (__AVR_ATmega32U4__)
+      Serial.rcvRdy(); //service usb
+    #endif //defined (__AVR_ATmega32U4__)
       if (!GET_DRVSEL()) break; //if drive unselected exit loop      
       side = (SIDE()) ? 0:1; //check side
       if (IS_TRACKCHANGED()) //if track changed

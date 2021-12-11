@@ -30,9 +30,8 @@
 #if defined (__AVR_ATmega328P__)
     #define rxReady (UCSR0A & (1 << RXC0))
 #elif defined (__AVR_ATmega32U4__)
-    #undef SERIAL_ENABLED
-    #define SERIAL_ENABLED 0 //disable serial on pins
-    #define rxReady (UCSR0A & (1 << RXC1))
+    #include "USBtoSerial.h"
+    #define rxReady Serial.rcvRdy()
 #endif //defined (__ATmega32U4__)
     
 //https://forum.arduino.cc/t/what-does-the-f-do-exactly/89384
@@ -58,6 +57,9 @@ class UART0 : public UART{
     void init(uint32_t);
     int write(char);
     int read(void);
+#if defined (__AVR_ATmega32U4__)
+    bool rcvRdy() {usb_cdc_loop(); return !RingBuffer_IsEmpty(&USBtoUSART_Buffer);};
+#endif //defined (__ATmega32U4__)    
 };
 
 extern class UART0 Serial;
