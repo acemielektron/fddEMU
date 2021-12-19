@@ -76,7 +76,7 @@ stdin = stdout = stderr = &UART_stdinout;
 #endif //_STDIO_H_ stdio streams
 }
 
-#if defined (__AVR_ATmega328p__)
+#if defined (__AVR_ATmega328P__)
 
 void UART0::init(uint32_t baud)
 {   //https://forum.arduino.cc/t/over-600-bytes-of-ram-for-serial-on-a-mega-gasp/71429
@@ -115,10 +115,6 @@ int UART0::read(void)
 	return UDR0;    // return output register
 }
 
-bool UART0::receiveReady()
-{
-    return (UCSR0A & (1 << RXC0));
-}
 
 #elif defined (__AVR_ATmega32U4__)
 
