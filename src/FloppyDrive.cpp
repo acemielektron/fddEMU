@@ -46,7 +46,7 @@ class FloppyDrive drive[N_DRIVE]; //will be used as extern
 ISR(INT0_vect) //int0 pin 2 of port D
 {
   if (IS_STEP() ) //debounce
-    iTrack = (STEPDIR()) ? --iTrack : ++iTrack;
+    (STEPDIR()) ? --iTrack : ++iTrack;
   SET_TRACKCHANGED();  
 }
 
