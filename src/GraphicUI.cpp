@@ -207,7 +207,7 @@ void GraphicUI::setPage(uint8_t r_page)
 	#if DEBUG	
 		Serial.print(F("Screen wakeup\n"));		
 	#endif //DEBUG
-		showDriveIdle();
+		//showDriveIdle();
 	}	
 	sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
 }
