@@ -132,7 +132,7 @@ int FloppyDrive::getSectorData(int lba)
   uint8_t head   = 0;
   uint8_t track  = lba / (numSec*2);
   uint8_t sector = lba % (numSec*2);
-  if( sector >= numSec ) { head = 1; sector -= numSec; }
+  if( sector >= numSec ) { head = 1; sector -= numSec; Serial.write('#'); }
 
   Serial.write('R');
   Serial.printDEC(track);
@@ -242,7 +242,7 @@ void FloppyDrive::run()
         (isReady()) || isVirtual() ? SET_DSKCHANGE_HIGH() : SET_DSKCHANGE_LOW(); //disk present ?      
       }
       //start sector
-      lba=(track*2+side)*18+sector;//LBA = (C × HPC + H) × SPT + (S − 1)
+      lba=(track*2+side)*numSec+sector;//LBA = (C × HPC + H) × SPT + (S − 1)
       getSectorData(lba); //get sector from SD      
       setup_timer1_for_write();
       genSectorID((uint8_t)track,side,sector);
