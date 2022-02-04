@@ -123,6 +123,7 @@ Connected to pin A7 (ADC7) on Arduino Nano or pin A2 (PF5) on Arduino Pro Micro
 * [Petit FAT FS](https://github.com/greiman/PetitFS) by [Chan](http://elm-chan.org/fsw/ff/00index_p.html) adapted for hardware SPI by [Bill Greiman](https://github.com/greiman). fddEMU uses a modified Petit FAT FS.
 * [rjhcoding.com/avrc-sd-interface](http://rjhcoding.com/avrc-sd-interface-1.php) Great tutorial for using SD card with AVR.
 * [u8glib](https://github.com/olikraus/u8glib) Very useful for incorporating SSD1306 and can easily be used with various displays.
+* [lufa](https://github.com/abcminiuser/lufa) Lightweight USB Framework for AVRs
 <br><br>
 
 **Releases**
@@ -184,10 +185,10 @@ After a drive is selected:<br>
 <br><br>
 **How to build (Makefile)**
 <br>
+Download with submodules(u8glib & lufa): `git clone https://github.com/acemielektron/fddEMU --recursive`<br>
+If not downloaded with recursive option run (in fddEMU folder): `git submodule update --init --recursive`<br>
 Current Makefile assumes avr-gcc and avr-binutils are installed and are in the path, 
-avr specific includes are in "/usr/avr/include" and u8glib library is installed in 
-"libs/u8glib" (either install through git or extract downloaded "u8glib.zip" to "libs/" 
-directory). <br><br>
+avr specific includes are in "/usr/avr/include"(arch) or "/usr/lib/avr/include"(ubuntu) <br><br>
 **make:** builds binary with default options.<br>
 **build options:**
 * *GUI:* enables graphical user interface on OLED screen and ADC buttons (enabled default by Makefile). 
@@ -197,11 +198,11 @@ directory). <br><br>
 * *FLIP:* flips the image on OLED screen 180 degrees (enabled default by Makefile).
 * *WDT:* enables watchdog timer (enabled default by Makefile).<br><br>
 These build options could either be switched on and off from Makefile or commandline 
-(eg.: 'make DUAL=1 GUI=1 VFFS=1 SERIAL=0 DEBUG=0').<br>
-Flashing the mcu could also be done by Makefile. "make flash" programs "fddEMU.hex" to 
+(eg.: `make DUAL=1 GUI=1 VFFS=1 SERIAL=0 DEBUG=0`).<br>
+Flashing the mcu could also be done by Makefile. `make flash` programs "fddEMU.hex" to 
 default serial port "/dev/ttyUSB0". If you want to use another serial port assign it to 
-PORT variable (eg.: "make flash PORT=/dev/ttyUSB2").<br><br>
+PORT variable (eg.: `make flash PORT=/dev/ttyUSB2`).<br><br>
 
-**Note:**  Please report any errors on [github issues for fddEMU](https://github.com/acemielektron/fddEMU/issues). Suggestions for improvements and feedback could be posted on [fddEMU blog page](http://acemielektronikci.blogspot.com/2021/10/fddemu-disket-surucu-emulatoru.html) Although the blog page is in turkish, feel free to write comments either in turkish or english.
+**Note:**  Please report any errors on [github issues for fddEMU](https://github.com/acemielektron/fddEMU/issues). Suggestions for improvements and feedback could be posted on [discussions](https://github.com/acemielektron/fddEMU/discussions) or [fddEMU blog page](http://acemielektronikci.blogspot.com/2021/10/fddemu-disket-surucu-emulatoru.html) Although the blog page is in turkish, feel free to write comments either in turkish or english.
 <br><br>
 
