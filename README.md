@@ -20,6 +20,10 @@ Standalone (using without usb serial connection) require SSD1306 i2c screen, but
 * Male to female jumper wires (for connecting arduino nano pins to FDC ribbon cable)
 * Male to male jumper wires (for pullup on step and readdata pins)
 
+**Note:** Due to larger bootloader on Atmega32U4 and added code overhead for USB-Serial all features of fddEMU will be avaialble on Atmega32U4
+
+***Warning:*** *Writing > 28K (28672 bytes) firmware to Arduino Pro Micro results in bootloader being overwritten and requires reprogramming the bootloader using external programmer (eg. USBASP). Please check output of avr-size at the end of make process and make sure it is < 28K.*
+
 **Optional**
 * 0.96" i2c OLED (SSD1306) screen (for output)
 * 4 or 5 1kOhm resistors (for making ADC buttons)
@@ -96,7 +100,8 @@ VCC                 |5V             |VCC
 <br><br>
 
 **Resistor ladder for ADC buttons**
-Connected to pin A7 (Arduino Nano) or pin A2 (PF5) on Arduino Pro Micro
+<br>
+Connected to pin A7 (ADC7) on Arduino Nano or pin A2 (PF5) on Arduino Pro Micro
 <br>
 ![Resistor Ladder 1x5](/images/ResistorLadder-1x5.png)
 <br><br>
