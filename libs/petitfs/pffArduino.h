@@ -12,7 +12,11 @@
 #include "integer.h"
 
 // SD chip select pin
-#define SD_CS_PIN 10
+#if (defined(__AVR_ATmega328P__)||defined(__AVR_ATmega168__)||defined(__AVR_ATmega168P__))
+  #define SD_CS_PIN 10
+#elif (defined(__AVR_ATmega32U4__))||(defined(__AVR_ATmega16U2__))
+  #define SD_CS_PIN A0  //PF7 (Arduino pro micro)
+#endif  
 
 // Use SPI SCK divisor of 2 if nonzero else 4.
 #define SPI_FCPU_DIV_2 1
@@ -68,6 +72,27 @@ static void init_spi (void) {
   DDRB  |= 1 << 2;  // SS output mode
   DDRB  |= 1 << 3;  // MOSI output mode
   DDRB  |= 1 << 5;  // SCK output mode
+  SD_CS_DDR |= SD_CS_MASK;
+  spi_set_divisor(0);
+}
+#elif (defined(__AVR_ATmega32U4__))||(defined(__AVR_ATmega16U2__))
+  #if SD_CS_PIN != A0
+      #error Bad SD_CS_PIN
+  #endif  // SD_CS_PIN !=A0
+  #define SD_CS_PORT PORTF
+  #define SD_CS_DDR DDRF
+  #define SD_CS_BIT 7
+  #define SD_CS_MASK (1 << SD_CS_BIT)
+  #define SELECT()  (SD_CS_PORT &= ~SD_CS_MASK)	 /* CS = L */
+  #define	DESELECT()	(SD_CS_PORT |= SD_CS_MASK)	/* CS = H */
+  #define	SELECTING	!(SD_CS_PORT & SD_CS_MASK)	  /* CS status (true:CS low) */
+
+static void init_spi (void) {
+  // Save a few bytes for 32U4 CPU - gcc optimizes single bit '|' to sbi.
+  PORTB |= 1 << 0;  // SS high
+  DDRB  |= 1 << 0;  // SS output mode
+  DDRB  |= 1 << 2;  // MOSI output mode
+  DDRB  |= 1 << 1;  // SCK output mode
   SD_CS_DDR |= SD_CS_MASK;
   spi_set_divisor(0);
 }

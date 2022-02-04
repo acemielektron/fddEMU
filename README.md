@@ -13,7 +13,7 @@ Standalone (using without usb serial connection) require SSD1306 i2c screen, but
 <br>
 <br>
 **Requirements**
-* Arduino nano (UNO will do but button inputs require ADC7, use serial commands instead)
+* Arduino Nano or Arduino Pro Micro (UNO will do but button inputs require ADC7, use serial commands instead)
 * Micro SD card adapter (converts 5 volts arduino power supply and signals to 3.3 volts)
 * A micro SD card (formatted FAT16/32, floppy images in root directory)
 * Two 1kOhm resistors (for step and readdata pins - atmega's internal pullups are not sufficicient for parasitic capacitance of long floppy drive cable)
@@ -38,64 +38,65 @@ Arduino bootloader could be used for uploading (see command below), simply repla
 <br><br>
 
 **Pin mapping (single drive)**
-Pin         |Arduino Nano|FDD Ribbon Cable
-------------|-----------|----------------------
-GND			|GND		|1	(GND)
-STEP		|D2			|20	(Step pulse)
-STEP_DIR	|D3			|18	(Direction)
-MOTOR_A		|D4			|16	(Motor on B)
-SELECT_A	|D5			|12	(Drive Select B)
-SIDE		|D6			|32	(Select head)
-INDEX		|D7			|8	(Index pulse)
-READDATA	|D8			|22	(Write data)
-WRITEDATA	|D9			|30	(Read data)
-WRITE_GATE	|A0			|24	(Write enable)
-TRACK_0		|A1			|26	(Track zero)
-WRITE_PROTECT|A2		|28	(Write protect)
-DISK_CHANGE	|A3			|34	(Disk changed)
+Arduino Pro Micro   |Arduino Nano   |FDD Ribbon Cable
+--------------------|---------------|----------------------
+GND                 |GND		    |1	(GND)
+RX (PD2)            |D2 (PD2)       |20	(Step pulse)
+TX (PD3)            |D3	(PD3)		|18	(Direction)
+8  (PB4)            |D4	(PD4)		|16	(Motor on B)
+10 (PB6)            |D5	(PD5)		|12	(Drive Select B)
+5  (PC6)            |D6	(PD6)		|32	(Select head)
+6  (PD7)            |D7	(PD7)		|8	(Index pulse)
+4  (PD4)            |D8	(PB0)		|22	(Write data)
+9  (PB5)            |D9	(PB1)		|30	(Read data)
+7  (PE6)            |A0	(PC0)		|24	(Write enable)
+A3 (PF4)            |A1	(PC1)		|26	(Track zero)
+24 (PD5 - TXLED)    |A2	(PC2)	    |28	(Write protect)
+A1 (PF6)            |A3	(PC3)		|34	(Disk changed)
 
 <br><br>
 
 **Pin mapping (dual drive)**
-Pin         |Arduino Nano|FDD Ribbon Cable
-------------|-----------|----------------------
-GND			|GND		|1	(GND)
-STEP		|D2			|20	(Step pulse)
-STEP_DIR	|D3			|18	(Direction)
-SELECT_B	|D4			|14	(Drive Select A)
-SELECT_A	|D5			|12	(Drive Select B)
-SIDE		|D6			|32	(Select head)
-INDEX		|D7			|8	(Index pulse)
-READDATA	|D8			|22	(Write data)
-WRITEDATA	|D9			|30	(Read data)
-WRITE_GATE	|A0			|24	(Write enable)
-TRACK_0		|A1			|26	(Track zero)
-WRITE_PROTECT|A2		|28	(Write protect)
-DISK_CHANGE	|A3			|34	(Disk changed)
+Arduino Pro Micro   |Arduino Nano   |FDD Ribbon Cable
+--------------------|---------------|----------------------
+GND                 |GND		    |1	(GND)
+RX (PD2)            |D2 (PD2)       |20	(Step pulse)
+TX (PD3)            |D3	(PD3)		|18	(Direction)
+8  (PB4)            |D4	(PD4)		|14	(Drive Select A)
+10 (PB6)            |D5	(PD5)		|12	(Drive Select B)
+5  (PC6)            |D6	(PD6)		|32	(Select head)
+6  (PD7)            |D7	(PD7)		|8	(Index pulse)
+4  (PD4)            |D8	(PB0)		|22	(Write data)
+9  (PB5)            |D9	(PB1)		|30	(Read data)
+7  (PE6)            |A0	(PC0)		|24	(Write enable)
+A3 (PF4)            |A1	(PC1)		|26	(Track zero)
+24 (PD5 - TXLED)    |A2	(PC2)	    |28	(Write protect)
+A1 (PF6)            |A3	(PC3)		|34	(Disk changed)
 
 <br><br>
 
-Pin			|Arduino Nano|Micro SD adapter
-------------|------------|-------------------
-Slave Select|D10			|CS
-MOSI		|D11			|MOSI
-MISO		|D12			|MISO
-SCK			|D13			|SCK
-VCC         |5V             |VCC
-GND         |GND            |GND
+Arduino Pro Micro   |Arduino Nano   |Micro SD adapter
+--------------------|---------------|-------------------
+A0 (PF7)            |D10 (PB2)  	|CS
+16 (PB2)            |D11 (PB3)	    |MOSI
+14 (PB3)            |D12 (PB4)		|MISO
+15 (PB1)            |D13 (PB5)		|SCK
+VCC                 |5V             |VCC
+GND                 |GND            |GND
 
 <br><br>
 
-Pin			|Arduino Nano|0.96" OLED SSD1306
-------------|------------|-------------------
-GND         |GND        |GND
-VCC         |5V         |VCC
-SDA			|A4			|SDA
-SCL			|A5			|SCL
+Arduino Pro Micro   |Arduino Nano   |0.96" OLED SSD1306
+--------------------|---------------|-------------------
+GND                 |GND            |GND
+VCC                 |5V             |VCC
+2  (PD1)			|A4			    |SDA
+3  (PD0)			|A5			    |SCL
 
 <br><br>
 
 **Resistor ladder for ADC buttons**
+Connected to pin A7 (Arduino Nano) or pin A2 (PF5) on Arduino Pro Micro
 <br>
 ![Resistor Ladder 1x5](/images/ResistorLadder-1x5.png)
 <br><br>

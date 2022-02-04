@@ -18,6 +18,7 @@
 // -----------------------------------------------------------------------------
 
 
+#include "fddEMU.h"
 #include "FloppyDrive.h"
 #include "SerialUI.h"
 #include <avr/io.h>
@@ -26,7 +27,6 @@
 #endif  //ENABLE_WDT
 #include "pff.h"
 #include "GraphicUI.h"
-#include "constStrings.h"
 #include "DiskFile.h"
 #include "ADCButton.h"
 #include "VirtualFloppyFS.h"

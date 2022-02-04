@@ -22,6 +22,29 @@
 #include "simpleUART.h"
 #include <stdlib.h>
 
+#if defined (__AVR_ATmega328P__)
+    #define UCSRA   UCSR0A
+    #define UCSRB   UCSR0B
+    #define UDRE    UDRE0
+    #define UDR     UDR0
+    #define RXC     RXC0
+    #define UBRR    UBRR0
+    #define RXEN    RXEN0
+    #define TXEN    TXEN0
+    #define U2X     U2X0
+#endif //defined (__ATmega328P__)
+#if defined (__AVR_ATmega32U4__)
+    #define UCSRA   UCSR1A
+    #define UCSRB   UCSR1B
+    #define UDRE    UDRE1
+    #define UDR     UDR1
+    #define RXC     RXC1
+    #define UBRR    UBRR1
+    #define RXEN    RXEN1
+    #define TXEN    TXEN1
+    #define U2X     U2X1
+#endif //defined (__ATmega32U4__)
+
 #if ENABLE_SERIAL
 class UART0 Serial;
 #endif //ENABLE_SERIAL
@@ -31,20 +54,12 @@ const uint16_t MIN_2X_BAUD = F_CPU/(4*(2*0XFFF + 1)) + 1;
 
 int putchar_stream(char ch, FILE *stream) 
 {    
-    if (ch == '\n') //if ch == LF
-    {        
-        while(((UCSR0A & (1<<UDRE0)) == 0)); //wait for empty tx buffer
-        UDR0 = '\r';    //send CR        
-    }
-    while(((UCSR0A & (1<<UDRE0)) == 0)); //wait for empty tx buffer
-    UDR0 = ch;
-    return 0;
+    return Serial.write(ch);
 }
 
 int getchar_stream(FILE *stream) 
 {    
-    while((UCSR0A & (1 << RXC0)) == 0); //wait for rx buffer
-    return UDR0;
+    return Serial.read();
 }
 
 
@@ -60,6 +75,8 @@ UART_stdinout.flags = _FDEV_SETUP_RW;
 stdin = stdout = stderr = &UART_stdinout;
 #endif //_STDIO_H_ stdio streams
 }
+
+#if defined (__AVR_ATmega328P__)
 
 void UART0::init(uint32_t baud)
 {   //https://forum.arduino.cc/t/over-600-bytes-of-ram-for-serial-on-a-mega-gasp/71429
@@ -97,6 +114,40 @@ int UART0::read(void)
 	while((UCSR0A & (1 << RXC0)) == 0); // wait for data to be received	
 	return UDR0;    // return output register
 }
+
+
+#elif defined (__AVR_ATmega32U4__)
+
+void UART0::init(uint32_t baud)
+{
+    SetupHardware();
+}
+
+int UART0::write(char ch)
+{	    
+    if (ch == '\n') //  ch == LF
+    {
+        if (RingBuffer_IsFull(&USARTtoUSB_Buffer))
+            return -1;
+        RingBuffer_Insert(&USARTtoUSB_Buffer, '\r'); //send CR
+        usb_cdc_loop();
+    }    
+    if (RingBuffer_IsFull(&USARTtoUSB_Buffer))
+        return -1;
+    RingBuffer_Insert(&USARTtoUSB_Buffer, ch);
+    usb_cdc_loop();
+    return 0;
+}
+
+int UART0::read(void)
+{	
+    usb_cdc_loop();
+    if (RingBuffer_IsEmpty(&USBtoUSART_Buffer))
+        return -1;
+    return RingBuffer_Remove(&USBtoUSART_Buffer);
+}
+
+#endif  //defined (__AVR_ATmega32U4__)
 
 void UART::print(char *str)
 {	
