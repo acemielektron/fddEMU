@@ -15,9 +15,13 @@ WDT = 1		#WDT enabled = 1
 VFFS = 0	#Virtual FLoppy Disabled
 GUI = 1		#Graphical User Interface enabled
 SERIAL = 0	#Serial disabled
-PORT = /dev/ttyUSB0
-OPT=s
 #OPT=3
+
+ifeq	($(MCU),atmega32u4) 
+	PORT = /dev/ttyACM0
+else
+	PORT = /dev/ttyUSB0
+endif
 
 # Files
 EXT_C   = c
