@@ -6,7 +6,7 @@ OSC = 16000000UL
 CC = avr-gcc
 CXX = avr-g++
 
-INCLUDES	= -I ./ -I libs/avrFlux -I libs/petitfs  -I /usr/avr/include -I libs/u8glib/csrc
+INCLUDES	= -I ./ -I libs/avrFlux -I libs/petitfs  -I libs/u8glib/csrc -I /usr/avr/include -I /usr/lib/avr/include 
 INCLUDES	+= -I ./usb-cdc -I ./libs -I ./libs/LUFA/Drivers/
 DUAL = 0	#enable drive B = 1
 DEBUG = 0	#enable debug = 1
