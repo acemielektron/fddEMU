@@ -7,7 +7,7 @@ CC = avr-gcc
 CXX = avr-g++
 
 INCLUDES	= -I ./ -I libs/avrFlux -I libs/petitfs  -I libs/u8glib/csrc -I /usr/avr/include -I /usr/lib/avr/include 
-INCLUDES	+= -I ./usb-cdc -I ./libs -I ./libs/LUFA/Drivers/
+INCLUDES	+= -I usb-cdc -I libs/lufa -I libs/lufa/LUFA/Drivers
 DUAL = 0	#enable drive B = 1
 DEBUG = 0	#enable debug = 1
 FLIP = 1	#flip scren upside down = 1
@@ -30,12 +30,12 @@ EXT_ASM = S
 
 LUFAOBJS = \
 	$(patsubst %.$(EXT_C),%.o,$(wildcard ./usb-cdc/*.$(EXT_C)))\
-	$(patsubst %.$(EXT_C),%.o,$(wildcard ./libs/LUFA/Drivers/USB/Core/*.$(EXT_C)))\
-	$(patsubst %.$(EXT_C),%.o,$(wildcard ./libs/LUFA/Drivers/USB/Core/AVR8/*.$(EXT_C)))\
-	$(patsubst %.$(EXT_C),%.o,$(wildcard ./libs/LUFA/Drivers/USB/Core/AVR8/Template/*.$(EXT_C)))\
-	$(patsubst %.$(EXT_C),%.o,$(wildcard ./libs/LUFA/Drivers/USB/Class/Device/*.$(EXT_C)))\
-	$(patsubst %.$(EXT_C),%.o,$(wildcard ./libs/LUFA/Drivers/USB/Class/Common/*.$(EXT_C)))\
-	$(patsubst %.$(EXT_C),%.o,$(wildcard ./libs/LUFA/Drivers/USB/Peripheral/AVR8/*.$(EXT_C))) 	
+	$(patsubst %.$(EXT_C),%.o,$(wildcard ./libs/lufa/LUFA/Drivers/USB/Core/*.$(EXT_C)))\
+	$(patsubst %.$(EXT_C),%.o,$(wildcard ./libs/lufa/LUFA/Drivers/USB/Core/AVR8/*.$(EXT_C)))\
+	$(patsubst %.$(EXT_C),%.o,$(wildcard ./libs/lufa/LUFA/Drivers/USB/Core/AVR8/Template/*.$(EXT_C)))\
+	$(patsubst %.$(EXT_C),%.o,$(wildcard ./libs/lufa/LUFA/Drivers/USB/Class/Device/*.$(EXT_C)))\
+	$(patsubst %.$(EXT_C),%.o,$(wildcard ./libs/lufa/LUFA/Drivers/USB/Class/Common/*.$(EXT_C)))\
+	$(patsubst %.$(EXT_C),%.o,$(wildcard ./libs/lufa/LUFA/Drivers/USB/Peripheral/AVR8/*.$(EXT_C))) 	
 
 U8GOBJS = \
 	$(patsubst %.$(EXT_C),%.o,$(wildcard libs/u8glib/csrc/*.$(EXT_C)))\

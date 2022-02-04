@@ -18,7 +18,13 @@ jobs:
       run: sudo apt install gcc-avr binutils-avr avr-libc
     - uses: actions/checkout@v2
     - name: install u8glib
-      run: cd libs; git clone https://github.com/olikraus/u8glib; cd ..
+      run: git clone https://github.com/olikraus/u8glib libs/u8glib
+    -name: select commit f1642c3 on u8glib
+      run: cd libs/u8glib;git checkout f1642c3045b67d17be80ae21155ff780fa315bfb;cd ../..
+    -name: install lufa
+      run: git clone https://github.com/abcminiuser/lufa libs/lufa
+    -name: select commit 9ec72190b on lufa
+      run: cd libs/lufa;git checkout 9ec72190b9562e5a1bbaba1753bcefeabe2e052;cd ../..
     #- name: configure
     #  run: ./configure
     - name: make
@@ -27,3 +33,9 @@ jobs:
     #  run: make check
     #- name: make distcheck
     #  run: make distcheck
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-m328p
+        path: fddEMU.hex
+        retention-days: 5

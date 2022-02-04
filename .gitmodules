@@ -1,0 +1,6 @@
+[submodule "libs/u8glib"]
+	path = libs/u8glib
+	url = https://github.com/olikraus/u8glib
+[submodule "libs/lufa"]
+	path = libs/lufa
+	url = https://github.com/abcminiuser/lufa
