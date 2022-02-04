@@ -50,9 +50,7 @@ ISR(INT2_vect) //int2
 #endif //(__AVR_ATmega32U4__)
 {
   if (IS_STEP() ) //debounce
-    (STEPDIR()) ? iTrack-- : iTrack++; //
-    ,
-    pointed out by hachi
+    (STEPDIR()) ? iTrack-- : iTrack++; // pointed out by hachi
   SET_TRACKCHANGED();  
 }
 
