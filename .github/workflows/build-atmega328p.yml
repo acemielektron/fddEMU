@@ -1,0 +1,29 @@
+name: build for atmega328p C/C++ CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: update packages
+      run: sudo apt update
+    - name: install avr-gcc & avr-binutils & avr-libc
+      run: sudo apt install gcc-avr binutils-avr avr-libc
+    - uses: actions/checkout@v2
+    - name: install u8glib
+      run: cd libs; git clone https://github.com/olikraus/u8glib; cd ..
+    #- name: configure
+    #  run: ./configure
+    - name: make
+      run: make MCU=atmega328p
+    #- name: make check
+    #  run: make check
+    #- name: make distcheck
+    #  run: make distcheck

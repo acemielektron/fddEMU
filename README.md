@@ -1,6 +1,7 @@
 # fddEMU
 An AVR (atmega328p) based floppy drive emulator for PC
 <br>
+![build workflow](https://github.com/acemielektron/fddEMU/actions/workflows/build-atmega328p.yml/badge.svg)
 <br>
 ![fddEMU on perfboard](/images/perfboard-2.png)
 <br>
