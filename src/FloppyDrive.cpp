@@ -50,7 +50,9 @@ ISR(INT2_vect) //int2
 #endif //(__AVR_ATmega32U4__)
 {
   if (IS_STEP() ) //debounce
-    iTrack = (STEPDIR()) ? --iTrack : ++iTrack;
+    (STEPDIR()) ? iTrack-- : iTrack++; //
+    ,
+    pointed out by hachi
   SET_TRACKCHANGED();  
 }
 
@@ -282,14 +284,14 @@ void FloppyDrive::run()
         (isReady()) || isVirtual() ? SET_DSKCHANGE_HIGH() : SET_DSKCHANGE_LOW(); //disk present ?      
       }
       //start sector
-      lba=(track*2+side)*18+sector;//LBA = (C × HPC + H) × SPT + (S − 1)
+      lba=(track*2+side)*numSec+sector;//LBA = (C × HPC + H) × SPT + (S − 1) //pointed by ikonko
       getSectorData(lba); //get sector from SD      
       setup_timer1_for_write();
       genSectorID((uint8_t)track,side,sector);
       sector_start(bitLength);          
-      if (track != iTrack) continue; //check track change
+      if (IS_TRACKCHANGED()) continue; //if track changed skip rest of the loop
       //check WriteGate
-      for (int i=0; i<20; i++) //wait 20X cycles for WRITEGATE
+      for (int i=0; i<20; i++) //wait and check for WRITEGATE
         if (IS_WRITE() ) break;
       if (IS_WRITE() )  //write gate on               
       {

@@ -1,6 +1,6 @@
 TARGET = fddEMU
-MCU = atmega32u4
-#MCU = atmega328p
+#MCU = atmega32u4
+MCU = atmega328p
 OSC = 16000000UL
 
 CC = avr-gcc
