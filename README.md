@@ -13,6 +13,11 @@ Standalone (using without usb serial connection) require SSD1306 i2c screen, but
 ![fddEMU on breadboard](/images/breadboard.png)
 <br>
 <br>
+**A very compact and configurable PCB design for fddEMU (courtesy of @ikonko)**<br>
+Please check [discussion thread](../../discussions/9) for configuration options
+![A really compact fddEMU on perfboard, courtes of ikonko](/images/ikonko/fddEMU_v1.png)
+<br>
+<br>
 **Requirements**
 * Arduino Nano or Arduino Pro Micro (UNO will do but button inputs require ADC7, use serial commands instead)
 * Micro SD card adapter (converts 5 volts arduino power supply and signals to 3.3 volts)
