@@ -1,0 +1,58 @@
+name: build for atmega328p & atmega32u4 C/C++ CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    #prepare ubuntu
+    - name: update packages
+      run: sudo apt update
+    - name: install avr-gcc & avr-binutils & avr-libc
+      run: sudo apt install gcc-avr binutils-avr avr-libc
+    #install fddEMU repository  
+    - uses: actions/checkout@v2
+    - name: install submodules (u8glib & lufa)
+      run: git submodule update --init --recursive
+    #atmega328p-single  
+    - name: build atmega328p-single  
+      run: make MCU=atmega328p GUI=1 SERIAL=1 DUAL=0 VFFS=1 DEBUG=0
+    - name: Copy atmega328p-single
+      run: mv fddEMU.hex ./atmega328p-single.hex
+    - name: make clean
+      run: make clean
+    #atmega328p-dual  
+    - name: build atmega328p-dual  
+      run: make MCU=atmega328p GUI=1 SERIAL=1 DUAL=1 VFFS=1 DEBUG=0
+    - name: Copy atmega328p-dual
+      run: mv fddEMU.hex ./atmega328p-dual.hex
+    - name: make clean
+      run: make clean
+    #atmega32u4-gui-dual-noserial
+    - name: build atmega32u4-gui-dual-noserial
+      run: make MCU=atmega32u4 GUI=1 SERIAL=0 DUAL=1 VFFS=0 DEBUG=0
+    - name: Copy atmega32u4-dual-gui
+      run: mv fddEMU.hex ./atmega32u4-dual-gui.hex
+    - name: make clean
+      run: make clean
+    #atmega32u4-serial-dual
+    - name: build atmega32u4-serial-dual
+      run: make MCU=atmega32u4 GUI=0 SERIAL=1 DUAL=1 VFFS=1 DEBUG=1
+    - name: Copy atmega32u4-serial-dual
+      run: mv fddEMU.hex ./atmega32u4-serial-dual.hex
+    - name: make clean
+      run: make clean
+    #upload built firmware files  
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-fddEMU
+        path: ./*.hex
+        retention-days: 30
