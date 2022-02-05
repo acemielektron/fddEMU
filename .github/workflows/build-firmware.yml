@@ -27,28 +27,28 @@ jobs:
     - name: Copy atmega328p-single
       run: mv fddEMU.hex ./atmega328p-single.hex
     - name: make clean
-      run: make clean
+      run: make MCU=atmega328p clean
     #atmega328p-dual  
     - name: build atmega328p-dual  
       run: make MCU=atmega328p GUI=1 SERIAL=1 DUAL=1 VFFS=1 DEBUG=0
     - name: Copy atmega328p-dual
       run: mv fddEMU.hex ./atmega328p-dual.hex
     - name: make clean
-      run: make clean
-    #atmega32u4-gui-dual-noserial
-    - name: build atmega32u4-gui-dual-noserial
-      run: make MCU=atmega32u4 GUI=1 SERIAL=0 DUAL=1 VFFS=0 DEBUG=0
-    - name: Copy atmega32u4-dual-gui
-      run: mv fddEMU.hex ./atmega32u4-dual-gui.hex
+      run: make MCU=atmega328p clean
+    #atmega32u4-single
+    - name: build atmega32u4-single
+      run: make MCU=atmega32u4 GUI=1 SERIAL=1 DUAL=0 VFFS=1 DEBUG=0
+    - name: Copy atmega32u4-single
+      run: mv fddEMU.hex ./atmega32u4-single.hex
     - name: make clean
-      run: make clean
-    #atmega32u4-serial-dual
-    - name: build atmega32u4-serial-dual
-      run: make MCU=atmega32u4 GUI=0 SERIAL=1 DUAL=1 VFFS=1 DEBUG=1
-    - name: Copy atmega32u4-serial-dual
-      run: mv fddEMU.hex ./atmega32u4-serial-dual.hex
+      run: make MCU=atmega32u4 clean
+    #atmega32u4-dual
+    - name: build atmega32u4-dual
+      run: make MCU=atmega32u4 GUI=1 SERIAL=1 DUAL=1 VFFS=1 DEBUG=0
+    - name: Copy atmega32u4-dual
+      run: mv fddEMU.hex ./atmega32u4-dual.hex
     - name: make clean
-      run: make clean
+      run: make MCU=atmega32u4 clean
     #upload built firmware files  
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
