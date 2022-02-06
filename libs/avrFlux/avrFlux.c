@@ -220,7 +220,7 @@ void setup_timer1_for_read()
   TIMSK0 &= ~bit(TOIE0); //Disable Timer0 Overflow - noInterrupts();
 }
 
-void genSectorID(uint8_t track, uint8_t side, uint8_t sector)
+void genSectorID(uint8_t track, uint8_t side, uint8_t sector, uint8_t sector_length)
 {
   // pre-compute ID record
   uint8_t *ptr = sectorID;
@@ -228,7 +228,7 @@ void genSectorID(uint8_t track, uint8_t side, uint8_t sector)
   *ptr++ = track;     // cylinder number
   *ptr++ = side;      // side number
   *ptr++ = sector+1; //i+1;       // sector number
-  *ptr++ = 2;         // sector length
+  *ptr++ = sector_length;         // sector length 2=512b 1=256b
   uint16_t crc = calc_crc(ptr-5, 5);
   *ptr++ = crc / 256; // CRC
   *ptr++ = crc & 255; // CRC

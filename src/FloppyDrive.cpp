@@ -182,8 +182,13 @@ int FloppyDrive::getSectorData(int lba)
   
   if (isReady())
   {
-    n = disk_read_sector(pbuf, startSector+lba);
+    n = (IS_HALFSECTOR()) ? disk_read_sector(pbuf, startSector+(lba>>1)):disk_read_sector(pbuf, startSector+lba);
     if (n) msg.error(err_diskread);
+  }
+  if (IS_HALFSECTOR())
+  {
+    if ((lba & 1) == 0)
+      memccpy(pbuf, pbuf+256, 1, 256); //if sector is even copy second half over first half
   }
 #if ENABLE_VFFS
   else if (isVirtual()) 
@@ -197,6 +202,8 @@ int FloppyDrive::setSectorData(int lba)
   int n = FR_DISK_ERR;
   uint8_t *pbuf=dataBuffer+1;  
   
+  if (IS_HALFSECTOR())
+    return -1; //writing half sectors is not supported yet
   if (isReady())
   {
     n = disk_write_sector(pbuf, startSector+lba);
@@ -233,10 +240,11 @@ int FloppyDrive::setSectorData(int lba)
 
 bool FloppyDrive::load(char *r_file) 
 {
-  if (FloppyDisk::load(r_file)) 
-    (numSec > 9) ? bitLength = 16 : bitLength = 32; //DD or HD
-  else 
-    return false;  
+  if (!FloppyDisk::load(r_file)) 
+    return false;
+  (numSec > 9) ? bitLength = 16 : bitLength = 32; //HD or DD disk
+  if (IS_HALFSECTOR())
+    bitLength = 32; //256b sector disks should be DD
   return true;  
 }
 
@@ -285,7 +293,7 @@ void FloppyDrive::run()
       lba=(track*2+side)*numSec+sector;//LBA = (C × HPC + H) × SPT + (S − 1)
       getSectorData(lba); //get sector from SD      
       setup_timer1_for_write();
-      genSectorID((uint8_t)track,side,sector);
+      IS_HALFSECTOR() ? genSectorID((uint8_t)track,side,sector,1):genSectorID((uint8_t)track,side,sector,2);
       sector_start(bitLength);          
       if (IS_TRACKCHANGED()) continue; //if track changed skip rest of the loop
       //check WriteGate
@@ -294,7 +302,7 @@ void FloppyDrive::run()
       if (IS_WRITE() )  //write gate on               
       {
         setup_timer1_for_read();      
-        read_data(bitLength, dataBuffer, 515);
+        IS_HALFSECTOR() ? read_data(bitLength, dataBuffer, 259):read_data(bitLength, dataBuffer, 515);
       #if ENABLE_WDT  
         wdt_reset();
       #endif  //ENABLE_WDT
@@ -305,11 +313,22 @@ void FloppyDrive::run()
       else  //write gate off                                  
       {
         dataBuffer[0]   = 0xFB; // "data" id
-        uint16_t crc = calc_crc(dataBuffer, 513);
-        dataBuffer[513] = crc/256;
-        dataBuffer[514] = crc&255;
-        dataBuffer[515] = 0x4E; // first byte of post-data gap        
-        write_data(bitLength, dataBuffer, 516);                                      
+        if (IS_HALFSECTOR())
+        {
+          uint16_t crc = calc_crc(dataBuffer, 257);
+          dataBuffer[257] = crc/256;
+          dataBuffer[258] = crc&255;
+          dataBuffer[259] = 0x4E; // first byte of post-data gap        
+          write_data(bitLength, dataBuffer, 260);
+        }
+        else
+        {
+          uint16_t crc = calc_crc(dataBuffer, 513);
+          dataBuffer[513] = crc/256;
+          dataBuffer[514] = crc&255;
+          dataBuffer[515] = 0x4E; // first byte of post-data gap        
+          write_data(bitLength, dataBuffer, 516);
+        }
       }
     }//sectors             
   }//selected

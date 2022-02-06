@@ -27,7 +27,10 @@
 #define FD_CHANGED  (1 << 0)
 #define FD_READY    (1 << 1)
 #define FD_READONLY (1 << 2)
-#define FD_VIRTUAL  (1 << 3)     
+#define FD_VIRTUAL  (1 << 3)    
+#define FD_HALFSECTOR (1 << 4) //256 byte sectors
+//define MACRO
+#define IS_HALFSECTOR() flags & FD_HALFSECTOR
 
 class FloppyDisk{
     public:

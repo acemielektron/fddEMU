@@ -75,6 +75,16 @@ bool FloppyDisk::load(char *filename)
         numTrack = 40;
         numSec = 9;
         break;
+      case (uint16_t) (80*2*16/2): //80 track 2 sided TR-DOS image
+        flags |= FD_HALFSECTOR; //set HALFSECTOR flag
+        numTrack = 80;
+        numSec = 16;
+        break;
+      case (uint16_t) (40*2*16/2): //80 track 2 sided TR-DOS image
+        flags |= FD_HALFSECTOR; //set HALFSECTOR flag
+        numTrack = 40;
+        numSec = 16;
+        break;        
       default:  //not a standart raw floppy image
         msg.error(err_invfile);
 	      return false;
