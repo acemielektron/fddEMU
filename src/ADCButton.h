@@ -23,13 +23,18 @@
 #define adcReady    (!(ADCSRA & (1<<ADSC)) )
 #define adcBusy     (ADCSRA & (1<<ADSC))
 
-#define BUTTON_PIN 7 //ADC7
+#if defined (__AVR_ATmega328P__)
+    #define BUTTON_CHANNEL 7 //pin A7 (ADC7)
+#endif //defined (__Atmega328p__)
+#if defined (__AVR_ATmega32U4__)
+    #define BUTTON_CHANNEL 5 //pin A2 (PF5-ADC5) Set as input in ADCButton::init()
+#endif //defined (__Atmega32U4__)
 
-#define BTN_EJECT   1
-#define BTN_LOAD    2
-#define BTN_PREV    3
-#define BTN_NEXT    4
-#define BTN_SELECT  5     
+#define BTN_CANCEL  1
+#define BTN_OK      2
+#define BTN_UP      3
+#define BTN_DOWN    4
+#define BTN_EXTRA   5     
 
 class ADCButton{
     private:

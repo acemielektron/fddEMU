@@ -29,12 +29,17 @@ class ADCButton abtn;
 ADCButton::ADCButton()
 {
   init();
-  requestADC(BUTTON_PIN);
+  requestADC(BUTTON_CHANNEL);
 }
 
 void ADCButton::init()
 {
+#if defined(__AVR_ATmega328P__)  
   PRR &= ~(1<<PRADC); //clear PRADC bit in Power Reduction Register
+#elif defined(__AVR_ATmega32U4__)
+  PRR0 &= ~(1<<PRADC); //clear PRADC bit in Power Reduction Register
+  DDRF &= ~(1 << 5); //set pin A2 (PF5-ADC5) as INPUT for ADC_BUTTON
+#endif  
   ADMUX = (1<<REFS0);     //select AVCC as reference
   ADCSRA = (1<<ADEN) | (1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0);  //enable and prescale = 128 (16MHz/128 = 125kHz)
 }
@@ -73,7 +78,7 @@ int8_t ADCButton::read()
 
   if (adcBusy)  return 0;  
   adcval = readADC();
-  requestADC(BUTTON_PIN);
+  requestADC(BUTTON_CHANNEL);
   if (adcval > 900) newval = 6;
   else if ( (adcval >= 800) && (adcval < 870) ) newval = 5;
   else if ( (adcval >= 600) && (adcval < 660) ) newval = 4;

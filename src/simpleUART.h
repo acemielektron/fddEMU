@@ -27,8 +27,13 @@
 #include <stdio.h> //sprintf & printf
 #include <string.h> //strlen
 
-#define rxReady (UCSR0A & (1 << RXC0))
-
+#if defined (__AVR_ATmega328P__)
+    #define rxReady (UCSR0A & (1 << RXC0))
+#elif defined (__AVR_ATmega32U4__)
+    #include "USBtoSerial.h"
+    #define rxReady Serial.rcvRdy()
+#endif //defined (__ATmega32U4__)
+    
 //https://forum.arduino.cc/t/what-does-the-f-do-exactly/89384
 class __PGMSTR;
 #define F(string_literal) (reinterpret_cast<const __PGMSTR *>(PSTR(string_literal)))
@@ -52,6 +57,9 @@ class UART0 : public UART{
     void init(uint32_t);
     int write(char);
     int read(void);
+#if defined (__AVR_ATmega32U4__)
+    bool rcvRdy() {usb_cdc_loop(); return !RingBuffer_IsEmpty(&USBtoUSART_Buffer);};
+#endif //defined (__ATmega32U4__)    
 };
 
 extern class UART0 Serial;

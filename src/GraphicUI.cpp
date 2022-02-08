@@ -17,9 +17,9 @@
 // Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 // -----------------------------------------------------------------------------
 
+#include "fddEMU.h"
 #include "GraphicUI.h"
 #include "FloppyDrive.h"
-#include "constStrings.h"
 #include "SerialUI.h" //debug
 #include "DiskFile.h"
 #include "ADCButton.h"
@@ -326,7 +326,7 @@ void GraphicUI::buttonAction(int8_t button)
   sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
   switch(button)
   {
-    case  BTN_SELECT:  //load virtual disk to selected drive     
+    case  BTN_EXTRA:  //load virtual disk to selected drive     
       if (getPage() == PAGE_STATUS)  //behave as drive select
       {
         if (getSelectedDrive())
@@ -336,7 +336,7 @@ void GraphicUI::buttonAction(int8_t button)
         }
       }
       break;
-    case  BTN_NEXT:  //Next file    
+    case  BTN_DOWN:  //Next file    
       if (getPage() == PAGE_STATUS)  //behave as drive select+
       {
         if (getSelectedDrive() == 0)
@@ -352,7 +352,7 @@ void GraphicUI::buttonAction(int8_t button)
         loadMenuFiles();
       }     
       break;
-    case  BTN_PREV:  //Previous file
+    case  BTN_UP:  //Previous file
       if (getPage() == PAGE_STATUS)  //behave as drive select-
       {
         if (getSelectedDrive() == DRIVE1)
@@ -364,7 +364,7 @@ void GraphicUI::buttonAction(int8_t button)
         loadMenuFiles();
       }    
 		  break;
-    case  BTN_LOAD:  //load disk    
+    case  BTN_OK:  //load disk    
       if (getPage() == PAGE_STATUS) //if we are in STATUS page
       {
         if (getSelectedDrive()) //if a drive is selected open file selection menu
@@ -387,7 +387,7 @@ void GraphicUI::buttonAction(int8_t button)
         if (load_res) setPage(PAGE_STATUS); //return to status else show error message
       }
 		  break;		
-    case  BTN_EJECT:  //eject disk
+    case  BTN_CANCEL:  //eject disk
       if (getPage() == PAGE_MENU)  //behave as cancel
       {
         setPage(PAGE_STATUS); //return to status

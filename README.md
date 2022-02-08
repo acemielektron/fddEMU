@@ -1,103 +1,21 @@
 # fddEMU
 An AVR (atmega328p) based floppy drive emulator for PC
 <br>
+[![build for atmega328p & atmega32u4 C/C++ CI](https://github.com/acemielektron/fddEMU/actions/workflows/build-firmware.yml/badge.svg)](https://github.com/acemielektron/fddEMU/actions/workflows/build-firmware.yml)
 <br>
 ![fddEMU on perfboard](/images/perfboard-2.png)
 <br>
 <br>
 fddEMU is a DIY floppy drive emulator. You can immediately begin testing fddEMU on serial terminal with an arduino nano, an SD adapter that converts 5 volts arduino power supply and signals to 3.3 volts suitable for SD card, an SD card,  and some jumper cables. 
 Standalone (using without usb serial connection) require SSD1306 i2c screen, buttons and a 5 volts power supply.
-<br>
-<br>
+<br><br>
+
 ![fddEMU on breadboard](/images/breadboard.png)
-<br>
-<br>
-**Requirements**
-* Arduino nano (UNO will do but button inputs require ADC7, use serial commands instead)
-* Micro SD card adapter (converts 5 volts arduino power supply and signals to 3.3 volts)
-* A micro SD card (formatted FAT16/32, floppy images in root directory)
-* Two 1kOhm resistors (for step and readdata pins - atmega's internal pullups are not sufficicient for parasitic capacitance of long floppy drive cable)
-* Male to female jumper wires (for connecting arduino nano pins to FDC ribbon cable)
-* Male to male jumper wires (for pullup on step and readdata pins)
-
-**Optional**
-* 0.96" i2c OLED (SSD1306) screen (for output)
-* 4 or 5 1kOhm resistors (for making ADC buttons)
-* 1 100kOhm resistor (ADC7 has no pullup, so an external pullup required)
-* 4 or 5 push buttons (required for ADC input obviously)
-* 5 volts power supply (Computer PSU 5v pins or an external PSU can be used)
-* Female to female jumper wires (for connecting SD adapter to arduino nano)
-* Breadboard or perfboard (for placing pullups and ADC buttons)
 <br><br>
 
-**Programming**
-<br>
-Arduino bootloader could be used for uploading (see command below), simply replace /dev/ttyUSB0 with your usb port
-<br>
-*avrdude -B 10 -p m328p -c arduino -P /dev/ttyUSB0 -U flash:w:fddEMU.hex*
-<br><br>
-
-**Pin mapping (single drive)**
-Pin         |Arduino Nano|FDD Ribbon Cable
-------------|-----------|----------------------
-GND			|GND		|1	(GND)
-STEP		|D2			|20	(Step pulse)
-STEP_DIR	|D3			|18	(Direction)
-MOTOR_A		|D4			|16	(Motor on B)
-SELECT_A	|D5			|12	(Drive Select B)
-SIDE		|D6			|32	(Select head)
-INDEX		|D7			|8	(Index pulse)
-READDATA	|D8			|22	(Write data)
-WRITEDATA	|D9			|30	(Read data)
-WRITE_GATE	|A0			|24	(Write enable)
-TRACK_0		|A1			|26	(Track zero)
-WRITE_PROTECT|A2		|28	(Write protect)
-DISK_CHANGE	|A3			|34	(Disk changed)
-
-<br><br>
-
-**Pin mapping (dual drive)**
-Pin         |Arduino Nano|FDD Ribbon Cable
-------------|-----------|----------------------
-GND			|GND		|1	(GND)
-STEP		|D2			|20	(Step pulse)
-STEP_DIR	|D3			|18	(Direction)
-SELECT_B	|D4			|14	(Drive Select A)
-SELECT_A	|D5			|12	(Drive Select B)
-SIDE		|D6			|32	(Select head)
-INDEX		|D7			|8	(Index pulse)
-READDATA	|D8			|22	(Write data)
-WRITEDATA	|D9			|30	(Read data)
-WRITE_GATE	|A0			|24	(Write enable)
-TRACK_0		|A1			|26	(Track zero)
-WRITE_PROTECT|A2		|28	(Write protect)
-DISK_CHANGE	|A3			|34	(Disk changed)
-
-<br><br>
-
-Pin			|Arduino Nano|Micro SD adapter
-------------|------------|-------------------
-Slave Select|D10			|CS
-MOSI		|D11			|MOSI
-MISO		|D12			|MISO
-SCK			|D13			|SCK
-VCC         |5V             |VCC
-GND         |GND            |GND
-
-<br><br>
-
-Pin			|Arduino Nano|0.96" OLED SSD1306
-------------|------------|-------------------
-GND         |GND        |GND
-VCC         |5V         |VCC
-SDA			|A4			|SDA
-SCL			|A5			|SCL
-
-<br><br>
-
-**Resistor ladder for ADC buttons**
-<br>
-![Resistor Ladder 1x5](/images/ResistorLadder-1x5.png)
+**A very compact and configurable PCB design for fddEMU (created by @ikonko)**<br>
+Please check [discussion thread](../../discussions/9#discussioncomment-2114518) for configuration options
+![A really compact fddEMU on perfboard, courtes of ikonko](/images/ikonko/fddEMU_v1.png)
 <br><br>
 
 **Limitations**
@@ -110,17 +28,116 @@ SCL			|A5			|SCL
 * If read data pin (D8) is disconnected or does not have sufficient external pullup fddEMU might hang up while reading data from host, which might cause a static image on screen. To protect the screen currently a watchdog timer of 8 seconds is set (which is the longest duration for watchdog timer). If mcu (arduino) can't access SD card after reset remove the sd card, wait a few seconds, reinsert the SD card then reset the arduino.
 <br><br>
 
-**Acknowledgements**
+**Hardware (Required)**
+* Arduino Nano or Arduino Pro Micro (UNO will do but button inputs require ADC7, use serial commands instead)
+* Micro SD card adapter (converts 5 volts arduino power supply and signals to 3.3 volts)
+* A micro SD card (formatted FAT16/32, floppy images in root directory)
+* Two 1kOhm resistors (for step and readdata pins - atmega's internal pullups are not sufficicient for parasitic capacitance of long floppy drive cable)
+* Male to female jumper wires (for connecting arduino nano pins to FDC ribbon cable)
+* Male to male jumper wires (for pullup on step and readdata pins)
 <br>
-* [ArduinoFDC](https://github.com/dhansel/ArduinoFDC) by [David Hansel](https://github.com/dhansel). fddEMU uses a modified ArduinoFDC library renamed to avrFlux for communicating with FDC.
-* [Petit FAT FS](https://github.com/greiman/PetitFS) by [Chan](http://elm-chan.org/fsw/ff/00index_p.html) adapted for hardware SPI by [Bill Greiman](https://github.com/greiman). fddEMU uses a modified Petit FAT FS.
-* [rjhcoding.com/avrc-sd-interface](http://rjhcoding.com/avrc-sd-interface-1.php) Great tutorial for using SD card with AVR.
-* [u8glib](https://github.com/olikraus/u8glib) Very useful for incorporating SSD1306 and can easily be used with various displays.
+
+**Hardware (Optional)**
+* 0.96" i2c OLED (SSD1306) screen (for output)
+* 4 or 5 1kOhm resistors (for making ADC buttons)
+* 1 100kOhm resistor (ADC7 has no pullup, so an external pullup required)
+* 4 or 5 push buttons (required for ADC input obviously)
+* 5 volts power supply (Computer PSU 5v pins or an external PSU can be used)
+* Female to female jumper wires (for connecting SD adapter to arduino nano)
+* Breadboard or perfboard (for placing pullups and ADC buttons)
 <br><br>
 
-**Releases**
+**Pin mapping (single drive)**
+Arduino Pro Micro   |Arduino Nano   |FDD Ribbon Cable
+--------------------|---------------|----------------------
+GND                 |GND		    |1	(GND)
+RX (PD2)            |D2 (PD2)       |20	(Step pulse)
+TX (PD3)            |D3	(PD3)		|18	(Direction)
+8  (PB4)            |D4	(PD4)		|16	(Motor on B)
+10 (PB6)            |D5	(PD5)		|12	(Drive Select B)
+5  (PC6)            |D6	(PD6)		|32	(Select head)
+6  (PD7)            |D7	(PD7)		|8	(Index pulse)
+4  (PD4)            |D8	(PB0)		|22	(Write data)
+9  (PB5)            |D9	(PB1)		|30	(Read data)
+7  (PE6)            |A0	(PC0)		|24	(Write enable)
+A3 (PF4)            |A1	(PC1)		|26	(Track zero)
+24 (PD5 - TXLED)    |A2	(PC2)	    |28	(Write protect)
+A1 (PF6)            |A3	(PC3)		|34	(Disk changed)
+
 <br>
-* [fddEMU releases](https://github.com/acemielektron/fddEMU/releases)
+
+**Pin mapping (dual drive)**
+Arduino Pro Micro   |Arduino Nano   |FDD Ribbon Cable
+--------------------|---------------|----------------------
+GND                 |GND		    |1	(GND)
+RX (PD2)            |D2 (PD2)       |20	(Step pulse)
+TX (PD3)            |D3	(PD3)		|18	(Direction)
+8  (PB4)            |D4	(PD4)		|14	(Drive Select A)
+10 (PB6)            |D5	(PD5)		|12	(Drive Select B)
+5  (PC6)            |D6	(PD6)		|32	(Select head)
+6  (PD7)            |D7	(PD7)		|8	(Index pulse)
+4  (PD4)            |D8	(PB0)		|22	(Write data)
+9  (PB5)            |D9	(PB1)		|30	(Read data)
+7  (PE6)            |A0	(PC0)		|24	(Write enable)
+A3 (PF4)            |A1	(PC1)		|26	(Track zero)
+24 (PD5 - TXLED)    |A2	(PC2)	    |28	(Write protect)
+A1 (PF6)            |A3	(PC3)		|34	(Disk changed)
+
+<br>
+
+**Micro SD Adapter connections**
+Arduino Pro Micro   |Arduino Nano   |Micro SD adapter
+--------------------|---------------|-------------------
+A0 (PF7)            |D10 (PB2)  	|CS
+16 (PB2)            |D11 (PB3)	    |MOSI
+14 (PB3)            |D12 (PB4)		|MISO
+15 (PB1)            |D13 (PB5)		|SCK
+VCC                 |5V             |VCC
+GND                 |GND            |GND
+
+<br>
+
+**0.96" OLED SSD1306 connections**
+Arduino Pro Micro   |Arduino Nano   |0.96" OLED SSD1306
+--------------------|---------------|-------------------
+GND                 |GND            |GND
+VCC                 |5V             |VCC
+2  (PD1)			|A4			    |SDA
+3  (PD0)			|A5			    |SCL
+
+<br><br>
+
+**Resistor ladder for ADC buttons**
+<br>
+Connected to pin A7 (ADC7) on Arduino Nano or pin A2 (PF5) on Arduino Pro Micro
+<br>
+![Resistor Ladder 1x5](/images/ResistorLadder-1x5.png)
+<br><br>
+
+**Firmware**
+<br>
+Download with submodules(u8glib & lufa): `git clone https://github.com/acemielektron/fddEMU --recursive`<br>
+If not downloaded with recursive option run (in fddEMU folder): `git submodule update --init --recursive`<br>
+Current Makefile assumes avr-gcc and avr-binutils are installed and are in the path, 
+avr specific includes are in "/usr/avr/include" (arch) or "/usr/lib/avr/include" (ubuntu) <br>
+run `make` to build fddEMU.hex with default options.
+<br>
+**build options:**
+* *GUI:* enables graphical user interface on OLED screen and ADC buttons (enabled default by Makefile). 
+* *SERIAL:* enables serial user interface and serial commands.
+* *VFFS:* enables virtual disk.
+* *DEBUG:* enables debug output on serial.
+* *FLIP:* flips the image on OLED screen 180 degrees (enabled default by Makefile).
+* *WDT:* enables watchdog timer (enabled default by Makefile).<br><br>
+These build options could either be switched on and off from Makefile or commandline 
+(eg.: `make DUAL=1 GUI=1 VFFS=1 SERIAL=0 DEBUG=0`).<br>
+Flashing the mcu could also be done by Makefile. `make flash` programs "fddEMU.hex" to 
+default serial port "/dev/ttyUSB0". If you want to use another serial port assign it to 
+PORT variable (eg.: `make flash PORT=/dev/ttyUSB2`).
+
+**Note:** Due to larger bootloader on Atmega32U4 and added code overhead for USB-Serial all features of fddEMU will be avaialble on Atmega32U4
+
+***Warning:*** *Writing > 28K (28672 bytes) firmware to Arduino Pro Micro results in bootloader being overwritten and requires reprogramming the bootloader using external programmer (eg. USBASP). Please check output of avr-size at the end of make process and make sure it is < 28K.*
 <br><br>
 
 **How to use**<br>
@@ -130,26 +147,26 @@ SCL			|A5			|SCL
 * For booting a host system, on startup fddEmu looks for "BOOT.IMG" on SD card. If there is a "BOOT.IMG" on the SD card fddEMU tries to load this file to drive A. 
 * if image file has "read only" attribute set, fddEMU will report "Write Protected" to host system.
 * To protect OLED screen fddEMU will put screen to sleep after some idle time, press "S1" (SELECT) button or "S" key inside serial terminal to wake screen up.
-* When host is reading/writing one of the emulated drives, BUSY message will be shown on screen and serial, during this time fddEMU will not respond to input. *Warning: fddEMU will not put the screen to sleep while drive is active. If there is a hardware or software problem causing an emulated drive to go continuously active, OLED screen might be damaged.*
+* When host is reading/writing one of the emulated drives, BUSY message will be shown on screen and serial, during this time fddEMU will not respond to input. *Warning: fddEMU will not put the screen to sleep while drive is active. If there is a hardware or software problem causing an emulated drive to go continuously active, OLED screen might get damaged.*
 <br><br>
 
-**fddEMU button interface:**
+**How to use (GUI button interface)**
 * S1: Load Virtual Disk
 * S2: Next
 * S3: Previous
 * S4: Open file selection Menu / Load selected file
 * S5: Eject selected disk / Cancel loading file
-
+<br>
 On the main screen, drive 0 "A" and -if enabled- drive 1 "B" are displayed. To use any of the functions a drive must first be selected through "S2" or "S3" buttons.<br>
 After a drive is selected:<br>
 "S1" button: in main status screen, if virtual disk is enabled, loads the virtual disk to selected drive.<br>
 "S2" button: in main status screen selects drive down, in file selection menu selects file down.<br>
 "S3" button: in main status screen selects drive up, in file selection menu selects file up.<br>
 "S4" button: in main status screen opens file selection menu, in file selection menu loads the selected image file to the selected drive.<br>
-"S5" button: in main status screen ejects image file loaded to the selected drive, in file section menu cancels file selection and returns to main status screen.<br>
-
+"S5" button: in main status screen ejects image file loaded to the selected drive, in file section menu cancels file selection and returns to main status screen.
 <br><br>
-**How to use (Serial)**
+
+**How to use (Serial interface)**
 <br>
 ![initial serial output](/images/serial-init.png)
 <br><br>
@@ -159,42 +176,34 @@ fddEMU serial interface is used through keys
 * P: Previous file
 * L: Load selected file
 * E: Eject selected disk / Cancel loading file
-
+<br>
 To use any of the functions a drive must first be selected through "S" key then serial terminal will report "Sel drive: A" or if drive B is selected "Sel drive: B".<br>
 After a drive is selected:<br>
 "S" key: shows serial status information and selects next drive.<br>
 "N" key: selects next image file. If virtul disk is enabled and if the last file in the directory is reached selects virtual disk .<br>
 "P" key: selects the previous image file. If the first file is selected, this file is reselected.<br>
 "L" key: loads selected image file to the selected drive.<br>
-"E" key: ejects image file loaded to selected drive. If pressed during file selection, cancels file selection.<br>
-
+"E" key: ejects image file loaded to selected drive. If pressed during file selection, cancels file selection.
 <br><br>
+
 **How to use through host system (Virtual Disk)**
 <br>
--if virtual disk is enabled and loaded- Virtual disk root directory contains a "DISKS" directory, a "DRVA.TXT" file and if DUAL drives enabled a "DRVB.TXT" file. If an SD card is inserted "DISKS" directory contains the file listing of inserted SD card's root directory otherwise it will be empty. "DRVA.TXT" would contain name of the image file loaded the "drive 0" and "DRVB.TXT" would contain name of the image file loaded to "drive 1". Writing the name of an image file to either "DRVA.TXT" or "DRVB.TXT" would result loading requested image file to respective emulated drive upon host releasing the drive. However disk write cache might interfere writing into these files and a cache flush might be required.
-<br>
-
-<br><br>
-**How to build (Makefile)**
-<br>
-Current Makefile assumes avr-gcc and avr-binutils are installed and are in the path, 
-avr specific includes are in "/usr/avr/include" and u8glib library is installed in 
-"libs/u8glib" (either install through git or extract downloaded "u8glib.zip" to "libs/" 
-directory). <br><br>
-**make:** builds binary with default options.<br>
-**build options:**
-* *GUI:* enables graphical user interface on OLED screen and ADC buttons (enabled default by Makefile). 
-* *SERIAL:* enables serial user interface and serial commands.
-* *VFFS:* enables virtual disk.
-* *DEBUG:* enables debug output on serial.
-* *FLIP:* flips the image on OLED screen 180 degrees (enabled default by Makefile).
-* *WDT:* enables watchdog timer (enabled default by Makefile).<br><br>
-These build options could either be switched on and off from Makefile or commandline 
-(eg.: 'make DUAL=1 GUI=1 VFFS=1 SERIAL=0 DEBUG=0').<br>
-Flashing the mcu could also be done by Makefile. "make flash" programs "fddEMU.hex" to 
-default serial port "/dev/ttyUSB0". If you want to use another serial port assign it to 
-PORT variable (eg.: "make flash PORT=/dev/ttyUSB2").<br><br>
-
-**Note:**  Please report any errors on [github issues for fddEMU](https://github.com/acemielektron/fddEMU/issues). Suggestions for improvements and feedback could be posted on [fddEMU blog page](http://acemielektronikci.blogspot.com/2021/10/fddemu-disket-surucu-emulatoru.html) Although the blog page is in turkish, feel free to write comments either in turkish or english.
+-if virtual disk (VFFS) is enabled and loaded- Virtual disk root directory contains a "DISKS" directory, a "DRVA.TXT" file and if DUAL drives enabled a "DRVB.TXT" file. If an SD card is inserted "DISKS" directory contains the file listing of inserted SD card's root directory otherwise it will be empty. "DRVA.TXT" would contain name of the image file loaded the "drive 0" and "DRVB.TXT" would contain name of the image file loaded to "drive 1". Writing the name of an image file to either "DRVA.TXT" or "DRVB.TXT" would result loading requested image file to respective emulated drive upon host releasing the drive. However disk write cache might interfere writing into these files and a cache flush might be required.
 <br><br>
 
+**Acknowledgements**
+<br>
+* [ArduinoFDC](https://github.com/dhansel/ArduinoFDC) by [David Hansel](https://github.com/dhansel). fddEMU uses a modified ArduinoFDC library renamed to avrFlux for communicating with FDC.
+* [Petit FAT FS](https://github.com/greiman/PetitFS) by [Chan](http://elm-chan.org/fsw/ff/00index_p.html) adapted for hardware SPI by [Bill Greiman](https://github.com/greiman). fddEMU uses a modified Petit FAT FS.
+* [rjhcoding.com/avrc-sd-interface](http://rjhcoding.com/avrc-sd-interface-1.php) Great tutorial for using SD card with AVR.
+* [u8glib](https://github.com/olikraus/u8glib) Very useful for incorporating SSD1306 and can easily be used with various displays.
+* [lufa](https://github.com/abcminiuser/lufa) Lightweight USB Framework for AVRs
+<br><br>
+
+**Releases**
+<br>
+* [fddEMU releases](https://github.com/acemielektron/fddEMU/releases)
+<br><br>
+
+**Note:**  Please report any errors on [github issues for fddEMU](https://github.com/acemielektron/fddEMU/issues). Suggestions for improvements and feedback could be posted on [discussions](https://github.com/acemielektron/fddEMU/discussions) or [fddEMU blog page](http://acemielektronikci.blogspot.com/2021/10/fddemu-disket-surucu-emulatoru.html) Although the blog page is in turkish, feel free to write comments either in turkish or english.
+<br><br>
