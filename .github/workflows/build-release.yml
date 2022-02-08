@@ -1,0 +1,99 @@
+name: build for atmega328p & atmega32u4
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    #prepare ubuntu
+    - name: update packages
+      run: sudo apt update
+    - name: install avr-gcc & avr-binutils & avr-libc
+      run: sudo apt install gcc-avr binutils-avr avr-libc
+    #install fddEMU repository  
+    - uses: actions/checkout@v2
+    - name: install submodules (u8glib & lufa)
+      run: git submodule update --init --recursive
+    #atmega328p-single  
+    - name: build atmega328p-single  
+      run: make MCU=atmega328p GUI=1 SERIAL=1 DUAL=0 VFFS=1 DEBUG=0
+    - name: Copy atmega328p-single
+      run: mv fddEMU.hex ./atmega328p-single.hex
+    - name: make clean
+      run: make MCU=atmega328p clean
+    #atmega328p-dual  
+    - name: build atmega328p-dual  
+      run: make MCU=atmega328p GUI=1 SERIAL=1 DUAL=1 VFFS=1 DEBUG=0
+    - name: Copy atmega328p-dual
+      run: mv fddEMU.hex ./atmega328p-dual.hex
+    - name: make clean
+      run: make MCU=atmega328p clean
+    #atmega32u4-single
+    - name: build atmega32u4-single
+      run: make MCU=atmega32u4 GUI=1 SERIAL=1 DUAL=0 VFFS=1 DEBUG=0
+    - name: Copy atmega32u4-single
+      run: mv fddEMU.hex ./atmega32u4-single.hex
+    - name: make clean
+      run: make MCU=atmega32u4 clean
+    #atmega32u4-dual
+    - name: build atmega32u4-dual
+      run: make MCU=atmega32u4 GUI=1 SERIAL=1 DUAL=1 VFFS=1 DEBUG=0
+    - name: Copy atmega32u4-dual
+      run: mv fddEMU.hex ./atmega32u4-dual.hex
+    - name: make clean
+      run: make MCU=atmega32u4 clean
+    #upload built firmware files  
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-fddEMU
+        path: ./*.hex
+        retention-days: 30
+    # Get current commit sha (https://stackoverflow.com/questions/57968497/how-do-i-set-an-env-var-with-a-bash-expression-in-github-actions)
+    - name: Get SHA
+      run:  echo "sha_short=$(echo $GITHUB_SHA | cut -c 1-7)" >> $GITHUB_ENV      
+    # Zip files
+    - name: Zip release files
+      run:  zip ./build-${{ env.sha_short }}.zip *.hex
+    # Create release text (https://stackoverflow.com/questions/3357280/print-commit-message-of-a-given-commit-in-git)
+    - name: Create release message
+      run:  |
+            echo "This is an automated release triggered by commit $(echo $GITHUB_SHA | cut -c 1-7)" > ./release.txt              
+            echo "<br> $(git log --format=%B -n 1 HEAD)" >> ./release.txt       
+    # Check repository owner and actor
+    - name: Check repository owner and actor
+      run:  |
+              echo "actor=$(echo $GITHUB_ACTOR)" >> $GITHUB_ENV
+              echo "owner=$(echo $GITHUB_REPOSITORY_OWNER)" >> $GITHUB_ENV
+    # Create release (https://github.com/actions/upload-release-asset)
+    - name: Create Release
+      if: env.actor == env.owner #This step fails otherwise
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ env.sha_short }}
+        release_name: Release ${{ env.sha_short }}
+        draft: false
+        prerelease: true
+        body_path: ./release.txt 
+    # Upload release asset (https://github.com/actions/upload-release-asset)    
+    - name: Upload Release Asset
+      if: env.actor == env.owner #This step fails otherwise
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+        asset_path: ./build-${{ env.sha_short }}.zip
+        asset_name: build-${{ env.sha_short }}.zip
+        asset_content_type: application/zip
