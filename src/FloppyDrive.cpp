@@ -169,7 +169,7 @@ int FloppyDrive::getSectorData(int lba)
   uint8_t head   = 0;
   uint8_t track  = lba / (numSec*2);
   uint8_t sector = lba % (numSec*2);
-  if( sector >= numSec ) { head = 1; sector -= numSec; Serial.write('#'); }
+  if( sector >= numSec ) { head = 1; sector -= numSec; }
 
   Serial.write('R');
   Serial.printDEC(track);
