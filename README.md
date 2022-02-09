@@ -14,7 +14,7 @@ Standalone (using without usb serial connection) require SSD1306 i2c screen, but
 <br><br>
 
 **A very compact and configurable PCB design for fddEMU (created by @ikonko)**<br>
-Please check [discussion thread](../../discussions/9#discussioncomment-2114518) for configuration options
+Please check [documentation for compact PCB](/images/ikonko/README.md) for detailed explanation and configuration options
 ![A really compact fddEMU on perfboard, courtes of ikonko](/images/ikonko/fddEMU_v1.png)
 <br><br>
 
