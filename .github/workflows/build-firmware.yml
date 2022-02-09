@@ -65,8 +65,10 @@ jobs:
     # Create release text (https://stackoverflow.com/questions/3357280/print-commit-message-of-a-given-commit-in-git)
     - name: Create release message
       run:  |
-            echo "This is an automated release triggered by commit $(echo $GITHUB_SHA | cut -c 1-7)" > ./release.txt              
-            echo "<br> $(git log --format=%B -n 1 HEAD)" >> ./release.txt       
+            echo "This is an automated release triggered by commit $(echo $GITHUB_SHA | cut -c 1-7)" >> ./release.txt              
+            echo "$(git log --format=%B -n 1 HEAD)" >> ./release.txt 
+            echo -e "Built release message:\r\n$(cat ./release.txt)"
+            
     # Check trigger, repository owner and actor
     - name: Check trigger, repository owner and actor
       run:  |
