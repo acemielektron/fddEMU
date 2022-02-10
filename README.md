@@ -1,7 +1,7 @@
 # fddEMU
 An AVR (atmega328p) based floppy drive emulator for PC
 <br>
-[![build for atmega328p & atmega32u4 C/C++ CI](https://github.com/acemielektron/fddEMU/actions/workflows/build-firmware.yml/badge.svg)](https://github.com/acemielektron/fddEMU/actions/workflows/build-firmware.yml)
+[![build for atmega328p & atmega32u4](https://github.com/acemielektron/fddEMU/actions/workflows/build-firmware.yml/badge.svg)](https://github.com/acemielektron/fddEMU/actions/workflows/build-firmware.yml)
 <br>
 ![fddEMU on perfboard](/images/perfboard-2.png)
 <br>
@@ -25,14 +25,13 @@ Please check [documentation for compact PCB](/images/ikonko/README.md) for detai
 * fddEMU uses raw floppy images (images prepared with dd or rawread) does not require or use a MFM file. Converts raw image sectors to MFM on the fly using [ArduinoFDC](https://github.com/dhansel/ArduinoFDC) library.
 * fddEMU supports fixed sector size of 512 bytes, other sector sizes are not supported.
 * Requires a Floppy Drive Controller (FDC) on the PC side to communicate so it probably wont work with an Amiga.
-* If read data pin (D8) is disconnected or does not have sufficient external pullup fddEMU might hang up while reading data from host, which might cause a static image on screen. To protect the screen currently a watchdog timer of 8 seconds is set (which is the longest duration for watchdog timer). If mcu (arduino) can't access SD card after reset remove the sd card, wait a few seconds, reinsert the SD card then reset the arduino.
 <br><br>
 
 **Hardware (Required)**
 * Arduino Nano or Arduino Pro Micro (UNO will do but button inputs require ADC7, use serial commands instead)
 * Micro SD card adapter (converts 5 volts arduino power supply and signals to 3.3 volts)
 * A micro SD card (formatted FAT16/32, floppy images in root directory)
-* Two 1kOhm resistors (for step and readdata pins - atmega's internal pullups are not sufficicient for parasitic capacitance of long floppy drive cable)
+* Two 1kOhm resistors for Step (pin 20 of floppy connector) and WriteData (pin 22 of floppy connector). Atmega's internal pullups are not sufficicient for parasitic capacitance of long floppy drive cable
 * Male to female jumper wires (for connecting arduino nano pins to FDC ribbon cable)
 * Male to male jumper wires (for pullup on step and readdata pins)
 <br>
@@ -190,6 +189,11 @@ After a drive is selected:<br>
 <br>
 -if virtual disk (VFFS) is enabled and loaded- Virtual disk root directory contains a "DISKS" directory, a "DRVA.TXT" file and if DUAL drives enabled a "DRVB.TXT" file. If an SD card is inserted "DISKS" directory contains the file listing of inserted SD card's root directory otherwise it will be empty. "DRVA.TXT" would contain name of the image file loaded the "drive 0" and "DRVB.TXT" would contain name of the image file loaded to "drive 1". Writing the name of an image file to either "DRVA.TXT" or "DRVB.TXT" would result loading requested image file to respective emulated drive upon host releasing the drive. However disk write cache might interfere writing into these files and a cache flush might be required.
 <br><br>
+
+**Troubleshooting**
+* To test fddEMU or any other floppy drive emulator a Floppy Drive Controller (FDC) is very useful. Unfortunately new computers usually don't come with a FDC. Thankfully we already have a very good FDC that generates the precise debug information we need: the [ArduinoFDC](https://github.com/dhansel/ArduinoFDC). A direct pin to pin connection from fddEMU to ArduinoFDC works, if using shorter jumper wires external pullups are not necessary.
+* If using a floppy drive ribbon cable make sure of external pullup resistors to +5V on Step (Pin 20 on floppy connector) and WriteData (pin 22 on floppy connector) pins.
+* If WiteData pin (pin 22 on floppy connector) is disconnected or does not have sufficient external pullup fddEMU might hang up while reading data from host, which might cause a static image on screen. To protect the screen currently a watchdog timer of 8 seconds is set (which is the longest duration for watchdog timer). If mcu (arduino) can't access SD card after reset remove the sd card, wait a few seconds, reinsert the SD card then reset the arduino.
 
 **Acknowledgements**
 <br>
