@@ -187,7 +187,7 @@ int FloppyDrive::getSectorData(int lba)
   }
   if (IS_HALFSECTOR())
   {
-    if ((lba & 1) == 0)
+    if ((lba & 1) == 1)
       memccpy(pbuf, pbuf+256, 1, 256); //if sector is even copy second half over first half
   }
 #if ENABLE_VFFS

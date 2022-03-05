@@ -228,7 +228,7 @@ void genSectorID(uint8_t track, uint8_t side, uint8_t sector, uint8_t sector_len
   *ptr++ = track;     // cylinder number
   *ptr++ = side;      // side number
   *ptr++ = sector+1; //i+1;       // sector number
-  *ptr++ = sector_length;         // sector length 2=512b 1=256b
+  *ptr++ = sector_length;         // sector length 0=128b 1=256b 2=512b 3=1024b
   uint16_t crc = calc_crc(ptr-5, 5);
   *ptr++ = crc / 256; // CRC
   *ptr++ = crc & 255; // CRC

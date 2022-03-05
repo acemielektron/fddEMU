@@ -28,7 +28,7 @@
 #include <avr/pgmspace.h>
 
 const char s_RootDir[] = {'\0'};		//Don't make PROGMEM
-const char s_bootfile[] = "BOOT.IMG";	//Don't make PROGMEM
+const char s_bootfile[] = "TEST.TRD";	//Don't make PROGMEM
 
 const char str_fddEMU[]		PROGMEM = "fddEMU";
 const char str_2021[]       PROGMEM = "(c) 2021";
