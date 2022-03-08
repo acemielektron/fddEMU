@@ -14,8 +14,8 @@ Standalone (using without usb serial connection) require SSD1306 i2c screen, but
 <br><br>
 
 **A very compact and configurable PCB design for fddEMU (created by @ikonko)**<br>
-Please check [documentation for compact PCB](/images/ikonko/README.md) for detailed explanation and configuration options
-![A really compact fddEMU on perfboard, courtes of ikonko](/images/ikonko/fddEMU_v1.png)
+Please check [documentation and photos for compact PCB](/images/ikonko) for detailed explanation and configuration options. Gerber files are available in [hardware](/hardware) folder.
+![Compact multilayered pcb](/images/ikonko/fddEMU_v1.png)
 <br><br>
 
 **Limitations**
