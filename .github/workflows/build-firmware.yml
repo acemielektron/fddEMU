@@ -30,7 +30,7 @@ jobs:
       run: make MCU=atmega328p clean
     #atmega328p-dual  
     - name: build atmega328p-dual  
-      run: make MCU=atmega328p GUI=1 SERIAL=1 DUAL=1 VFFS=1 DEBUG=0
+      run: make MCU=atmega328p GUI=1 SERIAL=1 DUAL=1 VFFS=0 DEBUG=1 FLIP=0
     - name: Copy atmega328p-dual
       run: mv fddEMU.hex ./atmega328p-dual.hex
     - name: make clean
