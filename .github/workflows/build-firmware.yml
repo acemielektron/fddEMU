@@ -21,31 +21,45 @@ jobs:
     - uses: actions/checkout@v2
     - name: install submodules (u8glib & lufa)
       run: git submodule update --init --recursive
-    #atmega328p-single  
-    - name: build atmega328p-single  
+    #atmega328p-single-debug 
+    - name: build atmega328p-single-debug  
       run: make MCU=atmega328p GUI=1 SERIAL=1 DUAL=0 VFFS=0 DEBUG=1 FLIP=0
-    - name: Copy atmega328p-single
-      run: mv fddEMU.hex ./atmega328p-single.hex
+    - name: Copy atmega328p-single-debug
+      run: mv fddEMU.hex ./atmega328p-single-debug.hex
     - name: make clean
       run: make MCU=atmega328p clean
-    #atmega328p-dual  
-    - name: build atmega328p-dual  
+    #atmega328p-dual-debug
+    - name: build atmega328p-dual-debug 
       run: make MCU=atmega328p GUI=1 SERIAL=1 DUAL=1 VFFS=0 DEBUG=1 FLIP=0
-    - name: Copy atmega328p-dual
-      run: mv fddEMU.hex ./atmega328p-dual.hex
+    - name: Copy atmega328p-dual-debug
+      run: mv fddEMU.hex ./atmega328p-dual-debug.hex
     - name: make clean
       run: make MCU=atmega328p clean
-    #atmega32u4-single
-    - name: build atmega32u4-single
-      run: make MCU=atmega32u4 GUI=1 SERIAL=1 DUAL=0 VFFS=1 DEBUG=0
-    - name: Copy atmega32u4-single
-      run: mv fddEMU.hex ./atmega32u4-single.hex
+    #atmega328p-single-flipped
+    - name: build atmega328p-single-flipped
+      run: make MCU=atmega328p GUI=1 SERIAL=1 DUAL=0 VFFS=0 DEBUG=0 FLIP=1
+    - name: Copy atmega328p-single-flipped
+      run: mv fddEMU.hex ./atmega328p-single-flipped.hex
+    - name: make clean
+      run: make MCU=atmega328p clean
+    #atmega328p-dual-flipped
+    - name: build atmega328p-dual-flipped 
+      run: make MCU=atmega328p GUI=1 SERIAL=1 DUAL=1 VFFS=0 DEBUG=0 FLIP=1
+    - name: Copy atmega328p-dual-flipped
+      run: mv fddEMU.hex ./atmega328p-dual-flipped.hex
+    - name: make clean
+      run: make MCU=atmega328p clean      
+    #atmega32u4-single-flipped
+    - name: build atmega32u4-single-flipped
+      run: make MCU=atmega32u4 GUI=1 SERIAL=1 DUAL=0 VFFS=1 DEBUG=0 FLIP=1
+    - name: Copy atmega32u4-single-flipped
+      run: mv fddEMU.hex ./atmega32u4-single-flipped.hex
     - name: make clean
       run: make MCU=atmega32u4 clean
-    #atmega32u4-dual
-    - name: build atmega32u4-dual
-      run: make MCU=atmega32u4 GUI=1 SERIAL=1 DUAL=1 VFFS=1 DEBUG=0
-    - name: Copy atmega32u4-dual
+    #atmega32u4-dual-flipped
+    - name: build atmega32u4-dual-flipped
+      run: make MCU=atmega32u4 GUI=1 SERIAL=1 DUAL=1 VFFS=1 DEBUG=0 FLIP=1
+    - name: Copy atmega32u4-dual-flipped-flipped
       run: mv fddEMU.hex ./atmega32u4-dual.hex
     - name: make clean
       run: make MCU=atmega32u4 clean

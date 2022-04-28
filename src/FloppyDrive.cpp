@@ -246,6 +246,7 @@ void FloppyDrive::run()
   static uint8_t side=0;
   static uint8_t sector=0;
   static int lba;
+  uint8_t writeGateWait = (bitLength == 16) ? 20:40;
 
   if (isChanged()) 
   {
@@ -289,7 +290,7 @@ void FloppyDrive::run()
       sector_start(bitLength);          
       if (IS_TRACKCHANGED()) continue; //if track changed skip rest of the loop
       //check WriteGate
-      for (int i=0; i<20; i++) //wait and check for WRITEGATE
+      for (int i=0; i<writeGateWait; i++) //wait and check for WRITEGATE
         if (IS_WRITE() ) break;
       if (IS_WRITE() )  //write gate on               
       {
