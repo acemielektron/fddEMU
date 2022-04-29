@@ -64,10 +64,10 @@ ISR(PCINT0_vect) //pin change interrupt of port B
 #endif //(__AVR_ATmega32U4__)
 {
 #if ENABLE_DRIVE_B
-  if ( IS_SELECTA() ) SET_DRIVE0(); //drive A is selected 
-  else if ( IS_SELECTB() ) SET_DRIVE1(); //drive B is selected   
+  if ( IS_SELECTA() ) SEL_DRIVE0(); //drive A is selected 
+  else if ( IS_SELECTB() ) SEL_DRIVE1(); //drive B is selected   
 #else //Drive B not enabled
-  if ( IS_SELECTA() && IS_MOTORA() ) SET_DRIVE0(); //driveA is selected 
+  if ( IS_SELECTA() && IS_MOTORA() ) SEL_DRIVE0(); //driveA is selected 
 #endif  //ENABLE_DRIVE_B
   else CLR_DRVSEL();
 }
@@ -269,11 +269,11 @@ void FloppyDrive::run()
       if (IS_TRACKCHANGED()) //if track changed
       {
         CLR_TRACKCHANGED();             
-        track = iTrack;
+        track += iTrack;	//add iTrack to current track
+        iTrack = 0;				//reset iTrack
         if (track < 0) track=0; //Check if track valid
         else if (track >= numTrack) track = numTrack-1;          
         (track == 0) ? SET_TRACK0_LOW() : SET_TRACK0_HIGH(); 
-        iTrack = track;
         isReady() || isVirtual() ? SET_DSKCHANGE_HIGH() : SET_DSKCHANGE_LOW(); //disk present ?      
       }
       //start sector

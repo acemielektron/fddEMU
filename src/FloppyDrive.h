@@ -121,8 +121,8 @@
 
 #define SET_TRACKCHANGED()  (iFlags |= F_TRACKCHANGED)
 #define CLR_TRACKCHANGED()  (iFlags &= ~F_TRACKCHANGED)
-#define SET_DRIVE0()  (iFlags |= DRIVE0)
-#define SET_DRIVE1()  (iFlags |= DRIVE1)
+#define SEL_DRIVE0()  (iFlags |= DRIVE0)
+#define SEL_DRIVE1()  (iFlags |= DRIVE1)
 #define CLR_DRVSEL() (iFlags &= ~(DRIVE0|DRIVE1) )
 
 #define IS_TRACKCHANGED() (iFlags & (1 << BIT_TRACKCHANGE))
