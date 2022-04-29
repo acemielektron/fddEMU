@@ -233,11 +233,7 @@ int FloppyDrive::setSectorData(int lba)
 
 bool FloppyDrive::load(char *r_file) 
 {
-  if (FloppyDisk::load(r_file)) 
-    (numSec > 9) ? bitLength = 16 : bitLength = 32; //DD or HD
-  else 
-    return false;  
-  return true;  
+  return (FloppyDisk::load(r_file)); 
 }
 
 void FloppyDrive::run()
