@@ -129,15 +129,13 @@ void initFDDpins()
   sei(); //Turn interrupts on
 }
 
-void FloppyDrive::init() 
-{ 
-  if (!pinsInitialized) initFDDpins();
-  bitLength=16; //  bit length for 3.5" HD floppy is 16
-}
-
 FloppyDrive::FloppyDrive(void)
 {    
-  init();
+  if (!pinsInitialized) initFDDpins();
+  bitLength=16; //  bit length for 3.5" HD floppy is 16
+  track = 0;
+  side = 0;
+  sector = 0;
 }
 
 char *FloppyDrive::diskInfoStr()	//Generate disk CHS info string
@@ -240,15 +238,15 @@ int FloppyDrive::setSectorData(int lba)
 
 bool FloppyDrive::load(char *r_file) 
 {
-  return (FloppyDisk::load(r_file)); 
+  track = 0;
+  side = 0;
+  sector = 0;
+  return (FloppyDisk::load(r_file));  
 }
 
 void FloppyDrive::run()
 {
-  static int track=0;
-  static uint8_t side=0;
-  static uint8_t sector=0;
-  static int lba;
+  int lba;
   uint8_t writeGateWait = (bitLength == 16) ? 20:40;
 
   if (isChanged()) 
@@ -283,7 +281,7 @@ void FloppyDrive::run()
         else if (track >= numTrack) track = numTrack-1;          
         (track == 0) ? SET_TRACK0_LOW() : SET_TRACK0_HIGH(); 
         iTrack = track;
-        (isReady()) || isVirtual() ? SET_DSKCHANGE_HIGH() : SET_DSKCHANGE_LOW(); //disk present ?      
+        isReady() || isVirtual() ? SET_DSKCHANGE_HIGH() : SET_DSKCHANGE_LOW(); //disk present ?      
       }
       //start sector
       lba=(track*2+side)*numSec+sector;//LBA = (C × HPC + H) × SPT + (S − 1)
