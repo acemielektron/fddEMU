@@ -132,16 +132,19 @@
 
 class FloppyDrive : public FloppyDisk
 {
-    public:      
-    uint8_t bitLength;
+  private:
+    int track;
+    uint8_t side;
+    uint8_t sector;
+
+  public:          
     FloppyDrive();
-    void init();
     char *diskInfoStr();
     int getSectorData(int lba);
     int setSectorData(int lba);
     bool load(char *);
     void eject() {FloppyDisk::eject(); bitLength = 16;}
-    void run();
+    void run();    
 };
 
 #if ENABLE_DRIVE_B

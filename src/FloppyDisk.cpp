@@ -58,25 +58,31 @@ bool FloppyDisk::load(char *filename)
       case (uint16_t)(80*2*36): //3.5" HD   2880KB
         numTrack = 80;
         numSec = 36;
+        bitLength = 16; //HD
         break;
       case (uint16_t)(80*2*18): //3.5" HD   1440KB
         numTrack = 80;
         numSec = 18;
+        bitLength = 16; //HD
         break;
       case (uint16_t)(80*2*9):  //3.5" DD   720KB
         numTrack = 80;
         numSec = 9;
+        bitLength = 32; //DD
         break;
       case (uint16_t)(80*2*15): //5.25" HD  1.2MB
         numTrack = 80;
         numSec = 15;
+        bitLength = 16; //HD
         break;
       case (uint16_t)(40*2*9):  //5.25" DD  360KB
         numTrack = 40;
         numSec = 9;
+        bitLength = 32; //DD
         break;
       default:  //not a standart raw floppy image
         msg.error(err_invfile);
+        bitLength = 16; //HD
 	      return false;
     } //switch        
   }
@@ -107,6 +113,7 @@ bool FloppyDisk::load(char *filename)
     }
     numSec = (uint8_t) *(int16_t *)(wbuf+13);     //WsectorsPerTrack@24
     numTrack = (uint8_t) ( totalSectors / (numSec*2) );
+    bitLength = (numSec >= 15) ? 16:32; //Decide according to numSec, >=15 HD else DD
   }
   //After all the checks load image file
   memcpy(fName, filename, 13);   
@@ -134,5 +141,6 @@ void FloppyDisk::loadVirtualDisk()
   if (isReady()) eject(); //if a disk is loaded, eject
   memcpy_P(fName, str_label, 13); //set disk name to FDDEMU
   flags |= FD_VIRTUAL;  
+  bitLength = 16; //HD
 #endif //ENABLE_VFFS
 }

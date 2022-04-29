@@ -34,6 +34,7 @@ class FloppyDisk{
     uint8_t flags;
     uint8_t numTrack;   //number of tracks
     uint8_t numSec;     //sectors per track
+    uint8_t bitLength;  //16 for HD, 32 for DD
     long startSector;
     char fName[13];    
     FloppyDisk();
