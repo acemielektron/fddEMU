@@ -132,8 +132,7 @@
 
 class FloppyDrive : public FloppyDisk
 {
-    public:      
-    uint8_t bitLength;
+    public:          
     FloppyDrive();
     void init();
     char *diskInfoStr();

@@ -169,7 +169,7 @@ int FloppyDrive::getSectorData(int lba)
   uint8_t head   = 0;
   uint8_t track  = lba / (numSec*2);
   uint8_t sector = lba % (numSec*2);
-  if( sector >= numSec ) { head = 1; sector -= numSec; Serial.write('#'); }
+  if( sector >= numSec ) { head = 1; sector -= numSec; }
 
   Serial.write('R');
   Serial.printDEC(track);
@@ -240,12 +240,7 @@ int FloppyDrive::setSectorData(int lba)
 
 bool FloppyDrive::load(char *r_file) 
 {
-  if (!FloppyDisk::load(r_file)) 
-    return false;
-  (numSec > 9) ? bitLength = 16 : bitLength = 32; //HD or DD disk
-  if (IS_HALFSECTOR())
-    bitLength = 32; //256b sector disks should be DD
-  return true;  
+  return (FloppyDisk::load(r_file)); 
 }
 
 void FloppyDrive::run()
@@ -254,6 +249,7 @@ void FloppyDrive::run()
   static uint8_t side=0;
   static uint8_t sector=0;
   static int lba;
+  uint8_t writeGateWait = (bitLength == 16) ? 20:40;
 
   if (isChanged()) 
   {
@@ -297,7 +293,7 @@ void FloppyDrive::run()
       sector_start(bitLength);          
       if (IS_TRACKCHANGED()) continue; //if track changed skip rest of the loop
       //check WriteGate
-      for (int i=0; i<20; i++) //wait and check for WRITEGATE
+      for (int i=0; i<writeGateWait; i++) //wait and check for WRITEGATE
         if (IS_WRITE() ) break;
       if (IS_WRITE() )  //write gate on               
       {
