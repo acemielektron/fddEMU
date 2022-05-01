@@ -70,7 +70,7 @@
 
 //Unchangeable pins ICP&OCP for timer1
 #define PIN_READDATA    4   //PD4 must be pin4 (ICP for timer1)
-#define PIN_WRITEDATA   5   //PB5 must be pin9 (OCP for timer1)    
+#define PIN_WRITEDATA   5   //PB5 must be pin9 (OCP for timer1)
 //Pin Change Interrupt pins
 #define PIN_MOTORA      4   //PB4-PCINT4-pin8
 #define PIN_SELECTA     6   //PB6-PCINT6-pin10
@@ -85,7 +85,7 @@
 #define PIN_WRITEPROT   5   //PD5-pin24-TXLED
 #define PIN_DSKCHANGE   6   //PF6-pinA1
 //SS pin for SD card is PF7-pinA0 for atmega32u4 (Arduino pro micro)
-//SS pin is set in "pffArduino.h" to change the pin 
+//SS pin is set in "pffArduino.h" to change the pin
 //also changing the macros in "pffArduino.h" is required.
 
 //Output commands
@@ -132,25 +132,25 @@
 
 class FloppyDrive : public FloppyDisk
 {
-  private:
-    int track;
-    uint8_t side;
-    uint8_t sector;
+	private:
+		int track;
+		uint8_t side;
+		uint8_t sector;
+		int getSectorData(int lba);
+		int setSectorData(int lba);
 
-  public:          
-    FloppyDrive();
-    char *diskInfoStr();
-    int getSectorData(int lba);
-    int setSectorData(int lba);
-    bool load(char *);
-    void eject() {FloppyDisk::eject(); bitLength = 16;}
-    void run();    
+	public:
+		FloppyDrive();
+		char *diskInfoStr();
+		bool load(char *);
+		void eject();
+		void run();
 };
 
 #if ENABLE_DRIVE_B
-    #define N_DRIVE 2
+		#define N_DRIVE 2
 #else
-    #define N_DRIVE 1
+		#define N_DRIVE 1
 #endif //ENABLE_DRIVE_B
 
 extern volatile uint8_t iFlags; //flags set by interrupt

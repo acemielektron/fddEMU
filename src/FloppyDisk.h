@@ -23,29 +23,35 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+//define BIT LENGTH
+#define BIT_LENGTH_HD	16
+#define BIT_LENGTH_DD	32
+
 //define FLAGS
 #define FD_CHANGED  (1 << 0)
 #define FD_READY    (1 << 1)
 #define FD_READONLY (1 << 2)
-#define FD_VIRTUAL  (1 << 3)     
+#define FD_VIRTUAL  (1 << 3)
 
 class FloppyDisk{
-    public:
-    uint8_t flags;
-    uint8_t numTrack;   //number of tracks
-    uint8_t numSec;     //sectors per track
-    uint8_t bitLength;  //16 for HD, 32 for DD
-    long startSector;
-    char fName[13];    
-    FloppyDisk();
-    bool load(char *);
-    void eject();
-    void loadVirtualDisk();
-    bool isReady(void) {return (flags & FD_READY);}
-    bool isReadonly(void) {return (flags & FD_READONLY);}
-    bool isChanged(void) {return (flags & FD_CHANGED);}
-    bool isVirtual(void) {return (flags & FD_VIRTUAL);}
-    void clrChanged(void) {flags &= ~FD_CHANGED;}
+	protected:
+		uint8_t flags;
+		uint8_t numTrack;   //number of tracks
+		uint8_t numSec;     //sectors per track
+		uint8_t bitLength;  //16 for HD, 32 for DD
+		long startSector;
+		FloppyDisk();
+		bool load(char *);
+		void eject();
+		bool isReady(void) {return (flags & FD_READY);}
+		bool isReadonly(void) {return (flags & FD_READONLY);}
+		bool isChanged(void) {return (flags & FD_CHANGED);}
+		bool isVirtual(void) {return (flags & FD_VIRTUAL);}
+		void clrChanged(void) {flags &= ~FD_CHANGED;}
+
+	public:
+		char fName[13];
+		void loadVirtualDisk();
 };
 
 void errorMessage(const char *errMessageProgmem);
