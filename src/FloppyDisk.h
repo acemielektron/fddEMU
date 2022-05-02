@@ -23,6 +23,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define BIT_LENGTH_HD	16
+#define BIT_LENGTH_DD	32
+
 //define FLAGS
 #define FD_CHANGED  (1 << 0)
 #define FD_READY    (1 << 1)

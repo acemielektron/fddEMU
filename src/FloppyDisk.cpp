@@ -26,25 +26,25 @@
 
 
 bool FloppyDisk::load(char *filename)
-{  
-  uint16_t totalSectors;
-  uint8_t wbuf[18]; //working buffer;
-    
-  if (isReady()) eject(); //if a disk is loaded, eject
-  // open requested file  
-  if ( !sdfile.getFileInfo((char *)s_RootDir, filename) )
-    {
-    msg.error(err_notfound);
-    return false;  
-    }
-  startSector = sdfile.getStartSector();  
-  if (sdfile.getReadOnly()) flags |= FD_READONLY;  
+{
+	uint16_t totalSectors;
+	uint8_t wbuf[18]; //working buffer;
 
-  if ( disk_readp(wbuf, startSector, 54, 18) ) //FileSystemType@54
-  {	
-    msg.error(err_diskread);
-	  return false;
-  }
+	if (isReady()) eject(); //if a disk is loaded, eject
+	// open requested file
+	if ( !sdfile.getFileInfo((char *)s_RootDir, filename) )
+		{
+		msg.error(err_notfound);
+		return false;
+		}
+	startSector = sdfile.getStartSector();
+	if (sdfile.getReadOnly()) flags |= FD_READONLY;
+
+	if ( disk_readp(wbuf, startSector, 54, 18) ) //FileSystemType@54
+	{
+		msg.error(err_diskread);
+		return false;
+	}
 #if DEBUG
   Serial.print(F("FS: "));
   for (int i=0; i < 5; i++) Serial.write(wbuf[i]);
@@ -58,43 +58,42 @@ bool FloppyDisk::load(char *filename)
       case (uint16_t)(80*2*36): //3.5" HD   2880KB
         numTrack = 80;
         numSec = 36;
-        bitLength = 16; //HD
+        bitLength = BIT_LENGTH_HD;
         break;
       case (uint16_t)(80*2*18): //3.5" HD   1440KB
         numTrack = 80;
         numSec = 18;
-        bitLength = 16; //HD
+        bitLength = BIT_LENGTH_HD;
         break;
       case (uint16_t)(80*2*9):  //3.5" DD   720KB
         numTrack = 80;
         numSec = 9;
-        bitLength = 32; //DD
+        bitLength = BIT_LENGTH_DD;
         break;
       case (uint16_t)(80*2*15): //5.25" HD  1.2MB
         numTrack = 80;
         numSec = 15;
-        bitLength = 16; //HD
+        bitLength = BIT_LENGTH_HD;
         break;
       case (uint16_t)(40*2*9):  //5.25" DD  360KB
         numTrack = 40;
         numSec = 9;
-        bitLength = 32; //DD
+        bitLength = BIT_LENGTH_DD;
         break;
       case (uint16_t) (80*2*16/2): //80 track 2 sided TR-DOS image
         flags |= FD_HALFSECTOR; //set HALFSECTOR flag
         numTrack = 80;
         numSec = 16;
-        bitLength = 32; //DD
+        bitLength = BIT_LENGTH_DD;
         break;
       case (uint16_t) (40*2*16/2): //80 track 2 sided TR-DOS image
         flags |= FD_HALFSECTOR; //set HALFSECTOR flag
         numTrack = 40;
         numSec = 16;
-        bitLength = 32; //DD
+        bitLength = BIT_LENGTH_DD;
         break;        
       default:  //not a standart raw floppy image
         msg.error(err_invfile);
-        bitLength = 16; //HD
 	      return false;
     } //switch        
   }
@@ -125,7 +124,7 @@ bool FloppyDisk::load(char *filename)
     }
     numSec = (uint8_t) *(int16_t *)(wbuf+13);     //WsectorsPerTrack@24
     numTrack = (uint8_t) ( totalSectors / (numSec*2) );
-    bitLength = (numSec >= 15) ? 16:32; //Decide according to numSec, >=15 HD else DD
+    bitLength = (numSec >= 15) ? BIT_LENGTH_HD:BIT_LENGTH_DD; //Decide according to numSec, >=15 HD else DD
   }
   //After all the checks load image file
   memcpy(fName, filename, 13);   
@@ -135,24 +134,24 @@ bool FloppyDisk::load(char *filename)
 
 void FloppyDisk::eject(void)
 {
-  startSector = 0;  
-  memset(fName, 0, 13); //clear disk file name  
-  numTrack = 80; //default for 3.5" HD Floppy
-  numSec = 18; //default for 3.5" HD Floppy
-  flags = FD_CHANGED; //clear flags & set DISK CHANGED
+	startSector = 0;
+	memset(fName, 0, 13); //clear disk file name
+	numTrack = 80; //default for 3.5" HD Floppy
+	numSec = 18; //default for 3.5" HD Floppy
+	flags = FD_CHANGED; //clear flags & set DISK CHANGED
 }
 
 FloppyDisk::FloppyDisk(void)
 {
-  eject();
+	eject();
 }
 
 void FloppyDisk::loadVirtualDisk()
 {
 #if ENABLE_VFFS
-  if (isReady()) eject(); //if a disk is loaded, eject
-  memcpy_P(fName, str_label, 13); //set disk name to FDDEMU
-  flags |= FD_VIRTUAL;  
-  bitLength = 16; //HD
+	if (isReady()) eject(); //if a disk is loaded, eject
+	memcpy_P(fName, str_label, 13); //set disk name to FDDEMU
+	flags |= FD_VIRTUAL;
+	bitLength = BIT_LENGTH_HD;
 #endif //ENABLE_VFFS
 }

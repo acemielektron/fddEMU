@@ -741,7 +741,7 @@ uint8_t sector_start(uint8_t bitlen)
      
       // => MSx95
      "secstart: WRT_PM\n"                   // write medium pulse
-     "          ldi    r20, 80\n"          // write 95 short pulses
+     "          ldi    r20, 95\n"          // write 95 short pulses
      "          call   wrt_short\n"         // returns 20 cycles after final pulse was written
      
      // 7) ---------- 3x SYNC 0xA1

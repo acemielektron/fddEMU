@@ -37,7 +37,7 @@
 //Global variables
 bool pinsInitialized = false;
 static uint8_t dataBuffer[516];
-volatile int iTrack = 0;
+volatile int8_t iTrack = 0;
 volatile uint8_t iFlags = 0;
 
 class FloppyDrive drive[N_DRIVE]; //will be used as extern
@@ -132,7 +132,7 @@ void initFDDpins()
 FloppyDrive::FloppyDrive(void)
 {    
   if (!pinsInitialized) initFDDpins();
-  bitLength=16; //  bit length for 3.5" HD floppy is 16
+  bitLength = BIT_LENGTH_DD;
   track = 0;
   side = 0;
   sector = 0;
@@ -247,7 +247,7 @@ bool FloppyDrive::load(char *r_file)
 void FloppyDrive::run()
 {
   int lba;
-  uint8_t writeGateWait = (bitLength == 16) ? 20:40;
+  uint8_t writeGateWait = (bitLength == 16) ? 20:60;
 
   if (isChanged()) 
   {
@@ -276,11 +276,11 @@ void FloppyDrive::run()
       if (IS_TRACKCHANGED()) //if track changed
       {
         CLR_TRACKCHANGED();             
-        track = iTrack;
+        track += iTrack;
+				iTrack = 0;
         if (track < 0) track=0; //Check if track valid
         else if (track >= numTrack) track = numTrack-1;          
         (track == 0) ? SET_TRACK0_LOW() : SET_TRACK0_HIGH(); 
-        iTrack = track;
         isReady() || isVirtual() ? SET_DSKCHANGE_HIGH() : SET_DSKCHANGE_LOW(); //disk present ?      
       }
       //start sector
