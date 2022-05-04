@@ -130,6 +130,26 @@
 #define IS_DRIVE1() (iFlags & DRIVE1)
 #define GET_DRVSEL() (iFlags & (DRIVE0|DRIVE1) )
 
+struct __attribute__((__packed__)) floppySector
+{
+	struct __attribute__((__packed__)) sectorHeader
+	{
+		uint8_t	id;	// sector header id: 0xFE
+		uint8_t track; // current cylinder
+		uint8_t	side; // current head
+		uint8_t	sector;	// current sector: starts at 1
+		uint8_t	length; // 0: 128b, 1: 256b, 2: 512b, 3: 1024b
+		uint8_t crcHI; // crc / 256
+		uint8_t	crcLO; // crc & 255
+		uint8_t gap; // first byte of post-header gap: 0x4E
+	} header;
+		uint8_t	id; // sector data id: 0xFB
+		uint8_t	data[512]; //sector data 512 bytes
+		uint8_t crcHI; // crc / 256
+		uint8_t	crcLO; // crc & 255
+		uint8_t gap; // first byte of post-data gap: 0x4E
+};
+
 class FloppyDrive : public FloppyDisk
 {
 	private:

@@ -36,7 +36,7 @@
 
 //Global variables
 bool pinsInitialized = false;
-static uint8_t dataBuffer[516];
+static struct floppySector sectorData;
 volatile int iTrack = 0;
 volatile uint8_t iFlags = 0;
 
@@ -85,21 +85,21 @@ void initFDDpins()
 	DDRB &= 0b11000000; //B6 & B7 is XTAL1 & XTAL2
 	DDRC &= 0b11110000; //C7 is nil, C6 is RST, C4 & C5 is SDA & SCL
 	//Assign Output pins LOW "0"
-	PORTD &= ~bit(PIN_INDEX);
-	PORTB &= ~bit(PIN_WRITEDATA);
-	PORTC &= ~(bit(PIN_TRACK0)|bit(PIN_WRITEPROT)|bit(PIN_DSKCHANGE));
+	PORTD &= ~(1 << PIN_INDEX);
+	PORTB &= ~(1 << PIN_WRITEDATA);
+	PORTC &= ~((1 << PIN_TRACK0)|(1 << PIN_WRITEPROT)|(1 << PIN_DSKCHANGE));
 	//Assign Input pins HIGH "1" (Activate Pullups)
-	PORTD |= bit(PIN_MOTORA)|bit(PIN_SELECTA);
-	PORTD |= bit(PIN_STEP)|bit(PIN_STEPDIR)|bit(PIN_SIDE);
-	PORTB |= bit(PIN_READDATA);
-	PORTC |= bit(PIN_WRITEGATE);
+	PORTD |= (1 << PIN_MOTORA)|( 1 << PIN_SELECTA);
+	PORTD |= (1 << PIN_STEP)|(1 << PIN_STEPDIR)|(1 << PIN_SIDE);
+	PORTB |= (1 << PIN_READDATA);
+	PORTC |= (1 << PIN_WRITEGATE);
 	//Setup Pin Change Interrupts
-	EICRA &=~(bit(ISC01)|bit(ISC00)); //clear ISC00&ISC01 bits
-	EICRA |= bit(ISC01); //set ISC01 "falling edge"
-	EIMSK |= bit(INT0); //External Interrupt Mask Register enable INT0
+	EICRA &=~((1 << ISC01)|(1 << ISC00)); //clear ISC00&ISC01 bits
+	EICRA |= (1 << ISC01); //set ISC01 "falling edge"
+	EIMSK |= (1 << INT0); //External Interrupt Mask Register enable INT0
 	//Setup External Interrupt
-	PCMSK2 = bit(PIN_SELECTA)| bit(PIN_MOTORA); // Pin Change Mask Register 2 enable SELECTA&MOTORA
-	PCICR |= bit(PCIE2); // Pin Change Interrupt Control Register enable port D
+	PCMSK2 = (1 << PIN_SELECTA)|(1 << PIN_MOTORA); // Pin Change Mask Register 2 enable SELECTA&MOTORA
+	PCICR |= (1 << PCIE2); // Pin Change Interrupt Control Register enable port D
 #elif defined (__AVR_ATmega32U4__)
 	//Setup Input and Output pins as Inputs
 	DDRB |= (1 << PIN_WRITEDATA); //set WRITEDATA as OUTPUT (Not sure it is necessary but datasheet says so)
@@ -161,7 +161,7 @@ char *FloppyDrive::diskInfoStr()	//Generate disk CHS info string
 int FloppyDrive::getSectorData(int lba)
 {
 	int n = FR_DISK_ERR;
-	uint8_t *pbuf=dataBuffer+1;
+	uint8_t *pbuf=sectorData.data;
 
 #if DEBUG
 	uint8_t head   = 0;
@@ -193,7 +193,7 @@ int FloppyDrive::getSectorData(int lba)
 int FloppyDrive::setSectorData(int lba)
 {
 	int n = FR_DISK_ERR;
-	uint8_t *pbuf=dataBuffer+1;
+	uint8_t *pbuf=sectorData.data;
 
 	if (isReady())
 	{
@@ -244,8 +244,9 @@ void FloppyDrive::eject()
 
 void FloppyDrive::run()
 {
-	int lba;
-	uint8_t writeGateWait = (bitLength == 16) ? 20:60;
+	int16_t lba;
+	int16_t res;
+	int16_t crc;
 
 	if (isChanged())
 	{
@@ -256,11 +257,6 @@ void FloppyDrive::run()
 	setup_timer1_for_write();
 	while(GET_DRVSEL()) //PCINT for SELECTA and MOTORA
 	{
-		//Start track with index signal
-		SET_INDEX_LOW();
-		track_start(bitLength);
-		SET_INDEX_HIGH();
-
 		for (sector=0; (sector < numSec) && GET_DRVSEL(); sector++)
 		{
 		#if ENABLE_WDT
@@ -285,31 +281,42 @@ void FloppyDrive::run()
 			lba=(track*2+side)*numSec+sector;//LBA = (C × HPC + H) × SPT + (S − 1)
 			getSectorData(lba); //get sector from SD
 			setup_timer1_for_write();
-			genSectorID((uint8_t)track,side,sector);
-			sector_start(bitLength);
-			if (IS_TRACKCHANGED()) continue; //if track changed skip rest of the loop
-			//check WriteGate
-			for (int i=0; i<writeGateWait; i++) //wait and check for WRITEGATE
-				if (IS_WRITE() ) break;
-			if (IS_WRITE() )  //write gate on
+			//prepare header
+      		sectorData.header.id = 0xFE; // ID mark
+      		sectorData.header.track = track;
+      		sectorData.header.side = side;
+      		sectorData.header.sector = sector + 1;
+      		sectorData.header.length = 2;
+			crc = calc_crc((uint8_t*)&sectorData.header, 5);
+			sectorData.header.crcHI = crc >> 8;
+			sectorData.header.crcLO = crc & 0xFF;
+      		sectorData.header.gap = 0x4E;
+			//prepare sector
+			sectorData.id = 0xFB;
+			crc = calc_crc((uint8_t *)&sectorData.id, 513);
+			sectorData.crcHI = crc >> 8;
+			sectorData.crcLO = crc & 0xFF;
+			sectorData.gap = 0x4E; 
+			res = write_sector((uint8_t *)&sectorData, bitLength);
+			if (res > 0) 
 			{
-				setup_timer1_for_read();
-				read_data(bitLength, dataBuffer, 515);
-			#if ENABLE_WDT
-				wdt_reset();
-			#endif  //ENABLE_WDT
-				setup_timer1_for_write(); //Write-mode: arduinoFDC immediately tries to verify written sector
-				setSectorData(lba); //save sector to SD
-				while (IS_WRITE());//wait for write to finish
+				if (IS_WRITE() )  //write gate on
+				{
+				#if ENABLE_WDT
+					wdt_reset();
+				#endif  //ENABLE_WDT
+					setup_timer1_for_read();
+					read_data(bitLength, &sectorData.id, 515);
+					setup_timer1_for_write(); //Write-mode: arduinoFDC immediately tries to verify written sector
+					setSectorData(lba); //save sector to SD
+					while (IS_WRITE());//wait for write to finish
+				}
 			}
-			else  //write gate off
+			else if (res < 0) 
 			{
-				dataBuffer[0]   = 0xFB; // "data" id
-				uint16_t crc = calc_crc(dataBuffer, 513);
-				dataBuffer[513] = crc/256;
-				dataBuffer[514] = crc&255;
-				dataBuffer[515] = 0x4E; // first byte of post-data gap
-				write_data(bitLength, dataBuffer, 516);
+			#if DEBUG
+				Serial.print(F("Error: sector > 512b not supported!\n"));
+			#endif //DEBUG
 			}
 		}//sectors
 	}//selected
