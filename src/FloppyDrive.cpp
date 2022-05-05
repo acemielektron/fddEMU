@@ -314,9 +314,15 @@ void FloppyDrive::run()
 					wdt_reset();
 				#endif  //ENABLE_WDT
 					setup_timer1_for_read();
-					read_data(bitLength, &sectorData.id, 515);
+					res = read_data(bitLength, &sectorData.id, 515);
 					setup_timer1_for_write(); //Write-mode: arduinoFDC immediately tries to verify written sector
-					setSectorData(lba); //save sector to SD
+					if (res) 
+					{
+					#if DEBUG || SERIAL
+						Serial.print(F("Read error!\n"));
+					#endif //DEBUG || SERIAL
+					}
+					else setSectorData(lba); //save sector to SD
 					while (IS_WRITE());//wait for write to finish
 				}
 			}

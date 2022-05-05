@@ -234,7 +234,7 @@ uint8_t read_data(uint8_t bitlen, uint8_t *buffer, unsigned int n)
      // on exit:  r18 is updated to the time of this pulse
      //           r22 contains the pulse length in timer ticks (=processor cycles)     
      // CLOBBERS: r19
-       ".macro READPULSE length=0,dst=undefined\n"
+     ".macro READPULSE length=0,dst=undefined\n"
      "        sbis    TIFR, ICF\n"     // (1/2) skip next instruction if timer input capture seen
      "        rjmp    .-4\n"           // (2)   wait more 
      "        lds     r19, ICRL\n"     // (2)   get time of input capture (ICR1L, lower 8 bits only)
@@ -262,7 +262,38 @@ uint8_t read_data(uint8_t bitlen, uint8_t *buffer, unsigned int n)
      "    .endif\n"
      "  .endif\n"
      ".endm\n"
-     
+     //add check WRITE_GATE to READPULSE
+     ".macro READPULSE_CHK length=0,dst=undefined\n"
+     "        sbic    WGPORT, WGBIT\n" // (2) skip next instruction if WRITE_GATE is asserted
+     "        rjmp    rd_err\n"        // exit: read error
+     "        sbis    TIFR, ICF\n"     // (1/2) skip next instruction if timer input capture seen
+     "        rjmp    .-4\n"           // (2)   wait more 
+     "        lds     r19, ICRL\n"     // (2)   get time of input capture (ICR1L, lower 8 bits only)
+     "        sbi     TIFR, ICF\n "    // (2)   clear input capture flag
+     "        mov     r22, r19\n"      // (1)   calculate time since previous capture...
+     "        sub     r22, r18\n"      // (1)   ...into r22
+     "        mov     r18, r19\n"      // (1)   set r18 to time of current capture
+     "  .if \\length == 1\n"           //       waiting for short pulse?
+     "        cp      r22, r16\n"      // (1)   compare r22 to min medium pulse
+     "        brlo   .+2\n"            // (1/2) skip jump if less
+     "        rjmp   \\dst\n"          // (3)   not the expected pulse => jump to dst
+     "  .else \n"
+     "    .if \\length == 2\n"         // waiting for medium pulse?
+     "        cp      r16, r22\n"      // (1)   min medium pulse < r22? => carry set if so
+     "        brcc    .+2\n"           // (1/2) skip next instruction if carry is clear
+     "        cp      r22, r17\n"      // (1)   r22 < min long pulse? => carry set if so
+     "        brcs   .+2\n"            // (1/2) skip jump if greater
+     "        rjmp   \\dst\n"          // (3)   not the expected pulse => jump to dst
+     "    .else\n"
+     "      .if \\length == 3\n" 
+     "        cp      r22, r17\n"      // (1)   min long pulse < r22?
+     "        brsh   .+2\n"            // (1/2) skip jump if greater
+     "        rjmp   \\dst\n"          // (3)   not the expected pulse => jump to dst
+     "      .endif\n"
+     "    .endif\n"
+     "  .endif\n"
+     ".endm\n"
+
      // define STOREBIT macro for storing or verifying data bit 
      // storing  data  : 5/14 cycles for "1", 4/13 cycles for "0"
      // verifying data : 5/15 cycles for "1", 4/14 cycles for "0"
@@ -301,7 +332,7 @@ uint8_t read_data(uint8_t bitlen, uint8_t *buffer, unsigned int n)
      "        ldi         %0, 3\n"     // (1)   no sync found in 1.048s => return status is is S_NOSYNC
      "        rjmp        rdend\n"     // (2)   done
      "ws2:    inc         r20\n"       // (1)   increment "short pulse" counter
-     "        READPULSE\n"             // (9)   wait for pulse
+     "        READPULSE_CHK\n"         // (11)   wait for pulse and check WRITE_GATE
      "        cp          r22, r16\n"  // (1)   pulse length < min medium pulse?
      "        brlo        ws1\n"       // (1/2) repeat if so
      "        cp          r22, r17\n"  // (1)   pulse length < min long pulse?
@@ -377,7 +408,7 @@ uint8_t read_data(uint8_t bitlen, uint8_t *buffer, unsigned int n)
      "rdes:   STOREBIT 0,rdend\n"      // (5/14) store "0" bit
      "        rjmp    rde\n"           // (2)    back to start (still even)
 
-     //"rddiff: ldi     %0, 8\n"         // return status is S_VERIFY (verify error)
+     "rd_err: ldi     %0, 1\n"         // return status is 1 (write error)
      "rdend: \n"
      
      : "=r"(status)                         // outputs
