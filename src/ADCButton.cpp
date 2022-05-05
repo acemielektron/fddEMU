@@ -20,7 +20,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include "ADCButton.h"
-#include "SerialUI.h" //debug
+#include "simpleUART.h" //debug
 
 #if ENABLE_GUI
 class ADCButton abtn;

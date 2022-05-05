@@ -70,7 +70,7 @@
 
 //Unchangeable pins ICP&OCP for timer1
 #define PIN_READDATA    4   //PD4 must be pin4 (ICP for timer1)
-#define PIN_WRITEDATA   5   //PB5 must be pin9 (OCP for timer1)    
+#define PIN_WRITEDATA   5   //PB5 must be pin9 (OCP for timer1)
 //Pin Change Interrupt pins
 #define PIN_MOTORA      4   //PB4-PCINT4-pin8
 #define PIN_SELECTA     6   //PB6-PCINT6-pin10
@@ -85,7 +85,7 @@
 #define PIN_WRITEPROT   5   //PD5-pin24-TXLED
 #define PIN_DSKCHANGE   6   //PF6-pinA1
 //SS pin for SD card is PF7-pinA0 for atmega32u4 (Arduino pro micro)
-//SS pin is set in "pffArduino.h" to change the pin 
+//SS pin is set in "pffArduino.h" to change the pin
 //also changing the macros in "pffArduino.h" is required.
 
 //Output commands
@@ -121,8 +121,8 @@
 
 #define SET_TRACKCHANGED()  (iFlags |= F_TRACKCHANGED)
 #define CLR_TRACKCHANGED()  (iFlags &= ~F_TRACKCHANGED)
-#define SET_DRIVE0()  (iFlags |= DRIVE0)
-#define SET_DRIVE1()  (iFlags |= DRIVE1)
+#define SEL_DRIVE0()  (iFlags |= DRIVE0)
+#define SEL_DRIVE1()  (iFlags |= DRIVE1)
 #define CLR_DRVSEL() (iFlags &= ~(DRIVE0|DRIVE1) )
 
 #define IS_TRACKCHANGED() (iFlags & (1 << BIT_TRACKCHANGE))
@@ -130,27 +130,48 @@
 #define IS_DRIVE1() (iFlags & DRIVE1)
 #define GET_DRVSEL() (iFlags & (DRIVE0|DRIVE1) )
 
+struct __attribute__((__packed__)) floppySector
+{
+	struct __attribute__((__packed__)) sectorHeader
+	{
+		uint8_t	id;	// sector header id: 0xFE
+		uint8_t track; // current cylinder
+		uint8_t	side; // current head
+		uint8_t	sector;	// current sector: starts at 1
+		uint8_t	length; // 0: 128b, 1: 256b, 2: 512b, 3: 1024b
+		uint8_t crcHI; // crc / 256
+		uint8_t	crcLO; // crc & 255
+		uint8_t gap; // first byte of post-header gap: 0x4E
+	} header;
+		uint8_t	id; // sector data id: 0xFB
+		uint8_t	data[512]; //sector data 512 bytes
+		uint8_t crcHI; // crc / 256
+		uint8_t	crcLO; // crc & 255
+		uint8_t gap; // first byte of post-data gap: 0x4E
+		uint8_t extra[9]; //extra for half_sector data
+};
+
 class FloppyDrive : public FloppyDisk
 {
-  private:
-    int track;
-    uint8_t side;
-    uint8_t sector;
+	private:
+		int track;
+		uint8_t side;
+		uint8_t sector;
+		int getSectorData(int lba);
+		int setSectorData(int lba);
 
-  public:          
-    FloppyDrive();
-    char *diskInfoStr();
-    int getSectorData(int lba);
-    int setSectorData(int lba);
-    bool load(char *);
-    void eject() {FloppyDisk::eject(); bitLength = 16;}
-    void run();    
+	public:
+		FloppyDrive();
+		char *diskInfoStr();
+		bool load(char *);
+		void eject();
+		void run();
 };
 
 #if ENABLE_DRIVE_B
-    #define N_DRIVE 2
+		#define N_DRIVE 2
 #else
-    #define N_DRIVE 1
+		#define N_DRIVE 1
 #endif //ENABLE_DRIVE_B
 
 extern volatile uint8_t iFlags; //flags set by interrupt

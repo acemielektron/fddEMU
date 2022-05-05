@@ -29,25 +29,12 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
-
-#define bit(X)  (1<<X)
-
-// return status for readSector/writeSector and formatDisk functions
-#define S_OK         0  // no error
-#define S_NOTINIT    1  // ArduinoFDC.begin() was not called
-#define S_NOTREADY   2  // Drive is not ready (no disk or power)
-#define S_NOSYNC     3  // No sync marks found
-
-
 uint16_t calc_crc(uint8_t *buf, int n);
-//uint8_t getBitLength(enum DriveType driveType);
 void setup_timer1_for_write();
 void setup_timer1_for_read();
-void genSectorID(uint8_t track, uint8_t side, uint8_t sector, uint8_t sector_length);
 uint8_t read_data(uint8_t bitlen, uint8_t *buffer, unsigned int n);
-void write_data(uint8_t bitlen, uint8_t *buffer, unsigned int n);
-uint8_t track_start(uint8_t bitlen);
-uint8_t sector_start(uint8_t bitlen);
+int16_t read_sector(uint8_t *buffer, uint8_t bitlen);
+int16_t write_sector(uint8_t *buffer, uint8_t bitlen);
 
 #ifdef __cplusplus
 }
