@@ -439,8 +439,8 @@ int16_t write_sector(uint8_t *buffer, uint8_t bitlen)
   uint8_t datagaplen = 54;
 
   asm volatile
-    (".macro    WAITP\n" // wait for pulse to be written (max 11 cycles)
-     // check if WRITE_GATE is asserted
+    (".macro    WRTPS_CHK\n" // wtite short pulse & check write gate (max 12 cycles)
+     "          sts   OCRL, r16\n"     
      "          sbis  WGPORT, WGBIT\n"     // (2) skip next instruction if WGBIT is set (not asserted)
      "          rjmp  wr_exit\n"           // (2) WG asserted jump to write exit
      "          sbis  TIFR, OCF\n"         // (1/2) skip next instruction if OCFx is set
@@ -450,19 +450,16 @@ int16_t write_sector(uint8_t *buffer, uint8_t bitlen)
      "          sbi   TIFR, OCF\n"         // (2)   reset OCFx (output compare flag)     
      ".endm\n"
      ".macro    WRTPS\n"
-     "          sts   OCRL, r16\n"
-     "          WAITP\n"    
-     //"          call  waitp\n"
+     "          sts   OCRL, r16\n"     
+     "          call  waitp\n"
      ".endm\n"
      ".macro    WRTPM\n"
-     "          sts   OCRL, r17\n"
-     "          WAITP\n"
-     //"          call  waitp\n"
+     "          sts   OCRL, r17\n"     
+     "          call  waitp\n"
      ".endm\n"
      ".macro    WRTPL\n"
-     "          sts   OCRL, r18\n"
-     "          WAITP\n"
-     //"          call  waitp\n"
+     "          sts   OCRL, r18\n"     
+     "          call  waitp\n"
      ".endm\n"
 
      // save SPH:SPL
@@ -574,8 +571,9 @@ int16_t write_sector(uint8_t *buffer, uint8_t bitlen)
      //  0 1 0 0 1 1 1 0  0 0 0 0 0 0 0 0  0 0 0 0 0 0 0 0 ...
      // 1001001001010100 1010101010101010 1010101010101010 ...
      // S  M  M  M S S   M S S S S S S S  S S S S S S S S  ...
-     // => MSx95
+     // => MSx95     
      "secstart: WRTPM\n"                   // write medium pulse
+     "          WRTPM\n"                   // write medium pulse
      "          ldi    r20, 95\n"          // write 95 short pulses
      "          call   wrtshort\n"         // returns 20 cycles after final pulse was written
      
@@ -671,7 +669,8 @@ int16_t write_sector(uint8_t *buffer, uint8_t bitlen)
      "          ldi     r20, 0\n"        
      "          sts     TCNTL, r20\n"    //       reset timer
      "          ldi     r20, 95\n"       //       initialize counter
-     "wri:      WRITEPULSE 1\n"          //       write short pulse
+     //"wri:      WRITEPULSE 1\n"          //       write short pulse
+     "wri:      WRTPS_CHK\n"          //       write short pulse
      "          dec     r20\n"           //       decrement counter
      "          brne    wri\n"           //       repeat until 0
 
@@ -788,14 +787,14 @@ int16_t write_sector(uint8_t *buffer, uint8_t bitlen)
      
      // wait for pulse to be written
      // => returns 14 cycles (max) after pulse is written (including return statement)
-     /*"waitp:    sbis  TIFR, OCF\n"         // (1/2) skip next instruction if OCFx is set
+     "waitp:    sbis  TIFR, OCF\n"         // (1/2) skip next instruction if OCFx is set
      "          rjmp  .-4\n"               // (2)   wait more
      "          ldi   r19,  FOC\n"         // (1)
      "          sts   TCCRC, r19\n"        // (2)   set OCP back HIGH (was set LOW when timer expired)
      "          sbi   TIFR, OCF\n"         // (2)   reset OCFx (output compare flag)
-     "          ret\n"                     // (4)   return*/
+     "          ret\n"                     // (4)   return
 
-     "err_exit: ldi   r27, 0xFF\n" //load X -1
+     "err_exit: ldi   r27, 0xFF\n" //load -1 to X
      "          ldi   r26, 0xFF\n"
      "wr_exit:  in    r19, __SREG__\n" // save status register (interrrupt status)
      "          cli\n" // disable interrupts
@@ -804,11 +803,10 @@ int16_t write_sector(uint8_t *buffer, uint8_t bitlen)
      "          out   __SREG__, r19\n" // restore status register (interrupt status)
      "sec_end:  pop   r2\n" //restore r2 from stack
      "          pop   r3\n" //restore r3 from stack
-     "          movw  %[retval], X" //copy X to retval
-
-     : [retval]"=X"(result)                   // outputs (x=r26/r27)
+     
+     : [retval]"=x"(result)                   // outputs (x=r26/r27)
      : [bitlen]"r"(bitlen), [gaplen]"r"(datagaplen), [buffer]"z"(buffer)      // inputs  (z=r30/r31)
-     : "r16", "r17", "r18", "r19", "r20", "r21", "r26", "r27"); // clobbers
+     : "r16", "r17", "r18", "r19", "r20", "r21"); // clobbers
 
   return result;
 }

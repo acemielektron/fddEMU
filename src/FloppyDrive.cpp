@@ -194,16 +194,24 @@ int FloppyDrive::setSectorData(int lba)
 {
 	int n = FR_DISK_ERR;
 	uint8_t *pbuf=sectorData.data;
+	uint16_t crc = calc_crc(&sectorData.id, 513);
 
-	if (isReady())
+	if ( (sectorData.crcHI == (crc >> 8)) || (sectorData.crcLO == (crc & 0xFF)) )
 	{
-		n = disk_write_sector(pbuf, startSector+lba);
-		if (n) msg.error(err_diskwrite);
+		if (isReady())
+		{
+			n = disk_write_sector(pbuf, startSector+lba);
+			if (n) msg.error(err_diskwrite);
+		}
+	#if ENABLE_VFFS
+		else if (isVirtual())
+			n = vffs.writeSector(pbuf, lba);
+	#endif //ENABLE_VFFS
+	} else {
+	#if DEBUG || SERIAL	
+		Serial.print(F("CRC error!\n"));
+	#endif // DEBUG || SERIAL	
 	}
-#if ENABLE_VFFS
-	else if (isVirtual())
-		n = vffs.readSector(pbuf, lba);
-#endif //ENABLE_VFFS
 
 #if DEBUG
 	uint8_t head   = 0;
