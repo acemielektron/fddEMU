@@ -38,7 +38,7 @@ bool FloppyDisk::load(char *filename)
 		return false;
 		}
 	startSector = sdfile.getStartSector();
-	if (sdfile.getReadOnly()) flags |= FD_READONLY;
+	if (sdfile.getReadOnly()) flags.readonly = 1;
 
 	if ( disk_readp(wbuf, startSector, 54, 18) ) //FileSystemType@54
 	{
@@ -59,38 +59,43 @@ bool FloppyDisk::load(char *filename)
         numTrack = 80;
         numSec = 36;
         bitLength = BIT_LENGTH_HD;
+        flags.seclen = 2; //512b sectors
         break;
       case (uint16_t)(80*2*18): //3.5" HD   1440KB
         numTrack = 80;
         numSec = 18;
         bitLength = BIT_LENGTH_HD;
+        flags.seclen = 2; //512b sectors
         break;
       case (uint16_t)(80*2*9):  //3.5" DD   720KB
         numTrack = 80;
         numSec = 9;
         bitLength = BIT_LENGTH_DD;
+        flags.seclen = 2; //512b sectors
         break;
       case (uint16_t)(80*2*15): //5.25" HD  1.2MB
         numTrack = 80;
         numSec = 15;
         bitLength = BIT_LENGTH_HD;
+        flags.seclen = 2; //512b sectors
         break;
       case (uint16_t)(40*2*9):  //5.25" DD  360KB
         numTrack = 40;
         numSec = 9;
         bitLength = BIT_LENGTH_DD;
+        flags.seclen = 2; //512b sectors
         break;
-      case (uint16_t) (80*2*16/2): //80 track 2 sided TR-DOS image
-        flags |= FD_HALFSECTOR; //set HALFSECTOR flag
+      case (uint16_t) (80*2*16/2): //80 track 2 sided TR-DOS image        
         numTrack = 80;
         numSec = 16;
         bitLength = BIT_LENGTH_DD;
+        flags.seclen = 1; //256b sectors
         break;
-      case (uint16_t) (40*2*16/2): //80 track 2 sided TR-DOS image
-        flags |= FD_HALFSECTOR; //set HALFSECTOR flag
+      case (uint16_t) (40*2*16/2): //80 track 2 sided TR-DOS image        
         numTrack = 40;
         numSec = 16;
         bitLength = BIT_LENGTH_DD;
+        flags.seclen = 1; //256b sectors
         break;        
       default:  //not a standart raw floppy image
         msg.error(err_invfile);
@@ -116,6 +121,7 @@ bool FloppyDisk::load(char *filename)
       msg.error(err_geometry);
 	    return false;        
     }
+    flags.seclen = 2; //512b sectors - we have already checked above
     totalSectors = (uint16_t) *(int16_t *)(wbuf+8);  //WtotalSectors@19
     if (totalSectors > (sdfile.getFileSize() >> 9))  
     {
@@ -128,7 +134,7 @@ bool FloppyDisk::load(char *filename)
   }
   //After all the checks load image file
   memcpy(fName, filename, 13);   
-  flags |= FD_READY;  
+  flags.ready = 1;  
   return true;
 }
 
@@ -138,7 +144,12 @@ void FloppyDisk::eject(void)
 	memset(fName, 0, 13); //clear disk file name
 	numTrack = 80; //default for 3.5" HD Floppy
 	numSec = 18; //default for 3.5" HD Floppy
-	flags = FD_CHANGED; //clear flags & set DISK CHANGED
+  //clear flags & set DISK CHANGED  
+	flags.changed = 1;
+  flags.ready = 0;
+  flags.readonly = 0;
+  flags.vdisk = 0;
+  flags.seclen = 2; //default 512b
 }
 
 FloppyDisk::FloppyDisk(void)
@@ -151,7 +162,8 @@ void FloppyDisk::loadVirtualDisk()
 #if ENABLE_VFFS
 	if (isReady()) eject(); //if a disk is loaded, eject
 	memcpy_P(fName, str_label, 13); //set disk name to FDDEMU
-	flags |= FD_VIRTUAL;
+	flags.vdisk = 1;
+  flags.seclen = 2; //512b sectors
 	bitLength = BIT_LENGTH_HD;
 #endif //ENABLE_VFFS
 }

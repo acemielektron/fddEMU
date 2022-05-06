@@ -30,11 +30,12 @@ extern "C" {
 #include <stddef.h>
 
 uint16_t calc_crc(uint8_t *buf, int n);
-void setup_timer1_for_write();
-void setup_timer1_for_read();
-uint8_t read_data(uint8_t bitlen, uint8_t *buffer, unsigned int n);
-int16_t read_sector(uint8_t *buffer, uint8_t bitlen);
-int16_t write_sector(uint8_t *buffer, uint8_t bitlen);
+void fdcWriteMode();
+void fdcReadMode();
+uint8_t fdcReadData(uint8_t bitlen, uint8_t *buffer, unsigned int n);
+uint8_t fdcWriteData(uint8_t bitlen, uint8_t *buffer, unsigned int n);
+void fdcWriteHeader(uint8_t bitlen, uint8_t *buffer);
+void fdcWriteGap(uint8_t bitlen, uint8_t gaplen);
 
 #ifdef __cplusplus
 }

@@ -130,33 +130,49 @@
 #define IS_DRIVE1() (iFlags & DRIVE1)
 #define GET_DRVSEL() (iFlags & (DRIVE0|DRIVE1) )
 
-struct __attribute__((__packed__)) floppySector
+struct __attribute__((__packed__)) floppySectorHeader
 {
-	struct __attribute__((__packed__)) sectorHeader
+	union 
 	{
-		uint8_t	id;	// sector header id: 0xFE
-		uint8_t track; // current cylinder
-		uint8_t	side; // current head
-		uint8_t	sector;	// current sector: starts at 1
-		uint8_t	length; // 0: 128b, 1: 256b, 2: 512b, 3: 1024b
-		uint8_t crcHI; // crc / 256
-		uint8_t	crcLO; // crc & 255
-		uint8_t gap; // first byte of post-header gap: 0x4E
-	} header;
-		uint8_t	id; // sector data id: 0xFB
-		uint8_t	data[512]; //sector data 512 bytes
-		uint8_t crcHI; // crc / 256
-		uint8_t	crcLO; // crc & 255
-		uint8_t gap; // first byte of post-data gap: 0x4E
-		uint8_t extra[9]; //extra for half_sector data
+		uint8_t buffer[8];
+		struct __attribute__((__packed__)) 
+		{
+			uint8_t	id;	// sector header id: 0xFE
+			uint8_t track; // current cylinder
+			uint8_t	side; // current head
+			uint8_t	sector;	// current sector: starts at 1
+			uint8_t	length; // 0: 128b, 1: 256b, 2: 512b, 3: 1024b
+			uint8_t crcHI; // crc / 256
+			uint8_t	crcLO; // crc & 255
+			uint8_t gap; // first byte of post-header gap: 0x4E
+
+		};
+	};
+	
+};
+
+
+struct __attribute__((__packed__)) floppySectorData
+{
+	union 
+	{
+		uint8_t buffer[1+512+3+3];
+		struct __attribute__((__packed__))
+		{
+			uint8_t	id; // sector data id: 0xFB
+			uint8_t	data[512]; //sector data 512 bytes
+			uint8_t crcHI; // crc / 256
+			uint8_t	crcLO; // crc & 255
+			uint8_t gap; // first byte of post-data gap: 0x4E
+			uint8_t save[3]; //storage for saving half_sector data			
+		};		
+	};	
 };
 
 class FloppyDrive : public FloppyDisk
 {
 	private:
 		int track;
-		uint8_t side;
-		uint8_t sector;
 		int getSectorData(int lba);
 		int setSectorData(int lba);
 

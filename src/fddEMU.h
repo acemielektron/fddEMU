@@ -28,7 +28,7 @@
 #include <avr/pgmspace.h>
 
 const char s_RootDir[] = {'\0'};		//Don't make PROGMEM
-const char s_bootfile[] = "TEST.TRD";	//Don't make PROGMEM
+const char s_bootfile[] = "BOOT.IMG";	//Don't make PROGMEM
 
 const char str_fddEMU[]		PROGMEM = "fddEMU";
 const char str_2021[]       PROGMEM = "(c) 2021";
@@ -57,6 +57,7 @@ const char err_notfound[]	PROGMEM = "Not found";
 const char err_invfile[]	PROGMEM = "Unrecognized image";
 const char err_geometry[] 	PROGMEM = "Incompat geometry";
 const char err_geombig[]	PROGMEM = "Geometry > file";
+const char err_secSize[] PROGMEM = "Invalid sector size!";
 const char err_test[]		PROGMEM = "Testing 1, 2, 3";
 
 //Virtual floppy things

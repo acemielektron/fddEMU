@@ -110,8 +110,8 @@ asm ("   .equ TIFR,    0x1A\n"  // timer 5 flag register
      "   .equ TCNTL,   0x124\n" // timer 5 counter (low byte)
      "   .equ ICRL,    0x126\n" // timer 5 input capture register (low byte)
      "   .equ OCRL,    0x128\n" // timer 5 output compare register (low byte)
-     "   .equ IDXPORT, 0x109\n" // INDEX pin register (digital pin 47, register PL2)
-     "   .equ IDXBIT,  2\n"     // INDEX pin bit (digital pin 47, register PL2)
+     "   /TODO/.equ IDXDDR, 0x109\n" // INDEX pin register (digital pin 47, register PL2)
+     "   /TODO/.equ IDXBIT,  2\n"     // INDEX pin bit (digital pin 47, register PL2)
      "   /TODO/.equ WGPORT,  0x06\n"  // PINC
      "   /TODO/.equ WGPIN,   0x0\n"   // pin 1
      );
@@ -176,7 +176,7 @@ uint16_t calc_crc(uint8_t *buf, int n)
   return crc;
 }
 
-void setup_timer1_for_write()
+void fdcWriteMode()
 {
   // set up timer
   TCCRB = (1 << CS0); // prescaler 1
@@ -198,7 +198,7 @@ void setup_timer1_for_write()
   TCCRA  = (1 << COMA0); // COMxA1:0 =  01 => toggle OC1A on compare match  
 }
 
-void setup_timer1_for_read()
+void fdcReadMode()
 {
   // reset timer and capture/overrun flags
   TCNT = 0;
@@ -207,23 +207,13 @@ void setup_timer1_for_read()
   TCCRA = 0;
   TCCRB = (1 << CS0); // falling edge input capture, prescaler 1, no output compare
   TCCRC = 0;      
-  TIMSK0 &= ~(1 << TOIE0); //Disable Timer0 Overflow - noInterrupts();
-}
-
-int16_t read_sector(uint8_t *buffer, uint8_t bitlen)
-{
-	int16_t res;
-	uint16_t length = (buffer[4] == 2) ? 512:256;
- 	setup_timer1_for_read();
-	res = read_data(buffer +8, bitlen, length +3);
-	setup_timer1_for_write();
-	return res;
+  //TIMSK0 &= ~(1 << TOIE0); //Disable Timer0 Overflow - noInterrupts();
 }
 
 //TODO: implement timer overflow check, cpu hangs up if read pin disconnected or has no external pullup
-uint8_t read_data(uint8_t bitlen, uint8_t *buffer, unsigned int n)
+uint8_t fdcReadData(uint8_t bitlen, uint8_t *buffer, unsigned int n)
 {
-  uint8_t status = 0; //timer overflow counter will be set to this value
+  uint8_t status;
 
   // expect at least 10 bytes of 0x00 followed by three sync marks (0xA1 with one missing clock bit)
   // Data bits :     0 0 ...0  1 0 1 0 0*0 0 1  1 0 1 0 0*0 0 1  1 0 1 0 0*0 0 1
@@ -244,7 +234,10 @@ uint8_t read_data(uint8_t bitlen, uint8_t *buffer, unsigned int n)
      // on exit:  r18 is updated to the time of this pulse
      //           r22 contains the pulse length in timer ticks (=processor cycles)     
      // CLOBBERS: r19
-     ".macro READPULSE length=0,dst=undefined\n"
+     //add check WRITE_GATE to READPULSE
+     ".macro READPULSE_CHK\n"
+     "        sbic    WGPORT, WGBIT\n" // (2) skip next instruction if WRITE_GATE is asserted
+     "        rjmp    rderr\n"         // exit: read error
      "        sbis    TIFR, ICF\n"     // (1/2) skip next instruction if timer input capture seen
      "        rjmp    .-4\n"           // (2)   wait more 
      "        lds     r19, ICRL\n"     // (2)   get time of input capture (ICR1L, lower 8 bits only)
@@ -252,30 +245,9 @@ uint8_t read_data(uint8_t bitlen, uint8_t *buffer, unsigned int n)
      "        mov     r22, r19\n"      // (1)   calculate time since previous capture...
      "        sub     r22, r18\n"      // (1)   ...into r22
      "        mov     r18, r19\n"      // (1)   set r18 to time of current capture
-     "  .if \\length == 1\n"           //       waiting for short pulse?
-     "        cp      r22, r16\n"      // (1)   compare r22 to min medium pulse
-     "        brlo   .+2\n"            // (1/2) skip jump if less
-     "        rjmp   \\dst\n"          // (3)   not the expected pulse => jump to dst
-     "  .else \n"
-     "    .if \\length == 2\n"         // waiting for medium pulse?
-     "        cp      r16, r22\n"      // (1)   min medium pulse < r22? => carry set if so
-     "        brcc    .+2\n"           // (1/2) skip next instruction if carry is clear
-     "        cp      r22, r17\n"      // (1)   r22 < min long pulse? => carry set if so
-     "        brcs   .+2\n"            // (1/2) skip jump if greater
-     "        rjmp   \\dst\n"          // (3)   not the expected pulse => jump to dst
-     "    .else\n"
-     "      .if \\length == 3\n" 
-     "        cp      r22, r17\n"      // (1)   min long pulse < r22?
-     "        brsh   .+2\n"            // (1/2) skip jump if greater
-     "        rjmp   \\dst\n"          // (3)   not the expected pulse => jump to dst
-     "      .endif\n"
-     "    .endif\n"
-     "  .endif\n"
      ".endm\n"
-     //add check WRITE_GATE to READPULSE
-     ".macro READPULSE_CHK length=0,dst=undefined\n"
-     "        sbic    WGPORT, WGBIT\n" // (2) skip next instruction if WRITE_GATE is asserted
-     "        rjmp    rd_err\n"        // exit: read error
+
+     ".macro READPULSE length=0,dst=undefined\n"
      "        sbis    TIFR, ICF\n"     // (1/2) skip next instruction if timer input capture seen
      "        rjmp    .-4\n"           // (2)   wait more 
      "        lds     r19, ICRL\n"     // (2)   get time of input capture (ICR1L, lower 8 bits only)
@@ -322,14 +294,14 @@ uint8_t read_data(uint8_t bitlen, uint8_t *buffer, unsigned int n)
      ".endm\n"
           
      // prepare for reading SYNC
-     "        mov         r16, %1\n"   // (1)   r16 = 2.5 * (MFM bit len) = minimum length of medium pulse
+     "        mov         r16, %[bitlen]\n"   // (1)   r16 = 2.5 * (MFM bit len) = minimum length of medium pulse
      "        lsr         r16\n"       // (1)
-     "        add         r16, %1\n"   // (1)
-     "        add         r16, %1\n"   // (1)
+     "        add         r16, %[bitlen]\n"   // (1)
+     "        add         r16, %[bitlen]\n"   // (1)
      "        mov         r17, r16\n"  // (1)   r17 = 3.5 * (MFM bit len) = minimum length of long pulse
-     "        add         r17, %1\n"   // (1)
-     "        ldi         %0, 0\n"     // (1)   default return status is S_OK
-     "        mov         r15, %0\n"   // (1)   initialize timer overflow counter
+     "        add         r17, %[bitlen]\n"   // (1)
+     "        ldi         %[retval], 0\n"     // (1)   default return status is S_OK
+     "        mov         r15, %[retval]\n"   // (1)   initialize timer overflow counter
      "        sbi         TIFR, TOV\n" // (2)   reset timer overflow flag
 
      // wait for at least 80x "10" (short) pulse followed by "100" (medium) pulse
@@ -343,6 +315,7 @@ uint8_t read_data(uint8_t bitlen, uint8_t *buffer, unsigned int n)
      "        rjmp        rdend\n"     // (2)   done
      "ws2:    inc         r20\n"       // (1)   increment "short pulse" counter
      "        READPULSE_CHK\n"         // (11)   wait for pulse and check WRITE_GATE
+     //"        READPULSE\n"             // (11)   wait for pulse
      "        cp          r22, r16\n"  // (1)   pulse length < min medium pulse?
      "        brlo        ws1\n"       // (1/2) repeat if so
      "        cp          r22, r17\n"  // (1)   pulse length < min long pulse?
@@ -418,11 +391,11 @@ uint8_t read_data(uint8_t bitlen, uint8_t *buffer, unsigned int n)
      "rdes:   STOREBIT 0,rdend\n"      // (5/14) store "0" bit
      "        rjmp    rde\n"           // (2)    back to start (still even)
 
-     "rd_err: ldi     %0, 1\n"         // return status is 1 (write error)
+     "rderr:  ldi     %[retval], 0XFF\n"         // return status -1 (write error)
      "rdend: \n"
      
-     : "=r"(status)                         // outputs
-     : "r"(bitlen), "x"(n-1), "z"(buffer)   // inputs  (x=r26/r27, z=r30/r31)
+     : [retval]"=r"(status)                         // outputs
+     : [bitlen]"r"(bitlen), "x"(n-1), "z"(buffer)   // inputs  (x=r26/r27, z=r30/r31)
      : "r15", "r16", "r17", "r18", "r19", "r20", "r21", "r22");  // clobbers
 
   return status;
@@ -445,8 +418,13 @@ asm (// define WRITEPULSE macro (used in write_data and format_track)
      "          sts   TCCRC, r19\n"      // (2)   set OCP back HIGH (was set LOW when timer expired)
      "          sbi   TIFR, OCF\n"       // (2)   reset OCFx (output compare flag)
      ".endm\n");
-     
-asm( // define GETNEXTBIT macro for getting next data bit into carry (4/9 cycles)
+   
+uint8_t fdcWriteData(uint8_t bitlen, uint8_t *buffer, unsigned int n)
+{
+  uint8_t status;
+
+  asm volatile
+    (// define GETNEXTBIT macro for getting next data bit into carry (4/9 cycles)
      // on entry: R20         contains the current byte 
      //           R21         contains the bit counter
      //           X (R26/R27) contains the byte counter
@@ -457,13 +435,109 @@ asm( // define GETNEXTBIT macro for getting next data bit into carry (4/9 cycles
      "          subi    r26, 1\n"        // (1)   subtract one from byte counter
      "          sbci    r27, 0\n"        // (1) 
      "          brmi    wdone\n"         // (1/2) done if byte counter <0
-     "          ld      r20, Z+\n"       // (2)   get next byte
+     "          ld	r20, Z+\n"       // (2)   get next byte
      "          ldi     r21, 7\n"        // (1)   reset bit counter (7 more bits after this first one)
      "          rol     r20\n"           // (1)   get next data bit into carry
-     ".endm\n");     
+     ".endm\n"
 
+	   ".macro WRITEPULSE_SC\n"	//Write short pulse with WRITE_GATE check
+	   "          sbis  WGPORT, WGBIT\n"	 //(2) if WRITE_GATE not asserted skip next instruction
+	   "          rjmp  wreq\n"
+     "          sts   OCRL, r16\n"       // (2)   set OCRxA to short pulse length
+     "          sbis  TIFR, OCF\n"       // (1/2) skip next instruction if OCFx is set
+     "          rjmp  .-4\n"             // (2)   wait more
+     "          ldi   r19,  FOC\n"       // (1)
+     "          sts   TCCRC, r19\n"      // (2)   set OCP back HIGH (was set LOW when timer expired)
+     "          sbi   TIFR, OCF\n"       // (2)   reset OCFx (output compare flag)
+     ".endm\n"
 
-int16_t write_sector(uint8_t *buffer, uint8_t bitlen)
+     // initialize pulse-length registers (r16, r17, r18)
+	   "          mov   r22, %[bitlen]\n" //save bitlen in r21
+     "          mov   r16, r22\n"         //       r16 = (2*bitlen)-1 = time for short ("01") pulse         
+     "          add   r16, r22\n"
+     "          dec   r16\n"
+     "          mov   r17, r16\n"        //       r17 = (3*bitlen)-1 = time for medium ("001") pulse
+     "          add   r17, r22\n"
+     "          mov   r18, r17\n"        //       r18 = (4*bitlen)-1 = time for long ("0001") pulse
+     "          add   r18, r22\n"
+	   "          ldi   %[retval], 0\n" //default return value "0"
+
+     // write 12 bytes (96 bits) of "0" (i.e. 96 "10" sequences, i.e. short pulses)
+     "          ldi     r20, 0\n"        
+     "          sts     TCNTL, r20\n"    //       reset timer
+     "          ldi     r20, 96\n"       //       initialize counter
+     //"wri:      WRITEPULSE 1\n"          //       write short pulse"
+     "wri:      WRITEPULSE_SC\n"         //       write short pulse & check WRITE_GATE
+     "          dec     r20\n"           //       decrement counter
+     "          brne    wri\n"           //       repeat until 0
+
+     // first sync "A1": 00100010010001001
+     "          WRITEPULSE 2\n"          //       write medium pulse
+     "          WRITEPULSE 3\n"          //       write long pulse
+     "          WRITEPULSE 2\n"          //       write medium pulse
+     "          WRITEPULSE 3\n"          //       write long pulse (this is the missing clock bit)
+     "          WRITEPULSE 2\n"          //       write medium pulse
+     
+     // second sync "A1": 0100010010001001
+     "          WRITEPULSE 1\n"          //       write short pulse
+     "          WRITEPULSE 3\n"          //       write long pulse
+     "          WRITEPULSE 2\n"          //       write medium pulse
+     "          WRITEPULSE 3\n"          //       write long pulse (this is the missing clock bit)
+     "          WRITEPULSE 2\n"          //       write medium pulse
+
+     // third sync "A1": 0100010010001001
+     "          WRITEPULSE 1\n"          //       write short pulse
+     "          WRITEPULSE 3\n"          //       write long pulse
+     "          WRITEPULSE 2\n"          //       write medium pulse
+     "          WRITEPULSE 3\n"          //       write long pulse (this is the missing clock bit)
+     "          WRITEPULSE 2\n"          //       write medium pulse
+
+     // start writing data
+     "          sts     OCRL, r16\n"     // (2)   set up timer for "01" sequence
+     "          ldi     r21, 0\n"        // (1)   initialize bit counter to fetch next byte
+
+     // just wrote a "1" bit => must be followed by either "01" (for "1" bit) or "00" (for "0" bit)
+     // (have time to fetch next bit during the leading "0")
+     "wro:      GETNEXTBIT\n"            // (4/9) fetch next data bit into carry
+     "          brcs    wro1\n"          // (1/2) jump if "1"
+     // next bit is "0" => write "00"
+     "          lds     r19,  OCRL\n"    // (2)   get current OCRxAL value
+     "          add     r19,  r22\n"     // (2)   add one-bit time
+     "          sts     OCRL, r19\n"     // (2)   set new OCRxAL value
+     "          rjmp    wre\n"           // (2)   now even
+     // next bit is "1" => write "01"
+     "wro1:     WRITEPULSE\n"            // (7)   wait and write pulse
+     "          sts     OCRL, r16\n"     // (2)   set up timer for another "01" sequence
+     "          rjmp    wro\n"           // (2)   still odd
+
+     // just wrote a "0" bit, (i.e. either "10" or "00") where time for the trailing "0" was already added
+     // to the pulse length (have time to fetch next bit during the already-added "0")
+     "wre:      GETNEXTBIT\n"            // (4/9) fetch next data bit into carry
+     "          brcs    wre1\n"          // (1/2) jump if "1"
+     // next bit is "0" => write "10"
+     "          WRITEPULSE\n"            // (7)   wait and write pulse
+     "          sts     OCRL, r16\n"     // (2)   set up timer for another "10" sequence
+     "          rjmp    wre\n"           // (2)   still even
+     // next bit is "1" => write "01"
+     "wre1:     lds     r19,  OCRL\n"    // (2)   get current OCRxAL value
+     "          add     r19,  r22\n"     // (2)   add one-bit time
+     "          sts     OCRL, r19\n"     // (2)   set new OCRxAL value
+     "          WRITEPULSE\n"            // (7)   wait and write pulse
+     "          sts     OCRL, r16\n"     // (2)   set up timer for "01" sequence
+     "          rjmp    wro\n"           // (2)   now odd
+
+     "wreq:     ldi %[retval], 0xFF\n"   // return -1
+     // done writing
+     "wdone:    WRITEPULSE\n"            // (9)   wait for and write final pulse
+
+     : [retval]"=r"(status)                     // outputs
+     : [bitlen]"r"(bitlen), "x"(n), "z"(buffer) // inputs  (x=r26/r27, z=r30/r31)
+     : "r16", "r17", "r18", "r19", "r20", "r21", "r22"); // clobbers
+
+  return status;
+}
+
+void fdcWriteHeader(uint8_t bitlen, uint8_t *buffer)
 {
   // 3.5" DD disk:
   //   writing 95 + 1 + 65 + (7 + 37 + 515 + 69) * 8 + (7 + 37 + 515) bytes
@@ -476,21 +550,9 @@ int16_t write_sector(uint8_t *buffer, uint8_t bitlen)
   //   => 5744 bytes per track = 45952 bits
   //   data rate 500 kbit/second, rotation rate 300 RPM (0.2s per rotation)
   //   => 100000 bits unformatted capacity per track
-  uint16_t result;
-  uint8_t datagaplen = 54;
-
+  
   asm volatile
-    (".macro    WRTPS_CHK\n" // wtite short pulse & check write gate (max 12 cycles)
-     "          sts   OCRL, r16\n"     
-     "          sbis  WGPORT, WGBIT\n"     // (2) skip next instruction if WGBIT is set (not asserted)
-     "          rjmp  wr_exit\n"           // (2) WG asserted jump to write exit
-     "          sbis  TIFR, OCF\n"         // (1/2) skip next instruction if OCFx is set
-     "          rjmp  .-4\n"               // (2)   wait more
-     "          ldi   r19,  FOC\n"         // (1)
-     "          sts   TCCRC, r19\n"        // (2)   set OCP back HIGH (was set LOW when timer expired)
-     "          sbi   TIFR, OCF\n"         // (2)   reset OCFx (output compare flag)     
-     ".endm\n"
-     ".macro    WRTPS\n"
+    (".macro    WRTPS\n"
      "          sts   OCRL, r16\n"     
      "          call  waitp\n"
      ".endm\n"
@@ -503,11 +565,6 @@ int16_t write_sector(uint8_t *buffer, uint8_t bitlen)
      "          call  waitp\n"
      ".endm\n"
 
-     // save SPH:SPL
-     "          push    r3\n" // save r3 to stack
-     "          push    r2\n" // save r2 to stack
-     "          in      r2, __SP_L__\n" // save SPL to r2
-     "          in      r3, __SP_H__\n" // save SPH to r3          
      // initialize pulse-length registers (r16, r17, r18)
      "          mov    r16, %[bitlen]\n"         // r16 = (2*bitlen)-1 = time for short ("01") pulse         
      "          add    r16, %[bitlen]\n"
@@ -520,25 +577,10 @@ int16_t write_sector(uint8_t *buffer, uint8_t bitlen)
      "          movw    X, Z\n"    
      // point X register to "sector" (buffer+3) in buffer 
      "          adiw   X, 3\n" 
-     "          ld     r19, X+\n" // load sector to r19
-     "          ld     r20, X\n" // load length to r20     
-     "          cpi    r20, 3\n" // if absolute "value=3" > r20 "carry" is set, if equal "zero" is set
-     "          brcs   continue\n" // if "carry" is set branch
-     "          rjmp   err_exit\n" // we don't support sector size > 512
-     "continue: eor    r27, r27\n" // clear X high byte
-     "          ldi    r26, 64\n" //put "64" in X low byte
-     "          inc    r20\n" // increment r20 "length" by 1 (minimum length is 128)
-     "calc_len: add    r26, r26\n" // shift left r26
-     "          adc    r27, r27\n" // shift left with carry r27
-     "          dec    r20\n"
-     "          brne   calc_len\n"
-     // we need to put number of bytes we want to write into X
-     "          adiw   X, 4\n" // add 4 to X "length" id(1)+crc(2)+gap(1)
-     //check if we are sending the first sector, if so track start
-     "          ldi     r20, 0\n"        
-     "          sts     TCNTL, r20\n" // reset timer     
+     "          ld     r19, X\n" // load sector to r19
+     //check if we are sending the first sector, if so track start  
      "          dec     r19\n" // if sector was "1", r19 is now "0" zero flag is set
-     "          breq    trkstart\n" // Branch if "Zero Flag" is set     
+     "          breq    trkstart\n" // Branch if "Zero Flag" is set   
      "          rjmp    secstart\n" // else jump to sector start
 
      // 1) ---------- 56x 0x4E (pre-index gap)
@@ -614,7 +656,6 @@ int16_t write_sector(uint8_t *buffer, uint8_t bitlen)
      // S  M  M  M S S   M S S S S S S S  S S S S S S S S  ...
      // => MSx95     
      "secstart: WRTPM\n"                   // write medium pulse
-     "          WRTPM\n"                   // write medium pulse
      "          ldi    r20, 95\n"          // write 95 short pulses
      "          call   wrtshort\n"         // returns 20 cycles after final pulse was written
      
@@ -698,93 +739,7 @@ int16_t write_sector(uint8_t *buffer, uint8_t bitlen)
      // => (MMMMSS)x21
      "          ldi    r20, 21\n"          // (1) write 21 gap bytes
      "          call   wrtgap\n"           //     returns 20 cycles after final pulse was written
-
-     // 10) ---------- 12x 0x00 (96 bits) of "0" (i.e. 96 "10" sequences, i.e. short pulses)
-     //
-     // 0x4E             0x00             0x00             ...
-     //  0 1 0 0 1 1 1 0  0 0 0 0 0 0 0 0  0 0 0 0 0 0 0 0 ...
-     // 1001001001010100 1010101010101010 1010101010101010 ...
-     // S  M  M  M S S   M S S S S S S S  S S S S S S S S  ...
-     // => MSx95
-     "          WRTPM\n"                   // write medium pulse     
-     "          ldi     r20, 0\n"        
-     "          sts     TCNTL, r20\n"    //       reset timer
-     "          ldi     r20, 95\n"       //       initialize counter
-     //"wri:      WRITEPULSE 1\n"          //       write short pulse
-     "wri:      WRTPS_CHK\n"          //       write short pulse
-     "          dec     r20\n"           //       decrement counter
-     "          brne    wri\n"           //       repeat until 0
-
-     // first sync "A1": 00100010010001001
-     "          WRITEPULSE 2\n"          //       write medium pulse
-     "          WRITEPULSE 3\n"          //       write long pulse
-     "          WRITEPULSE 2\n"          //       write medium pulse
-     "          WRITEPULSE 3\n"          //       write long pulse (this is the missing clock bit)
-     "          WRITEPULSE 2\n"          //       write medium pulse
-     
-     // second sync "A1": 0100010010001001
-     "          WRITEPULSE 1\n"          //       write short pulse
-     "          WRITEPULSE 3\n"          //       write long pulse
-     "          WRITEPULSE 2\n"          //       write medium pulse
-     "          WRITEPULSE 3\n"          //       write long pulse (this is the missing clock bit)
-     "          WRITEPULSE 2\n"          //       write medium pulse
-
-     // third sync "A1": 0100010010001001
-     "          WRITEPULSE 1\n"          //       write short pulse
-     "          WRITEPULSE 3\n"          //       write long pulse
-     "          WRITEPULSE 2\n"          //       write medium pulse
-     "          WRITEPULSE 3\n"          //       write long pulse (this is the missing clock bit)
-     "          WRITEPULSE 2\n"          //       write medium pulse
-
-     // start writing data
-     "          sts     OCRL, r16\n"     // (2)   set up timer for "01" sequence
-     "          ldi     r21, 0\n"        // (1)   initialize bit counter to fetch next byte
-
-     // just wrote a "1" bit => must be followed by either "01" (for "1" bit) or "00" (for "0" bit)
-     // (have time to fetch next bit during the leading "0")
-     "wro:      GETNEXTBIT\n"            // (4/9) fetch next data bit into carry
-     "          brcs    wro1\n"          // (1/2) jump if "1"
-     // next bit is "0" => write "00"
-     "          lds     r19,  OCRL\n"    // (2)   get current OCRxAL value
-     "          add     r19,  %[bitlen]\n"      // (2)   add one-bit time
-     "          sts     OCRL, r19\n"     // (2)   set new OCRxAL value
-     "          rjmp    wre\n"           // (2)   now even
-     // next bit is "1" => write "01"
-     "wro1:     WRITEPULSE\n"            // (7)   wait and write pulse
-     "          sts     OCRL, r16\n"     // (2)   set up timer for another "01" sequence
-     "          rjmp    wro\n"           // (2)   still odd
-
-     // just wrote a "0" bit, (i.e. either "10" or "00") where time for the trailing "0" was already added
-     // to the pulse length (have time to fetch next bit during the already-added "0")
-     "wre:      GETNEXTBIT\n"            // (4/9) fetch next data bit into carry
-     "          brcs    wre1\n"          // (1/2) jump if "1"
-     // next bit is "0" => write "10"
-     "          WRITEPULSE\n"            // (7)   wait and write pulse
-     "          sts     OCRL, r16\n"     // (2)   set up timer for another "10" sequence
-     "          rjmp    wre\n"           // (2)   still even
-     // next bit is "1" => write "01"
-     "wre1:     lds     r19,  OCRL\n"    // (2)   get current OCRxAL value
-     "          add     r19,  %[bitlen]\n"      // (2)   add one-bit time
-     "          sts     OCRL, r19\n"     // (2)   set new OCRxAL value
-     "          WRITEPULSE\n"            // (7)   wait and write pulse
-     "          sts     OCRL, r16\n"     // (2)   set up timer for "01" sequence
-     "          rjmp    wro\n"           // (2)   now odd
-
-     // done writing
-     "wdone:    WRITEPULSE\n"            // (9)   wait for and write final pulse
-
-     // 15) ---------- 54/102x 0x4E (post-data gap)
-     //
-     //  0xF6             0x4E             0x4E             ...
-     //  1 1 1 1 0 1 1 0  0 1 0 0 1 1 1 0  0 1 0 0 1 1 1 0 ...
-     // 0101010100010100 1001001001010100 1001001001010100 ...
-     //  S S S S   L S   M  M  M  M S S   ...
-     // => (MMMMSS) x datagaplen
-     "          mov    r20, %[gaplen]\n"         // (1) write "datagaplen" gap bytes
-     "          call   wrtgap\n"          //     returns 20 cycles after final pulse was written
-     "          clr    r26\n" //clear X register for return value
-     "          clr    r27\n" //clear X register for return value
-     "          rjmp   sec_end\n"         //       done
+     "          rjmp   secend\n" // jmp end
 
      // -------------- subroutines
 
@@ -835,19 +790,36 @@ int16_t write_sector(uint8_t *buffer, uint8_t bitlen)
      "          sbi   TIFR, OCF\n"         // (2)   reset OCFx (output compare flag)
      "          ret\n"                     // (4)   return
 
-     "err_exit: ldi   r27, 0xFF\n" //load -1 to X
-     "          ldi   r26, 0xFF\n"
-     "wr_exit:  in    r19, __SREG__\n" // save status register (interrrupt status)
-     "          cli\n" // disable interrupts
-     "          out   __SP_L__, r2\n" //restore SPL from r2
-     "          out   __SP_H__, r3\n" //restore SPH from r3
-     "          out   __SREG__, r19\n" // restore status register (interrupt status)
-     "sec_end:  pop   r2\n" //restore r2 from stack
-     "          pop   r3\n" //restore r3 from stack
+     "secend: \n"
      
-     : [retval]"=x"(result)                   // outputs (x=r26/r27)
-     : [bitlen]"r"(bitlen), [gaplen]"r"(datagaplen), [buffer]"z"(buffer)      // inputs  (z=r30/r31)
-     : "r16", "r17", "r18", "r19", "r20", "r21"); // clobbers
+     :                   // outputs
+     : [bitlen]"r"(bitlen), [buffer]"z"(buffer)      // inputs  (z=r30/r31)
+     : "r16", "r17", "r18", "r19", "r20", "r21", "r26", "r27"); // clobbers
+}
 
-  return result;
+void fdcWriteGap(uint8_t bitlen, uint8_t gaplen)
+{
+  asm volatile
+    (// initialize pulse-length registers (r16, r17, r18)
+     "          mov    r16, %[bitlen]\n"         // r16 = (2*bitlen)-1 = time for short ("01") pulse         
+     "          add    r16, %[bitlen]\n"
+     "          dec    r16\n"
+     "          mov    r17, r16\n"        //       r17 = (3*bitlen)-1 = time for medium ("001") pulse
+     "          add    r17, %[bitlen]\n"
+     "          mov    r18, r17\n"        //       r18 = (4*bitlen)-1 = time for long ("0001") pulse
+     "          add    r18, %[bitlen]\n"
+    
+     // 15) ---------- 54/102x 0x4E (post-data gap)
+     //
+     //  0xF6             0x4E             0x4E             ...
+     //  1 1 1 1 0 1 1 0  0 1 0 0 1 1 1 0  0 1 0 0 1 1 1 0 ...
+     // 0101010100010100 1001001001010100 1001001001010100 ...
+     //  S S S S   L S   M  M  M  M S S   ...
+     // => (MMMMSS) x datagaplen
+     "          mov    r20, %[gaplen]\n"         // (1) write "datagaplen" gap bytes
+     "          call   wrtgap\n"          //     returns 20 cycles after final pulse was written
+      
+     :  //outputs
+     :  [bitlen]"r"(bitlen), [gaplen]"r"(gaplen)//inputs
+     : "r16", "r17", "r18", "r19", "r20"); //clobbers
 }

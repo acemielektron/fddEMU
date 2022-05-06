@@ -62,6 +62,7 @@ COMMONFLAGS += -ffunction-sections -fdata-sections -Wl,--gc-sections
 LUFAFLAGS = -DF_USB=$(OSC) -DUSE_LUFA_CONFIG_HEADER
 SRCFLAGS += -DENABLE_DRIVE_B=$(DUAL) -DDEBUG=$(DEBUG) -DFLIP_SCREEN=$(FLIP) -DENABLE_WDT=$(WDT) 
 SRCFLAGS += -DENABLE_VFFS=$(VFFS) -DENABLE_GUI=$(GUI) -DENABLE_SERIAL=$(SERIAL) $(LUFAFLAGS)
+#SRCFLAGS += --save-temps #save temopoary files (.s,.i,.ii)
 
 #$(SRCOBJS): CXXFLAGS := $(COMMONFLAGS) $(SRCFLAGS)
 #$(SRCOBJS): CFLAGS := $(COMMONFLAGS) $(SRCFLAGS)
@@ -100,3 +101,7 @@ else
 endif
 clean :
 	rm $(TARGET).elf $(OBJECTS)
+removetemp:
+	find . -name "*.i" -type f -delete
+	find . -name "*.ii" -type f -delete
+	find . -name "*.s" -type f -delete

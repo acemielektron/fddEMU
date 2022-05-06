@@ -22,7 +22,7 @@
 
 #include <avr/io.h>
 #include <avr/pgmspace.h>
-#include<util/delay.h>
+#include <util/delay.h>
 //if stdio is included stdio streams will be initialized for printf/scanf functions
 #include <stdio.h> //sprintf & printf
 #include <string.h> //strlen
@@ -38,6 +38,9 @@
 class __PGMSTR;
 #define F(string_literal) (reinterpret_cast<const __PGMSTR *>(PSTR(string_literal)))
 
+//define our itobcd function here
+char *itobcd(int32_t val, char *buf);
+
 class UART{
     public:
     virtual int write(char) = 0;
@@ -49,7 +52,7 @@ class UART{
     void printHEX(uint8_t);
     void printHEX(uint16_t val) {printHEX((uint8_t) (val >> 8)); printHEX((uint8_t) val);}
     void printHEX(uint32_t val) {printHEX((uint16_t) (val >> 16)); printHEX((uint16_t) val);}
-    void printDEC(uint32_t);
+    void printDEC(int32_t);
 };
 
 class UART0 : public UART{
