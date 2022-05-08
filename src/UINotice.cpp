@@ -1,7 +1,7 @@
 #include "fddEMU.h"
 #include "UINotice.h"
-#include "GraphicUI.h" //disp
-#include "simpleUART.h" //Serial
+#include "gui/GraphicUI.h" //disp
+#include "serial/simpleUART.h" //Serial
 
 class UINotice msg;
 

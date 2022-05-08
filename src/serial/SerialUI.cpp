@@ -42,15 +42,15 @@ void SerialUI::readRx()
 	{
         case 'S': 
         case 's':           
-            if ( (drv_sel == 0) || (drv_sel == DRIVE1) ) drv_sel = DRIVE0;
+            if ( (drv_sel == 0) || (drv_sel == DRIVEA) ) drv_sel = DRIVEB;
         #if ENABLE_DRIVE_B  
-            else if (drv_sel == DRIVE0) drv_sel = DRIVE1;
+            else if (drv_sel == DRIVEA) drv_sel = DRIVEB;
         #endif //ENABLE_DRIVE_B  
             statusInfo();
             Serial.print_P(str_selected);
             Serial.print_P(str_drive);
-            if (drv_sel == DRIVE0) Serial.write('A');
-            else if (drv_sel== DRIVE1) Serial.write('B');
+            if (drv_sel == DRIVEA) Serial.write('A');
+            else if (drv_sel== DRIVEB) Serial.write('B');
             Serial.write('\n');               
             break;
 	    case 'p':
@@ -94,7 +94,7 @@ void SerialUI::readRx()
             if (drv_sel) 
             {
                 Serial.print_P(str_eject);
-                if (drv_sel == DRIVE0) Serial.write('A');
+                if (drv_sel == DRIVEA) Serial.write('A');
                 else Serial.write('B');
                 Serial.write('\n');
                 drive[drv_sel -1].eject();

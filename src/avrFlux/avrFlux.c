@@ -20,27 +20,12 @@
 // Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 // -----------------------------------------------------------------------------
 
-#include "avrFlux.h"
 #include <avr/io.h>
 #include <avr/pgmspace.h>
+#include "avrFlux.h"
 
 #if defined(__AVR_ATmega328P__)
-
-asm ("   .equ TIFR,    0x16\n"  // timer 1 flag register
-     "   .equ TOV,     0\n"     // overflow flag
-     "   .equ OCF,     1\n"     // output compare flag
-     "   .equ ICF,     5\n"     // input capture flag
-     "   .equ TCCRC,   0x82\n"  // timer 1 control register C
-     "   .equ FOC,     0x80\n"  // force output compare flag
-     "   .equ TCNTL,   0x84\n"  // timer 1 counter (low byte)
-     "   .equ ICRL,    0x86\n"  // timer 1 input capture register (low byte)
-     "   .equ OCRL,    0x88\n"  // timer 1 output compare register (low byte)
-     "   .equ IDXDDR,  0x0A\n" // DDRD 
-     "   .equ IDXBIT,  7\n" // INDEX pin bit (digital pin 7, register PORTD)     
-     "   .equ WGPORT,  0x06\n" // PINC
-     "   .equ WGBIT,   0\n" // A0
-     );
-
+// -----------------------  Pin assignments for Arduino Uno/Nano (Atmega328P)  --------------------------
 #define TIFR    TIFR1   // timer 1 flag register
 #define TOV     TOV1    // overflow flag
 #define OCF     OCF1A   // output compare flag
@@ -60,24 +45,7 @@ asm ("   .equ TIFR,    0x16\n"  // timer 1 flag register
 #define OCBIT   1       // bit for WRITEDATA pin
 
 #elif defined(__AVR_ATmega32U4__)
-
 // -----------------------  Pin assignments for Arduino Leonardo/Micro (Atmega32U4)  --------------------------
-
-asm ("   .equ TIFR,    0x16\n"  // timer 1 flag register
-     "   .equ TOV,     0\n"     // overflow flag
-     "   .equ OCF,     1\n"     // output compare flag
-     "   .equ ICF,     5\n"     // input capture flag
-     "   .equ TCCRC,   0x82\n"  // timer 1 control register C
-     "   .equ FOC,     0x80\n"  // force output compare flag
-     "   .equ TCNTL,   0x84\n"  // timer 1 counter (low byte)
-     "   .equ ICRL,    0x86\n"  // timer 1 input capture register (low byte)
-     "   .equ OCRL,    0x88\n"  // timer 1 output compare register (low byte)
-     "   .equ IDXDDR,  0x0A\n" // DDRD 
-     "   .equ IDXBIT,  7\n"     // INDEX pin bit (digital pin 6, register PORTD)     
-     "   .equ WGPORT,  0x0C\n"  // PINE accessed via SBIS instruction
-     "   .equ WGPIN,   6\n"   // pin 7
-     );
-
 #define TIFR    TIFR1   // timer 1 flag register
 #define TOV     TOV1    // overflow flag
 #define OCF     OCF1A   // output compare flag
@@ -96,26 +64,8 @@ asm ("   .equ TIFR,    0x16\n"  // timer 1 flag register
 #define OCDDR   DDRB    // WRITEDATA pin port (digital pin  9, register PB5)
 #define OCBIT   5       // WRITEDATA pin bit  (digital pin  9, register PB5)
 
-
 #elif defined(__AVR_ATmega2560__)
-
 // ------------------------------  Pin assignments for Arduino Mega (Atmega2560)  -----------------------------
-
-asm ("   .equ TIFR,    0x1A\n"  // timer 5 flag register
-     "   .equ TOV,     0\n"     // overflow flag
-     "   .equ OCF,     1\n"     // output compare flag
-     "   .equ ICF,     5\n"     // input capture flag
-     "   .equ TCCRC,   0x122\n" // timer 5 control register C
-     "   .equ FOC,     0x80\n"  // force output compare flag
-     "   .equ TCNTL,   0x124\n" // timer 5 counter (low byte)
-     "   .equ ICRL,    0x126\n" // timer 5 input capture register (low byte)
-     "   .equ OCRL,    0x128\n" // timer 5 output compare register (low byte)
-     "   /TODO/.equ IDXDDR, 0x109\n" // INDEX pin register (digital pin 47, register PL2)
-     "   /TODO/.equ IDXBIT,  2\n"     // INDEX pin bit (digital pin 47, register PL2)
-     "   /TODO/.equ WGPORT,  0x06\n"  // PINC
-     "   /TODO/.equ WGPIN,   0x0\n"   // pin 1
-     );
-
 #define TIFR    TIFR5   // timer 5 flag register
 #define TOV     TOV5    // overflow flag
 #define OCF     OCF5A   // output compare flag
@@ -210,6 +160,7 @@ void fdcReadMode()
   //TIMSK0 &= ~(1 << TOIE0); //Disable Timer0 Overflow - noInterrupts();
 }
 
+/*
 //TODO: implement timer overflow check, cpu hangs up if read pin disconnected or has no external pullup
 uint8_t fdcReadData(uint8_t bitlen, uint8_t *buffer, unsigned int n)
 {
@@ -234,19 +185,6 @@ uint8_t fdcReadData(uint8_t bitlen, uint8_t *buffer, unsigned int n)
      // on exit:  r18 is updated to the time of this pulse
      //           r22 contains the pulse length in timer ticks (=processor cycles)     
      // CLOBBERS: r19
-     //add check WRITE_GATE to READPULSE
-     ".macro READPULSE_CHK\n"
-     "        sbic    WGPORT, WGBIT\n" // (2) skip next instruction if WRITE_GATE is asserted
-     "        rjmp    rderr\n"         // exit: read error
-     "        sbis    TIFR, ICF\n"     // (1/2) skip next instruction if timer input capture seen
-     "        rjmp    .-4\n"           // (2)   wait more 
-     "        lds     r19, ICRL\n"     // (2)   get time of input capture (ICR1L, lower 8 bits only)
-     "        sbi     TIFR, ICF\n "    // (2)   clear input capture flag
-     "        mov     r22, r19\n"      // (1)   calculate time since previous capture...
-     "        sub     r22, r18\n"      // (1)   ...into r22
-     "        mov     r18, r19\n"      // (1)   set r18 to time of current capture
-     ".endm\n"
-
      ".macro READPULSE length=0,dst=undefined\n"
      "        sbis    TIFR, ICF\n"     // (1/2) skip next instruction if timer input capture seen
      "        rjmp    .-4\n"           // (2)   wait more 
@@ -311,11 +249,12 @@ uint8_t fdcReadData(uint8_t bitlen, uint8_t *buffer, unsigned int n)
      "        sbi         TIFR, TOV\n" // (2)   reset timer overflow flag
      "        dec         r15\n"       // (1)   overflow happens every 4.096ms, decrement overflow counter
      "        brne        ws2\n"       // (1/2) continue if fewer than 256 overflows
-     "        ldi         %0, 3\n"     // (1)   no sync found in 1.048s => return status is is S_NOSYNC
+     "        ldi         %[retval], 3\n"     // (1)   no sync found in 1.048s => return status is is S_NOSYNC
      "        rjmp        rdend\n"     // (2)   done
      "ws2:    inc         r20\n"       // (1)   increment "short pulse" counter
-     "        READPULSE_CHK\n"         // (11)   wait for pulse and check WRITE_GATE
-     //"        READPULSE\n"             // (11)   wait for pulse
+     "        sbic    WGPORT, WGBIT\n" // (2) skip next instruction if WRITE_GATE is asserted
+     "        rjmp    rderr\n"         // exit: read error
+     "        READPULSE\n"             // (11)   wait for pulse
      "        cp          r22, r16\n"  // (1)   pulse length < min medium pulse?
      "        brlo        ws1\n"       // (1/2) repeat if so
      "        cp          r22, r17\n"  // (1)   pulse length < min long pulse?
@@ -440,17 +379,6 @@ uint8_t fdcWriteData(uint8_t bitlen, uint8_t *buffer, unsigned int n)
      "          rol     r20\n"           // (1)   get next data bit into carry
      ".endm\n"
 
-	   ".macro WRITEPULSE_SC\n"	//Write short pulse with WRITE_GATE check
-	   "          sbis  WGPORT, WGBIT\n"	 //(2) if WRITE_GATE not asserted skip next instruction
-	   "          rjmp  wreq\n"
-     "          sts   OCRL, r16\n"       // (2)   set OCRxA to short pulse length
-     "          sbis  TIFR, OCF\n"       // (1/2) skip next instruction if OCFx is set
-     "          rjmp  .-4\n"             // (2)   wait more
-     "          ldi   r19,  FOC\n"       // (1)
-     "          sts   TCCRC, r19\n"      // (2)   set OCP back HIGH (was set LOW when timer expired)
-     "          sbi   TIFR, OCF\n"       // (2)   reset OCFx (output compare flag)
-     ".endm\n"
-
      // initialize pulse-length registers (r16, r17, r18)
 	   "          mov   r22, %[bitlen]\n" //save bitlen in r21
      "          mov   r16, r22\n"         //       r16 = (2*bitlen)-1 = time for short ("01") pulse         
@@ -467,7 +395,8 @@ uint8_t fdcWriteData(uint8_t bitlen, uint8_t *buffer, unsigned int n)
      "          sts     TCNTL, r20\n"    //       reset timer
      "          ldi     r20, 96\n"       //       initialize counter
      //"wri:      WRITEPULSE 1\n"          //       write short pulse"
-     "wri:      WRITEPULSE_SC\n"         //       write short pulse & check WRITE_GATE
+     "wri:      sbis  WGPORT, WGBIT\n"	 //(2) if WRITE_GATE not asserted skip next instruction
+	   "          rjmp  wreq\n"     			 // end write for read
      "          dec     r20\n"           //       decrement counter
      "          brne    wri\n"           //       repeat until 0
 
@@ -823,3 +752,4 @@ void fdcWriteGap(uint8_t bitlen, uint8_t gaplen)
      :  [bitlen]"r"(bitlen), [gaplen]"r"(gaplen)//inputs
      : "r16", "r17", "r18", "r19", "r20"); //clobbers
 }
+*/

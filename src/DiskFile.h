@@ -22,7 +22,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "pff.h"
+#include "petitfs/pff.h"
 
 class DiskFile
 {

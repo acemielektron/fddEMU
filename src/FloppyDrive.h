@@ -26,42 +26,37 @@
 #if defined (__AVR_ATmega328P__)
 // -------------------------------  Pin assignments for Arduino UNO/Nano/Pro Mini (Atmega328p)  ------------------------------
 //PORTD
-#define PIN_STEP       2
-#define PIN_STEPDIR    3
-#define PIN_MOTORA     4
-#define PIN_SELECTA    5
-#define PIN_SIDE       6
-#define PIN_INDEX      7
+#define PIN_STEP      2
+#define REG_STEP			PIND
+#define PIN_STEPDIR   3
+#define REG_STEPDIR		PIND
+#define PIN_MOTORA    4
+#define REG_MOTORA		PIND
+#define PIN_SELECTA   5
+#define REG_SELECTA		PIND
+#define PIN_SIDE      6
+#define REG_SIDE			PIND
+#define PIN_INDEX     7
+#define DDR_INDEX			DDRD
 
 //PORTB
-#define PIN_READDATA   0
-#define PIN_WRITEDATA  1
+#define PIN_READDATA  0
+#define DDR_READDATA	DDRB
+#define PIN_WRITEDATA 1
+#define DDR_WRITEDATA DDRB
 //rest of PORTB pins are SPI
 
 //PORTC
 #define PIN_WRITEGATE 0
+#define REG_WRITEGATE PINC
 #define PIN_TRACK0    1
+#define DDR_TRACK0 		DDRC
 #define PIN_WRITEPROT 2
+#define DDR_WRITEPROT DDRC
 #define PIN_DSKCHANGE 3
+#define DDR_DSKCHANGE DDRC
 
-//Output commands
-#define SET_INDEX_LOW()    (DDRD |= (1 << PIN_INDEX))
-#define SET_INDEX_HIGH()   (DDRD &= ~(1 << PIN_INDEX))
-#define SET_TRACK0_LOW()    (DDRC |= (1 << PIN_TRACK0))
-#define SET_TRACK0_HIGH()   (DDRC &= ~(1 << PIN_TRACK0))
-#define SET_DSKCHANGE_LOW()    (DDRC |= (1 << PIN_DSKCHANGE))
-#define SET_DSKCHANGE_HIGH()   (DDRC &= ~(1 << PIN_DSKCHANGE))
-#define SET_WRITEPROT_LOW()    (DDRC |= (1 << PIN_WRITEPROT))
-#define SET_WRITEPROT_HIGH()   (DDRC &= ~(1 << PIN_WRITEPROT))
 
-//Inputs
-#define IS_WRITE()          ( !(PINC & (1 << PIN_WRITEGATE)) )
-#define SIDE()              (PIND & (1 << PIN_SIDE))
-#define STEPDIR()           (PIND & (1 << PIN_STEPDIR))
-#define IS_STEP()           ( !(PIND & (1 << PIN_STEP)) )
-#define IS_SELECTA()        ( !(PIND & (1 << PIN_SELECTA)) )
-#define IS_MOTORA()         ( !(PIND & (1 << PIN_MOTORA)) )
-#define IS_SELECTB()        ( !(PIND & (1 << PIN_MOTORA)) )
 // -------------------------------  Pin assignments for Arduino UNO/Nano/Pro Mini (Atmega328p)  ------------------------------
 #elif defined (__AVR_ATmega32U4__)
 // -------------------------------  Pin assignments for Arduino (Atmega32U4)  ------------------------------
@@ -70,65 +65,92 @@
 
 //Unchangeable pins ICP&OCP for timer1
 #define PIN_READDATA    4   //PD4 must be pin4 (ICP for timer1)
+#define DDR_READDATA		DDRD
 #define PIN_WRITEDATA   5   //PB5 must be pin9 (OCP for timer1)
+#define DDR_WRITEDATA		DDRB
 //Pin Change Interrupt pins
 #define PIN_MOTORA      4   //PB4-PCINT4-pin8
+#define REG_MOTORA			PINB
 #define PIN_SELECTA     6   //PB6-PCINT6-pin10
+#define REG_SELECTA			PINB
 //External Interrupt pins
 #define PIN_STEP        2   //PD2-INT2-RX1 will use external interrupt 2
+#define REG_STEP				PIND
 //Changeable pins
 #define PIN_STEPDIR     3   //PD3-INT3-TX1
+#define REG_STEPDIR			PIND
 #define PIN_SIDE        6   //PC6-pin5
+#define REG_SIDE				PINC
 #define PIN_INDEX       7   //PD7-pin6
+#define DDR_INDEX				DDRD
 #define PIN_WRITEGATE   6   //PE6-INT6-pin7
+#define REG_WRITEGATE		PINE
 #define PIN_TRACK0      4   //PF4-pinA3
+#define DDR_TRACK0			DDRF
 #define PIN_WRITEPROT   5   //PD5-pin24-TXLED
+#define DDR_WRITEPROT		DDRD
 #define PIN_DSKCHANGE   6   //PF6-pinA1
+#define DDR_DSKCHANGE		DDRF
 //SS pin for SD card is PF7-pinA0 for atmega32u4 (Arduino pro micro)
 //SS pin is set in "pffArduino.h" to change the pin
 //also changing the macros in "pffArduino.h" is required.
 
-//Output commands
-#define SET_INDEX_LOW()    (DDRD |= (1 << PIN_INDEX))
-#define SET_INDEX_HIGH()   (DDRD &= ~(1 << PIN_INDEX))
-#define SET_TRACK0_LOW()    (DDRF |= (1 << PIN_TRACK0))
-#define SET_TRACK0_HIGH()   (DDRF &= ~(1 << PIN_TRACK0))
-#define SET_DSKCHANGE_LOW()    (DDRF |= (1 << PIN_DSKCHANGE))
-#define SET_DSKCHANGE_HIGH()   (DDRF &= ~(1 << PIN_DSKCHANGE))
-#define SET_WRITEPROT_LOW()    (DDRD |= (1 << PIN_WRITEPROT))
-#define SET_WRITEPROT_HIGH()   (DDRD &= ~(1 << PIN_WRITEPROT))
-
-//Inputs
-#define IS_WRITE()          ( !(PINE & (1 << PIN_WRITEGATE)) )
-#define SIDE()              (PINC & (1 << PIN_SIDE))
-#define STEPDIR()           (PIND & (1 << PIN_STEPDIR))
-#define IS_STEP()           ( !(PIND & (1 << PIN_STEP)) )
-#define IS_SELECTA()        ( !(PINB & (1 << PIN_SELECTA)) )
-#define IS_MOTORA()         ( !(PINB & (1 << PIN_MOTORA)) )
-#define IS_SELECTB()        ( !(PINB & (1 << PIN_MOTORA)) )
-
 // -------------------------------  Pin assignments for Arduino (Atmega32U4)  ------------------------------
 #endif //defined (__AVR_ATmega32U4__)
 
-//define bits of iFlags
-#define BIT_TRACKCHANGE 7
-#define BIT_DRIVE0      0
-#define BIT_DRIVE1      1
+//Output commands
+#define SET_INDEX_LOW()    (DDR_INDEX |= (1 << PIN_INDEX))
+#define SET_INDEX_HIGH()   (DDR_INDEX &= ~(1 << PIN_INDEX))
+#define SET_TRACK0_LOW()    (DDR_TRACK0 |= (1 << PIN_TRACK0))
+#define SET_TRACK0_HIGH()   (DDR_TRACK0 &= ~(1 << PIN_TRACK0))
+#define SET_DSKCHANGE_LOW()    (DDR_DSKCHANGE |= (1 << PIN_DSKCHANGE))
+#define SET_DSKCHANGE_HIGH()   (DDR_DSKCHANGE &= ~(1 << PIN_DSKCHANGE))
+#define SET_WRITEPROT_LOW()    (DDR_WRITEPROT |= (1 << PIN_WRITEPROT))
+#define SET_WRITEPROT_HIGH()   (DDR_WRITEPROT &= ~(1 << PIN_WRITEPROT))
 
-#define F_TRACKCHANGED  (1 << BIT_TRACKCHANGE)
-#define DRIVE0 (1 << BIT_DRIVE0)
-#define DRIVE1 (1 << BIT_DRIVE1)
+//Inputs
+#define IS_WRITE()          ( !(REG_WRITEGATE & (1 << PIN_WRITEGATE)) )
+#define SIDE()              (REG_SIDE & (1 << PIN_SIDE))
+#define STEPDIR()           (REG_STEPDIR & (1 << PIN_STEPDIR))
+#define IS_STEP()           ( !(REG_STEP & (1 << PIN_STEP)) )
+#define IS_SELECTA()        ( !(REG_SELECTA & (1 << PIN_SELECTA)) )
+#define IS_MOTORA()         ( !(REG_MOTORA & (1 << PIN_MOTORA)) )
+#define IS_SELECTB()        IS_MOTORA()
+//Two drive mode requires SELECT and MOTOR pins combined trough an AND gate
+//if two drive mode is enabled SELECTA pin is used for combined SELECTA & MOTORA
+//and MOTORA pin is used for combined SELECTB & MOTORB
 
-#define SET_TRACKCHANGED()  (iFlags |= F_TRACKCHANGED)
-#define CLR_TRACKCHANGED()  (iFlags &= ~F_TRACKCHANGED)
-#define SEL_DRIVE0()  (iFlags |= DRIVE0)
-#define SEL_DRIVE1()  (iFlags |= DRIVE1)
-#define CLR_DRVSEL() (iFlags &= ~(DRIVE0|DRIVE1) )
+struct __attribute__((__packed__)) driveControlFlags
+{
+	unsigned int drive0 : 1;	
+	unsigned int drive1 : 1;
+	unsigned int driveChanged : 1;
+	unsigned int trackChanged : 1;
+	unsigned int empty : 4;
+};
 
-#define IS_TRACKCHANGED() (iFlags & (1 << BIT_TRACKCHANGE))
-#define IS_DRIVE0() (iFlags & DRIVE0)
-#define IS_DRIVE1() (iFlags & DRIVE1)
-#define GET_DRVSEL() (iFlags & (DRIVE0|DRIVE1) )
+class driveStatus
+{
+	private:
+		volatile struct driveControlFlags f;
+	public:
+		void setTrackChanged() {f.trackChanged = 1;}
+		void clrTrackChanged() {f.trackChanged = 0;}
+		int isTrackChanged() {return f.trackChanged;}		
+		void chkDrvChanged() { if (f.driveChanged) return;
+			f.driveChanged |= (isDrive1() != f.drive1 || isDrive0() != f.drive0) ? 1:0;
+			f.drive0 = isDrive0(); f.drive1 = isDrive1();}
+		int isDrvChanged() {chkDrvChanged(); return f.driveChanged;}
+		void clrDrvChanged() {f.driveChanged = 0;}	
+		int getDriveSel () {chkDrvChanged(); return isDrive1() << 1|isDrive0();}
+	#if ENABLE_DRIVE_B // Dual drive mode		
+		int isDrive0() {return IS_SELECTA() ? 1:0;}
+		int isDrive1() {return IS_SELECTB() ? 1:0;}
+	#else // Single drive mode
+		int isDrive0() {return IS_SELECTA() && IS_MOTORA() ? 1:0;}
+		int isDrive1() {return 0;}
+	#endif // ENABLE_DRIVE_B 
+};
 
 struct __attribute__((__packed__)) floppySectorHeader
 {
@@ -150,7 +172,6 @@ struct __attribute__((__packed__)) floppySectorHeader
 	};
 	
 };
-
 
 struct __attribute__((__packed__)) floppySectorData
 {
@@ -192,5 +213,6 @@ class FloppyDrive : public FloppyDisk
 
 extern volatile uint8_t iFlags; //flags set by interrupt
 extern class FloppyDrive drive[N_DRIVE];
+extern class driveStatus ds;
 
 #endif //PLOPPYDRIVE_H

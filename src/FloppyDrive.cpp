@@ -20,11 +20,11 @@
 
 #include "fddEMU.h"
 #include "FloppyDrive.h"
-#include "pff.h"
-#include "diskio.h"
-#include "avrFlux.h"
-#include "VirtualFloppyFS.h"
-#include "simpleUART.h" //DEBUG + itoa
+#include "petitfs/pff.h"
+#include "petitfs/diskio.h"
+#include "avrFlux/avrFlux.h"
+#include "vffs/VirtualFloppyFS.h"
+#include "serial/simpleUART.h" //DEBUG + itoa
 #include "UINotice.h" //msg.error
 
 #include <avr/io.h>
@@ -38,7 +38,7 @@ bool pinsInitialized = false;
 static struct floppySectorHeader secHeader;
 static struct floppySectorData secData;
 volatile int8_t iTrack = 0;
-volatile uint8_t iFlags = 0;
+class driveStatus ds;
 
 class FloppyDrive drive[N_DRIVE]; //will be used as extern
 
@@ -51,26 +51,10 @@ ISR(INT2_vect) //int2
 {
 	if (IS_STEP() ) //debounce
 		(STEPDIR()) ? --iTrack : ++iTrack;
-	SET_TRACKCHANGED();
+	ds.setTrackChanged();
 }
 
-//Two drive mode requires SELECT and MOTOR pins combined trough an OR gate
-//if two drive mode is enabled SELECTA pin is used for combined SELECTA & MOTORA
-//and MOTORA pin is used for combined SELECTB & MOTORB
-#if defined (__AVR_ATmega328P__)
-ISR(PCINT2_vect) //pin change interrupt of port D
-#elif defined (__AVR_ATmega32U4__)
-ISR(PCINT0_vect) //pin change interrupt of port B
-#endif //(__AVR_ATmega32U4__)
-{
-#if ENABLE_DRIVE_B
-	if ( IS_SELECTA() ) SEL_DRIVE0(); //drive A is selected
-	else if ( IS_SELECTB() ) SEL_DRIVE1(); //drive B is selected
-#else //Drive B not enabled
-	if ( IS_SELECTA() && IS_MOTORA() ) SEL_DRIVE0(); //driveA is selected
-#endif  //ENABLE_DRIVE_B
-	else CLR_DRVSEL();
-}
+
 
 void initFDDpins()
 {
@@ -143,7 +127,7 @@ void debugPrintSector(char charRW, uint8_t* buffer, int16_t len)
 	uint8_t head   = secHeader.side;	
 	uint8_t sector = secHeader.sector;
 
-	IS_DRIVE0() ? Serial.write('A'):Serial.write('B');
+	ds.isDrive0() ? Serial.write('A'):Serial.write('B');
 	Serial.write(':');
 	Serial.write(charRW);
 	Serial.printDEC(track);
@@ -185,7 +169,7 @@ void debugPrintSector(char charRW, uint8_t* buffer, int16_t len)
 uint8_t *prepSectorBuffer(uint8_t track, uint8_t head, uint8_t sector, uint8_t seclen)
 {
 	uint16_t crc;
-	uint8_t *buffer = NULL;
+	uint8_t *buffer = secData.buffer;
 	
 	//prepare header
 	secHeader.id = 0xFE; // ID mark
@@ -207,7 +191,6 @@ uint8_t *prepSectorBuffer(uint8_t track, uint8_t head, uint8_t sector, uint8_t s
 		crc = calc_crc(secData.buffer, 512+1);		
 		secData.crcHI = crc >> 8;
 		secData.crcLO = crc & 0xFF;
-		buffer = secData.buffer;
 		break;
 	case 1:	
 		if ((sector & 1) == 0) //first 256b
@@ -217,7 +200,6 @@ uint8_t *prepSectorBuffer(uint8_t track, uint8_t head, uint8_t sector, uint8_t s
 			secData.crcHI = crc >> 8;
 			secData.crcLO = crc & 0xFF;
 			memcpy(secData.data+256, &secData.crcHI, 3); //copy crc + gap over
-			buffer = secData.buffer;
 		}
 		else //second 256b
 		{			
@@ -231,46 +213,49 @@ uint8_t *prepSectorBuffer(uint8_t track, uint8_t head, uint8_t sector, uint8_t s
 		break;
 	default:
 		debugPrint_P((const __PGMSTR *)err_secSize);		
-	}	
+	}
+	debugPrintSector('R', NULL, 0);
 	return buffer;
 }
 
-//crc check & restore sector to SD writable format
-int restoreSector_checkCRC()
+bool checkCRC() // crc check & restore sector to SD writable format
 {
 	uint16_t crc;
+	int8_t status = false;
 	if (secHeader.length == 2)
 	{
 		crc = calc_crc(secData.buffer, 512+1);
-		if ( (secData.crcHI == (crc >> 8)) && (secData.crcLO == (crc & 0xFF)) ) return 0;
-		else {
-			Serial.print(F("CRC expected: "));
-			Serial.printHEX(crc);
-			Serial.print(F(" received: "));
-			Serial.printHEX(secData.crcHI);
-			Serial.printHEX(secData.crcLO);
-			Serial.write('\n');
-			//debugPrintSector('W', secData.data, 128 << secHeader.length);
-		}
 	}
 	else if (secHeader.length == 1)
 	{
 		if ((secHeader.sector &1) == 0) //first 256b
 		{
-			uint8_t crcHI = secData.data[256];
-			uint8_t crcLO = secData.data[257];
 			crc = calc_crc(secData.buffer, 256+1);
+			secData.crcHI = secData.data[256]; //copy crc to it's proper place
+			secData.crcLO = secData.data[257];			
 			memcpy(secData.data+256, secData.save, 3); //restore first 3 bytes of second half		
-			if ( (crcHI == (crc >> 8)) && (crcLO == (crc & 0xFF)) ) return 0;
 		}
 		else //second 256b
 		{
 			crc = calc_crc(secData.buffer+256, 256+1);
 			secData.data[256 -1] = secData.save[2]; //restore last byte of first half
-			if ( (secData.crcHI == (crc >> 8)) && (secData.crcLO == (crc & 0xFF)) ) return 0;
 		}
 	}
-	return -1;
+	if ( (secData.crcHI == (crc >> 8)) && (secData.crcLO == (crc & 0xFF)) ) status = true;
+#if DEBUG
+	else 
+	{
+		Serial.print(F("CRC expected: "));
+		Serial.printHEX(crc);
+		Serial.print(F(" received: "));
+		Serial.printHEX(secData.crcHI);
+		Serial.printHEX(secData.crcLO);
+		Serial.write('\n');
+	}
+	uint8_t *pbuf = ( (secHeader.length == 1) && ((secHeader.sector&1)==0) ) ? secData.data+256:secData.data;
+	debugPrintSector('W', pbuf, 128  << secHeader.length);
+#endif //DEBUG	
+	return status;
 }
 
 FloppyDrive::FloppyDrive(void)
@@ -316,7 +301,6 @@ int FloppyDrive::getSectorData(int lba)
 		n = vffs.readSector(secData.data, lba);
 	#endif //ENABLE_VFFS
 	}
-	debugPrintSector('R', NULL, 0);
 	return n;
 }
 
@@ -324,11 +308,6 @@ int FloppyDrive::setSectorData(int lba)
 {
 	int n = FR_DISK_ERR;
 	
-	#if DEBUG
-	uint8_t *pbuf = ( (flags.seclen == 1) && ((secHeader.sector&1)==0) ) ? secData.data+256:secData.data;
-	debugPrintSector('W', pbuf, 128  << flags.seclen);
-	#endif //DEBUG
-
 	if (isReady())
 	{
 		if (flags.seclen == 2) n = disk_write_sector(secData.data, startSector+lba);
@@ -370,7 +349,7 @@ void FloppyDrive::run()
 		if (isReady() || isVirtual()) clrChanged();//if a disk is loaded clear diskChange flag
 	}
 	(isReadonly()) ? SET_WRITEPROT_LOW() : SET_WRITEPROT_HIGH();  //check readonly
-	while(GET_DRVSEL()) //PCINT for SELECTA and MOTORA
+	while(!ds.isDrvChanged())
 	{
 	#if ENABLE_WDT
 		wdt_reset();
@@ -378,9 +357,9 @@ void FloppyDrive::run()
 	#if defined (__AVR_ATmega32U4__)
 		Serial.rcvRdy(); //service usb
 	#endif //defined (__AVR_ATmega32U4__)				
-		if (IS_TRACKCHANGED()) //if track changed
+		if (ds.isTrackChanged()) //if track changed
 		{
-			CLR_TRACKCHANGED();
+			ds.clrTrackChanged();
 			track += iTrack;	//add iTrack to current track
 			iTrack = 0;				//reset iTrack
 			if (track < 0) track=0; //Check if track valid
@@ -402,16 +381,15 @@ void FloppyDrive::run()
 			if (res) debugPrint_P(F("Read error!\n")); //couldnt read full sector
 			else 
 			{
-				if (restoreSector_checkCRC()) debugPrint_P(F("CRC error!\n"));
-				setSectorData(lba);
+				if (checkCRC()) setSectorData(lba);
 			}				
 			while (IS_WRITE());//wait for WRITE_GATE to deassert
 		}	
 		else fdcWriteGap(bitLength, 54);
-
 		sector++; //next sector
 		if (sector >= numSec) sector = 0;
 	}//selected
+	ds.clrDrvChanged();
 	SET_DSKCHANGE_HIGH();
 	SET_WRITEPROT_HIGH();
 }

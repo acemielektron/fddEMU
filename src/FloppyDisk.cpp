@@ -19,9 +19,9 @@
 
 #include "fddEMU.h"
 #include "FloppyDisk.h"
-#include "diskio.h"
+#include "petitfs/diskio.h"
 #include "DiskFile.h"
-#include "simpleUART.h" //DEBUG
+#include "serial/simpleUART.h" //DEBUG
 #include "UINotice.h" //msg.error
 
 

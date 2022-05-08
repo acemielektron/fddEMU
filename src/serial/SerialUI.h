@@ -22,6 +22,9 @@
 
 #include "simpleUART.h"
 
+#define DRIVEA 1
+#define DRIVEB 2
+
 class SerialUI{
     public:
     uint8_t drv_sel;

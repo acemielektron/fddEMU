@@ -19,7 +19,7 @@
 
 #include "fddEMU.h"
 #include "DiskFile.h"
-#include "simpleUART.h" //DEBUG
+#include "serial/simpleUART.h" //DEBUG
 #include "UINotice.h" //msg.show
 
 #include <string.h>

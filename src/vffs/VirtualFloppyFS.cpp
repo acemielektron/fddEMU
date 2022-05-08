@@ -21,9 +21,9 @@
 #include "FatStructures.h"
 #include "VirtualFloppyFS.h"
 #include "FloppyDrive.h"
-#include "diskio.h" //direct SD access
+#include "petitfs/diskio.h" //direct SD access
 #include "SerialUI.h" //debug
-#include "pff.h" //file attributes
+#include "petitfs/pff.h" //file attributes
 #include <string.h>
 
 //Virtual FLoppy Boot sector

@@ -36,6 +36,9 @@ class Fat12{
 //define virtual floppy flags
 #define F_EOFLIST   (1 << BIT_EOFLIST)
 
+#define DRIVE0 1
+#define DRIVE1 2
+
 class VirtualFloppyFS: public Fat12{
     private:
     uint32_t sdRootSect;        
