@@ -54,8 +54,6 @@ ISR(INT2_vect) //int2
 	ds.setTrackChanged();
 }
 
-
-
 void initFDDpins()
 {
 	//To emulate open collector outputs Output pins are set to LOW "0"
@@ -77,13 +75,10 @@ void initFDDpins()
 	PORTD |= (1 << PIN_STEP)|(1 << PIN_STEPDIR)|(1 << PIN_SIDE);
 	PORTB |= (1 << PIN_READDATA);
 	PORTC |= (1 << PIN_WRITEGATE);
-	//Setup Pin Change Interrupts
+	//Setup External Interrupt
 	EICRA &=~((1 << ISC01)|(1 << ISC00)); //clear ISC00&ISC01 bits
 	EICRA |= (1 << ISC01); //set ISC01 "falling edge"
 	EIMSK |= (1 << INT0); //External Interrupt Mask Register enable INT0
-	//Setup External Interrupt
-	PCMSK2 = (1 << PIN_SELECTA)|(1 << PIN_MOTORA); // Pin Change Mask Register 2 enable SELECTA&MOTORA
-	PCICR |= (1 << PCIE2); // Pin Change Interrupt Control Register enable port D
 #elif defined (__AVR_ATmega32U4__)
 	//Setup Input and Output pins as Inputs
 	DDRB |= (1 << PIN_WRITEDATA); //set WRITEDATA as OUTPUT (Not sure it is necessary but datasheet says so)
@@ -101,13 +96,10 @@ void initFDDpins()
 	PORTC |= (1 << PIN_SIDE); //PC6 SIDE
 	PORTD |= (1 << PIN_STEP)|(1 << PIN_STEPDIR)|(1 << PIN_READDATA); //PD0 SCL, PD1 SDA, PD5 TXLED, PD2 STEP, PD3 STEPDIR, PD4 ICP1, PD7 INDEX
 	PORTE |= (1 << PIN_WRITEGATE); //PE6 WRITEGATE
-	//Setup Pin Change Interrupts
+	//Setup External Interrupt
 	EICRA &=~((1 << ISC21)|(1 << ISC20)); //clear ISC20&ISC21 bits
 	EICRA |= (1 << ISC21); //set ISC21 "falling edge"
 	EIMSK |= (1 << INT2); //External Interrupt Mask Register enable INT2
-	//Setup External Interrupt
-	PCMSK0 = (1 << PIN_SELECTA)| (1 << PIN_MOTORA); // Pin Change Mask Register 2 enable SELECTA&MOTORA
-	PCICR |= (1 << PCIE0); // Pin Change Interrupt Control Register enable port B
 #endif //defined (__AVR_ATmega32U4__)
 	pinsInitialized = true; //done
 	sei(); //Turn interrupts on
@@ -134,7 +126,7 @@ void debugPrintSector(char charRW, uint8_t* buffer, int16_t len)
 	Serial.write('/');
 	Serial.printDEC(head);
 	Serial.write('/');
-	Serial.printDEC(sector+1);
+	Serial.printDEC(sector);
 	Serial.write('\n');	
 
 	if (charRW == 'W')
@@ -221,7 +213,7 @@ uint8_t *prepSectorBuffer(uint8_t track, uint8_t head, uint8_t sector, uint8_t s
 bool checkCRC() // crc check & restore sector to SD writable format
 {
 	uint16_t crc;
-	int8_t status = false;
+	int8_t status = true; // CRC error
 	if (secHeader.length == 2)
 	{
 		crc = calc_crc(secData.buffer, 512+1);
@@ -241,7 +233,7 @@ bool checkCRC() // crc check & restore sector to SD writable format
 			secData.data[256 -1] = secData.save[2]; //restore last byte of first half
 		}
 	}
-	if ( (secData.crcHI == (crc >> 8)) && (secData.crcLO == (crc & 0xFF)) ) status = true;
+	if ( (secData.crcHI == (crc >> 8)) && (secData.crcLO == (crc & 0xFF)) ) status = false; //no error
 #if DEBUG
 	else 
 	{
@@ -341,14 +333,13 @@ void FloppyDrive::run()
 	uint8_t side = 0;
 	uint8_t sector = 0;	//sectors in this loop are "0" based
 
-	fdcWriteMode();
-	fdcWriteGap(bitLength, 1); //change bitLength;
 	if (isChanged())
 	{
 		SET_DSKCHANGE_LOW();
 		if (isReady() || isVirtual()) clrChanged();//if a disk is loaded clear diskChange flag
 	}
 	(isReadonly()) ? SET_WRITEPROT_LOW() : SET_WRITEPROT_HIGH();  //check readonly
+	fdcWriteMode();	
 	while(!ds.isDrvChanged())
 	{
 	#if ENABLE_WDT
@@ -370,7 +361,7 @@ void FloppyDrive::run()
 		side = (SIDE()) ? 0:1; //check side
 		//start sector	
 		lba=(track*2+side)*numSec+sector;//LBA = (C × HPC + H) × SPT + (S − 1)			
-		getSectorData(lba); //get sector from SD	
+		getSectorData(lba); //get sector from SD
 		wBuffer = prepSectorBuffer(track, side, sector, flags.seclen);
 		fdcWriteHeader(bitLength, secHeader.buffer);
 		if ( fdcWriteData(bitLength, wBuffer, (128 << flags.seclen)+4) ) //if WRITE_GATE asserted
@@ -381,7 +372,7 @@ void FloppyDrive::run()
 			if (res) debugPrint_P(F("Read error!\n")); //couldnt read full sector
 			else 
 			{
-				if (checkCRC()) setSectorData(lba);
+				if (!checkCRC()) setSectorData(lba);
 			}				
 			while (IS_WRITE());//wait for WRITE_GATE to deassert
 		}	
@@ -389,7 +380,8 @@ void FloppyDrive::run()
 		sector++; //next sector
 		if (sector >= numSec) sector = 0;
 	}//selected
-	ds.clrDrvChanged();
 	SET_DSKCHANGE_HIGH();
 	SET_WRITEPROT_HIGH();
+	SET_TRACK0_HIGH();
+	SET_INDEX_HIGH();
 }

@@ -20,12 +20,27 @@
 // Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 // -----------------------------------------------------------------------------
 
+#include "avrFlux.h"
 #include <avr/io.h>
 #include <avr/pgmspace.h>
-#include "avrFlux.h"
 
 #if defined(__AVR_ATmega328P__)
-// -----------------------  Pin assignments for Arduino Uno/Nano (Atmega328P)  --------------------------
+
+asm ("   .equ TIFR,    0x16\n"  // timer 1 flag register
+     "   .equ TOV,     0\n"     // overflow flag
+     "   .equ OCF,     1\n"     // output compare flag
+     "   .equ ICF,     5\n"     // input capture flag
+     "   .equ TCCRC,   0x82\n"  // timer 1 control register C
+     "   .equ FOC,     0x80\n"  // force output compare flag
+     "   .equ TCNTL,   0x84\n"  // timer 1 counter (low byte)
+     "   .equ ICRL,    0x86\n"  // timer 1 input capture register (low byte)
+     "   .equ OCRL,    0x88\n"  // timer 1 output compare register (low byte)
+     "   .equ IDXDDR,  0x0A\n" // DDRD 
+     "   .equ IDXBIT,  7\n" // INDEX pin bit (digital pin 7, register PORTD)     
+     "   .equ WGPORT,  0x06\n" // PINC
+     "   .equ WGBIT,   0\n" // A0
+     );
+
 #define TIFR    TIFR1   // timer 1 flag register
 #define TOV     TOV1    // overflow flag
 #define OCF     OCF1A   // output compare flag
@@ -45,7 +60,24 @@
 #define OCBIT   1       // bit for WRITEDATA pin
 
 #elif defined(__AVR_ATmega32U4__)
+
 // -----------------------  Pin assignments for Arduino Leonardo/Micro (Atmega32U4)  --------------------------
+
+asm ("   .equ TIFR,    0x16\n"  // timer 1 flag register
+     "   .equ TOV,     0\n"     // overflow flag
+     "   .equ OCF,     1\n"     // output compare flag
+     "   .equ ICF,     5\n"     // input capture flag
+     "   .equ TCCRC,   0x82\n"  // timer 1 control register C
+     "   .equ FOC,     0x80\n"  // force output compare flag
+     "   .equ TCNTL,   0x84\n"  // timer 1 counter (low byte)
+     "   .equ ICRL,    0x86\n"  // timer 1 input capture register (low byte)
+     "   .equ OCRL,    0x88\n"  // timer 1 output compare register (low byte)
+     "   .equ IDXDDR,  0x0A\n" // DDRD 
+     "   .equ IDXBIT,  7\n"     // INDEX pin bit (digital pin 6, register PORTD)     
+     "   .equ WGPORT,  0x0C\n"  // PINE accessed via SBIS instruction
+     "   .equ WGBIT,   6\n"   // pin 7
+     );
+
 #define TIFR    TIFR1   // timer 1 flag register
 #define TOV     TOV1    // overflow flag
 #define OCF     OCF1A   // output compare flag
@@ -64,8 +96,26 @@
 #define OCDDR   DDRB    // WRITEDATA pin port (digital pin  9, register PB5)
 #define OCBIT   5       // WRITEDATA pin bit  (digital pin  9, register PB5)
 
+
 #elif defined(__AVR_ATmega2560__)
+
 // ------------------------------  Pin assignments for Arduino Mega (Atmega2560)  -----------------------------
+
+asm ("   .equ TIFR,    0x1A\n"  // timer 5 flag register
+     "   .equ TOV,     0\n"     // overflow flag
+     "   .equ OCF,     1\n"     // output compare flag
+     "   .equ ICF,     5\n"     // input capture flag
+     "   .equ TCCRC,   0x122\n" // timer 5 control register C
+     "   .equ FOC,     0x80\n"  // force output compare flag
+     "   .equ TCNTL,   0x124\n" // timer 5 counter (low byte)
+     "   .equ ICRL,    0x126\n" // timer 5 input capture register (low byte)
+     "   .equ OCRL,    0x128\n" // timer 5 output compare register (low byte)
+     "   /TODO/.equ IDXDDR, 0x109\n" // INDEX pin register (digital pin 47, register PL2)
+     "   /TODO/.equ IDXBIT,  2\n"     // INDEX pin bit (digital pin 47, register PL2)
+     "   /TODO/.equ WGPORT,  0x06\n"  // PINC
+     "   /TODO/.equ WGBIT,   0x0\n"   // pin 1
+     );
+
 #define TIFR    TIFR5   // timer 5 flag register
 #define TOV     TOV5    // overflow flag
 #define OCF     OCF5A   // output compare flag
@@ -160,7 +210,6 @@ void fdcReadMode()
   //TIMSK0 &= ~(1 << TOIE0); //Disable Timer0 Overflow - noInterrupts();
 }
 
-/*
 //TODO: implement timer overflow check, cpu hangs up if read pin disconnected or has no external pullup
 uint8_t fdcReadData(uint8_t bitlen, uint8_t *buffer, unsigned int n)
 {
@@ -249,7 +298,7 @@ uint8_t fdcReadData(uint8_t bitlen, uint8_t *buffer, unsigned int n)
      "        sbi         TIFR, TOV\n" // (2)   reset timer overflow flag
      "        dec         r15\n"       // (1)   overflow happens every 4.096ms, decrement overflow counter
      "        brne        ws2\n"       // (1/2) continue if fewer than 256 overflows
-     "        ldi         %[retval], 3\n"     // (1)   no sync found in 1.048s => return status is is S_NOSYNC
+     "        ldi         %0, 3\n"     // (1)   no sync found in 1.048s => return status is is S_NOSYNC
      "        rjmp        rdend\n"     // (2)   done
      "ws2:    inc         r20\n"       // (1)   increment "short pulse" counter
      "        sbic    WGPORT, WGBIT\n" // (2) skip next instruction if WRITE_GATE is asserted
@@ -394,9 +443,10 @@ uint8_t fdcWriteData(uint8_t bitlen, uint8_t *buffer, unsigned int n)
      "          ldi     r20, 0\n"        
      "          sts     TCNTL, r20\n"    //       reset timer
      "          ldi     r20, 96\n"       //       initialize counter
-     //"wri:      WRITEPULSE 1\n"          //       write short pulse"
-     "wri:      sbis  WGPORT, WGBIT\n"	 //(2) if WRITE_GATE not asserted skip next instruction
-	   "          rjmp  wreq\n"     			 // end write for read
+     //"wri:      WRITEPULSE 1\n"          //       write short pulse"     
+	   "wri:      sbis  WGPORT, WGBIT\n"	 //(2) if WRITE_GATE not asserted skip next instruction
+	   "          rjmp  wreq\n"     
+     "          WRITEPULSE 1\n"          //       write short pulse"     
      "          dec     r20\n"           //       decrement counter
      "          brne    wri\n"           //       repeat until 0
 
@@ -687,6 +737,8 @@ void fdcWriteHeader(uint8_t bitlen, uint8_t *buffer)
      //  => returns 20 cycles (max) after final pulse is written (including return statement)
      "wrtgap:   WRTPM\n"
      "wrtgap2:  WRTPM\n"
+     "          sbis  WGPORT, WGBIT\n"	 //(2) if WRITE_GATE not asserted skip next instruction
+	   "          rjmp  secend\n"  //terminate gap bytes
      "          WRTPM\n"
      "          WRTPM\n"
      "          WRTPS\n"
@@ -752,4 +804,3 @@ void fdcWriteGap(uint8_t bitlen, uint8_t gaplen)
      :  [bitlen]"r"(bitlen), [gaplen]"r"(gaplen)//inputs
      : "r16", "r17", "r18", "r19", "r20"); //clobbers
 }
-*/

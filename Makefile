@@ -8,7 +8,6 @@ WDT = 1		#WDT enabled = 1
 VFFS = 0	#Virtual FLoppy Disabled
 GUI = 1		#Graphical User Interface enabled
 SERIAL = 0	#Serial disabled
-OPT = s		#OPT = s (Optimize for size) OPT=3 (Optimize for speed)
 
 #if DEBUG is enabled, enable SERIAL
 ifneq ($(DEBUG),0)
@@ -45,11 +44,11 @@ VFFSOBJS = \
 
 SRCOBJS = \
 	$(patsubst %.$(EXT_C),%.o,$(wildcard ./src/avrFlux/*.$(EXT_C))) \
-	$(patsubst %.$(EXT_ASM),%.o,$(wildcard ./src/avrFlux/*.$(EXT_ASM))) \
 	$(patsubst %.$(EXT_C),%.o,$(wildcard ./src/petitfs/*.$(EXT_C))) \
 	$(patsubst %.$(EXT_C),%.o,$(wildcard ./src/*.$(EXT_C))) \
-	$(patsubst %.$(EXT_C++),%.o,$(wildcard ./src/*.$(EXT_C++))) \
-	$(patsubst %.$(EXT_ASM),%.o,$(wildcard ./src/*.$(EXT_ASM)))
+	$(patsubst %.$(EXT_C++),%.o,$(wildcard ./src/*.$(EXT_C++))) 
+#$(patsubst %.$(EXT_ASM),%.o,$(wildcard ./src/*.$(EXT_ASM)))
+#$(patsubst %.$(EXT_ASM),%.o,$(wildcard ./src/avrFlux/*.$(EXT_ASM))) \	
 
 #MCU = atmega32u4
 MCU = atmega328p
@@ -59,21 +58,26 @@ CC = avr-gcc
 CXX = avr-g++
 INCLUDES	= -I ./ -I src  -I /usr/avr/include -I /usr/lib/avr/include 
 
-CFLAGS = -O$(OPT) -mmcu=$(MCU) -DF_CPU=$(OSC) -Wall $(INCLUDES)
+CFLAGS = -Os -mmcu=$(MCU) -DF_CPU=$(OSC) -Wall $(INCLUDES)
 CFLAGS += -ffunction-sections -fdata-sections -Wl,--gc-sections
 CFLAGS += -DENABLE_WDT=$(WDT)
 #CFLAGS += --save-temps #save temporary files (.s,.i,.ii)
-CXXFLAGS = -O$(OPT) -mmcu=$(MCU) -DF_CPU=$(OSC) -Wall $(INCLUDES)
+CXXFLAGS = -Os -mmcu=$(MCU) -DF_CPU=$(OSC) -Wall $(INCLUDES)
 CXXFLAGS += -DENABLE_DRIVE_B=$(DUAL) -DDEBUG=$(DEBUG) -DFLIP_SCREEN=$(FLIP) -DENABLE_WDT=$(WDT) 
 CXXFLAGS += -DENABLE_VFFS=$(VFFS) -DENABLE_GUI=$(GUI) -DENABLE_SERIAL=$(SERIAL)
 LDFLAGS = -lm -g
-ASFLAGS = -mmcu=$(MCU) -DF_CPU=$(OSC)
+ASFLAGS = -mmcu=$(MCU) -Os -DF_CPU=$(OSC)
 
 #check target microcontroller
-ifeq	($(MCU),atmega32u4)
-#check if SERIAL = LUFA required
+ifeq ($(MCU),atmega32u4)
 	OBJECTS = $(SRCOBJS)		
 	PORT = /dev/ttyACM0
+ifeq ($(SERIAL),1)
+	INCLUDES	+= -I usb-cdc -I libs/lufa -I libs/lufa/LUFA/Drivers
+	OBJECTS += $(LUFAOBJS)
+	CFLAGS += -DF_USB=$(OSC) -DUSE_LUFA_CONFIG_HEADER
+	CXXFLAGS += -DF_USB=$(OSC) -DUSE_LUFA_CONFIG_HEADER
+endif
 else ifeq ($(MCU),atmega328p)
 	OBJECTS = $(SRCOBJS)
 	PORT = /dev/ttyUSB0
@@ -82,11 +86,8 @@ else
 endif
 
 #SERIAL requires LUFA on atmega32u4
-ifeq ($(MCU),atmega32u4) && ifeq ($(SERIAL),1)
-	INCLUDES	+= -I usb-cdc -I libs/lufa -I libs/lufa/LUFA/Drivers
-	OBJECTS += $(LUFAOBJS)
-	CFLAGS += -DF_USB=$(OSC) -DUSE_LUFA_CONFIG_HEADER
-	CXXFLAGS += -DF_USB=$(OSC) -DUSE_LUFA_CONFIG_HEADER
+ifeq ($(MCU),atmega32u4)
+
 endif
 
 #if SERIAL enabled

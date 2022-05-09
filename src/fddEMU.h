@@ -27,6 +27,10 @@
 
 #include <avr/pgmspace.h>
 
+//Drive selection macros used in core and ui
+#define DRIVE0 (1 << 0)     //1
+#define DRIVE1 (1 << 1)     //2
+
 const char s_RootDir[] = {'\0'};		//Don't make PROGMEM
 const char s_bootfile[] = "BOOT.IMG";	//Don't make PROGMEM
 

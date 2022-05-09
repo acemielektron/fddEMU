@@ -115,41 +115,40 @@
 #define IS_STEP()           ( !(REG_STEP & (1 << PIN_STEP)) )
 #define IS_SELECTA()        ( !(REG_SELECTA & (1 << PIN_SELECTA)) )
 #define IS_MOTORA()         ( !(REG_MOTORA & (1 << PIN_MOTORA)) )
-#define IS_SELECTB()        IS_MOTORA()
 //Two drive mode requires SELECT and MOTOR pins combined trough an AND gate
 //if two drive mode is enabled SELECTA pin is used for combined SELECTA & MOTORA
 //and MOTORA pin is used for combined SELECTB & MOTORB
 
 struct __attribute__((__packed__)) driveControlFlags
 {
-	unsigned int drive0 : 1;	
-	unsigned int drive1 : 1;
-	unsigned int driveChanged : 1;
-	unsigned int trackChanged : 1;
-	unsigned int empty : 4;
+	uint8_t driveSel : 2;		
+	uint8_t trackChanged : 1;
+	uint8_t empty : 5;
 };
 
 class driveStatus
 {
 	private:
-		volatile struct driveControlFlags f;
+		struct driveControlFlags f;		
 	public:
+		driveStatus() {f.driveSel = 0; f.trackChanged = 0;}
 		void setTrackChanged() {f.trackChanged = 1;}
 		void clrTrackChanged() {f.trackChanged = 0;}
-		int isTrackChanged() {return f.trackChanged;}		
-		void chkDrvChanged() { if (f.driveChanged) return;
-			f.driveChanged |= (isDrive1() != f.drive1 || isDrive0() != f.drive0) ? 1:0;
-			f.drive0 = isDrive0(); f.drive1 = isDrive1();}
-		int isDrvChanged() {chkDrvChanged(); return f.driveChanged;}
-		void clrDrvChanged() {f.driveChanged = 0;}	
-		int getDriveSel () {chkDrvChanged(); return isDrive1() << 1|isDrive0();}
+		uint8_t isTrackChanged() {return f.trackChanged;}	
 	#if ENABLE_DRIVE_B // Dual drive mode		
-		int isDrive0() {return IS_SELECTA() ? 1:0;}
-		int isDrive1() {return IS_SELECTB() ? 1:0;}
+		uint8_t isDrive0() {return IS_SELECTA() ? DRIVE0:0;}
+		uint8_t isDrive1() {return IS_MOTORA() ? DRIVE1:0;}
 	#else // Single drive mode
-		int isDrive0() {return IS_SELECTA() && IS_MOTORA() ? 1:0;}
-		int isDrive1() {return 0;}
-	#endif // ENABLE_DRIVE_B 
+		uint8_t isDrive0() {return IS_SELECTA() && IS_MOTORA() ? DRIVE0:0;}
+		uint8_t isDrive1() {return 0;}			
+	#endif // ENABLE_DRIVE_B 		
+		uint8_t getDriveSel () {return isDrive1()|isDrive0();}		
+		bool isDrvChanged() 
+		{
+			if (f.driveSel == getDriveSel()) return false;
+			else f.driveSel = getDriveSel(); 
+			return true;
+		}		
 };
 
 struct __attribute__((__packed__)) floppySectorHeader

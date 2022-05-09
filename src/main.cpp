@@ -49,12 +49,12 @@ int main(void)
 #endif //ENABLE_VFFS
 	for(;;)
 	{
-		uint8_t selectedDrive = ds.getDriveSel();
 	#if ENABLE_WDT
 		wdt_reset();
 	#endif //ENABLE_WDT
-		if (selectedDrive)
+		if (ds.isDrvChanged())
 		{
+			uint8_t selectedDrive = ds.getDriveSel();
 		#if ENABLE_GUI
 			disp.showDriveBusy(selectedDrive);
 		#endif //ENABLE_GUI

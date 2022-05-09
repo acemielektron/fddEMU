@@ -56,8 +56,7 @@ private:
 struct __attribute__((__packed__)) uiFlags
 {
 	unsigned int page : 6;
-	unsigned int driveA : 1;
-	unsigned int driveB : 1;
+	unsigned int driveSel : 2;
 }f;
 uint8_t idle_timer;
 uint8_t sleep_timer;
@@ -87,12 +86,10 @@ void update();
 void showDriveBusy(uint8_t);
 void showDriveIdle();
 void showDriveLoading();
-void selectDriveA() {f.driveB = 0; f.driveA = 1;}
-void selectDriveB() {f.driveB = 1; f.driveA = 0;}
-void deselectDrives() {f.driveB = 0; f.driveA = 0;}
-uint8_t getSelectedDrive() {return f.driveB << 1|f.driveA;} 
-uint8_t isDriveA() {return f.driveA ? 1:0;}
-uint8_t isDriveB() {return f.driveB ? 1:0;}
+void selectDrive(uint8_t r_drive) {f.driveSel = r_drive;}
+uint8_t getSelectedDrive() {return f.driveSel;} 
+bool isDriveA() {return f.driveSel & DRIVE0 ? true:false;}
+bool isDriveB() {return f.driveSel & DRIVE1 ? true:false;}
 void loadMenuFiles();
 void buttonAction(int8_t button);
 };

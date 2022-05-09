@@ -177,7 +177,7 @@ void GraphicUI::showNoticeP(const char *header, const char *message)
 
 void GraphicUI::showDriveIdle()
 {	
-	deselectDrives();
+	selectDrive(0);
 	setPage(PAGE_STATUS);
 	idle_timer = 0; //update screen ASAP
 	update();
@@ -185,8 +185,7 @@ void GraphicUI::showDriveIdle()
 
 void GraphicUI::showDriveBusy(uint8_t r_drive)
 {	
-	if (r_drive == 1 ) selectDriveA();	
-	else if (r_drive == 2 ) selectDriveB();
+	selectDrive(r_drive);		
 	setPage(PAGE_BUSY);
 	idle_timer = 0; //update screen ASAP
 	update();
@@ -341,10 +340,10 @@ void GraphicUI::buttonAction(int8_t button)
       if (getPage() == PAGE_STATUS)  //behave as drive select+
       {
         if (getSelectedDrive() == 0)
-          selectDriveA();	
+          selectDrive(DRIVE0);	
       #if ENABLE_DRIVE_B  
         else if (isDriveA())
-          selectDriveB();
+          selectDrive(DRIVE1);
       #endif //ENABLE_DRIVE_B
       }
       else if (getPage() == PAGE_MENU) //behave as file select+
@@ -357,7 +356,7 @@ void GraphicUI::buttonAction(int8_t button)
       if (getPage() == PAGE_STATUS)  //behave as drive select-
       {
         if (isDriveB())
-          selectDriveA();	
+          selectDrive(DRIVE0);	
       }
       else if (getPage() == PAGE_MENU) //behave as file select-
       {
