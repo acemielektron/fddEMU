@@ -20,10 +20,11 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include "ADCButton.h"
-#include "SerialUI.h" //debug
-
+#if ENABLE_SERIAL
+    #include "../serial/simpleUART.h" //debug
+#endif //ENABLE_SERIAL 
 #if ENABLE_GUI
-class ADCButton abtn;
+  class ADCButton abtn;
 #endif //ENABLE_GUI
 
 ADCButton::ADCButton()
@@ -95,7 +96,7 @@ int8_t ADCButton::read()
       Serial.print(F("Button: "));
       Serial.printHEX(newval);
       Serial.print(F(" value: "));
-      Serial.printDEC(adcval);
+      Serial.print(adcval);
       Serial.write('\n');
     #endif //DEBUG
       return newval;  

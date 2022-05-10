@@ -20,12 +20,31 @@
 #ifndef FDDEMUCONST_H
 #define FDDEMUCONST_H
 
+#include <avr/pgmspace.h>
+
 #if (!ENABLE_GUI) && (!ENABLE_SERIAL) //if no user interface
     #undef ENABLE_VFFS
     #define ENABLE_VFFS 1
 #endif //(!ENABLE_GUI) && (!ENABLE_SERIAL)
 
-#include <avr/pgmspace.h>
+#if ENABLE_WDT
+	#include <avr/wdt.h>
+#endif  //ENABLE_WDT
+#if ENABLE_SERIAL
+    #include "serial/simpleUART.h" //debug +itoa
+    #include "serial/SerialUI.h"
+#endif //ENABLE_SERIAL 
+#if ENABLE_GUI
+	#include "gui/GraphicUI.h"
+	#include "gui/ADCButton.h"
+#endif //ENABLE_GUI 
+#if ENABLE_VFFS
+    #include "vffs/VirtualFloppyFS.h"
+#endif //ENABLE_VFFS
+
+//Drive selection macros used in core and ui
+#define DRIVE0 (1 << 0)     //1
+#define DRIVE1 (1 << 1)     //2
 
 const char s_RootDir[] = {'\0'};		//Don't make PROGMEM
 const char s_bootfile[] = "BOOT.IMG";	//Don't make PROGMEM
@@ -57,6 +76,8 @@ const char err_notfound[]	PROGMEM = "Not found";
 const char err_invfile[]	PROGMEM = "Unrecognized image";
 const char err_geometry[] 	PROGMEM = "Incompat geometry";
 const char err_geombig[]	PROGMEM = "Geometry > file";
+const char err_secSize[]    PROGMEM = "Invalid sector size!";
+const char err_readFDC[]    PROGMEM = "Read error";
 const char err_test[]		PROGMEM = "Testing 1, 2, 3";
 
 //Virtual floppy things

@@ -25,17 +25,21 @@
 
 //define BIT LENGTH
 #define BIT_LENGTH_HD	16
-#define BIT_LENGTH_DD	32
+#define BIT_LENGTH_DD	32  
 
-//define FLAGS
-#define FD_CHANGED  (1 << 0)
-#define FD_READY    (1 << 1)
-#define FD_READONLY (1 << 2)
-#define FD_VIRTUAL  (1 << 3)
+struct __attribute__((__packed__)) fd_flags {
+	unsigned int changed : 1;
+	unsigned int ready : 1;
+	unsigned int readonly : 1;
+	unsigned int vdisk : 1;
+	unsigned int seclen : 2; //sector lenth: 1:256, 2:512
+	unsigned int empty : 2;
+};
 
 class FloppyDisk{
 	protected:
-		uint8_t flags;
+		struct fd_flags flags;
+		uint8_t sectorLen;
 		uint8_t numTrack;   //number of tracks
 		uint8_t numSec;     //sectors per track
 		uint8_t bitLength;  //16 for HD, 32 for DD
@@ -43,11 +47,11 @@ class FloppyDisk{
 		FloppyDisk();
 		bool load(char *);
 		void eject();
-		bool isReady(void) {return (flags & FD_READY);}
-		bool isReadonly(void) {return (flags & FD_READONLY);}
-		bool isChanged(void) {return (flags & FD_CHANGED);}
-		bool isVirtual(void) {return (flags & FD_VIRTUAL);}
-		void clrChanged(void) {flags &= ~FD_CHANGED;}
+		bool isReady(void) {return (flags.ready);}
+		bool isReadonly(void) {return (flags.readonly);}
+		bool isChanged(void) {return (flags.changed);}
+		bool isVirtual(void) {return (flags.vdisk);}
+		void clrChanged(void) {flags.changed = 0;}
 
 	public:
 		char fName[13];

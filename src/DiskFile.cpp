@@ -19,13 +19,8 @@
 
 #include "fddEMU.h"
 #include "DiskFile.h"
-#include "simpleUART.h" //DEBUG
 #include "UINotice.h" //msg.show
-
 #include <string.h>
-#if ENABLE_WDT
-  #include <avr/wdt.h>
-#endif //ENABLE_WDT
 
 DiskFile sdfile; //we will use as extern
 

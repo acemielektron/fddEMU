@@ -20,7 +20,7 @@
 //uses UART 0 (serial 0) on AVR
 
 #include "simpleUART.h"
-#include <stdlib.h>
+#include <stdlib.h> //itoa
 
 #if defined (__AVR_ATmega328P__)
     #define UCSRA   UCSR0A
@@ -49,7 +49,6 @@
 class UART0 Serial;
 #endif //ENABLE_SERIAL
 
-char itoabuf[12]; //DWORD 2^32 is 10 digits (in decimal) + sign + null terminating char
 const uint16_t MIN_2X_BAUD = F_CPU/(4*(2*0XFFF + 1)) + 1;
 
 int putchar_stream(char ch, FILE *stream) 
@@ -155,6 +154,13 @@ void UART::print(char *str)
 		write(*str++);  // print character
 }
 
+void UART::print(int32_t n, uint8_t base)
+{
+    char itoabuf[12]; //DWORD 2^32 is 10 digits (in decimal) + sign + null terminating char
+    itoa(n, itoabuf, base);
+    print(itoabuf);
+}
+
 void UART::print_P(const char *pstr)
 {       
     char ch;
@@ -175,10 +181,4 @@ void UART::printHEX(uint8_t val)
     // print the characters
     write(upperNibble);
     write(lowerNibble);
-}
-
-void UART::printDEC(uint32_t i)
-{
-    itoa(i, itoabuf, 10);
-    print(itoabuf);
 }

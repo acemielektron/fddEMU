@@ -1,0 +1,10 @@
+{
+	"files.associations": {
+		"*.ipp": "cpp",
+		"*.tcc": "cpp",
+		"regex": "cpp",
+		"string_view": "cpp",
+		"export": "c",
+		"types": "c"
+	}
+}

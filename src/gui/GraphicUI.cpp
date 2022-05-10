@@ -19,13 +19,11 @@
 
 #include "fddEMU.h"
 #include "GraphicUI.h"
-#include "FloppyDrive.h"
-#include "SerialUI.h" //debug
-#include "DiskFile.h"
 #include "ADCButton.h"
-
+#include "FloppyDrive.h"
+#include "DiskFile.h"
 #if ENABLE_GUI
-class GraphicUI disp; //will use as extern
+	class GraphicUI disp; //will use as extern
 #endif //ENABLE_GUI
 
 
@@ -63,7 +61,7 @@ void GraphicUI::statusScreen()
 	u8g_uint_t w = u8g_GetWidth(&u8g);
 	//Draw drive0		
 	u8g_SetDefaultForegroundColor(&u8g); //set color back to foreground color
-	if (isDrive0() ) 	
+	if (isDriveA() ) 	
 	{
 		drawXBMP(X_OFS, Y_OFS_A, floppym_width, floppym_height, floppya_bits);	
 		u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_A-1, floppym_width+2,floppym_height+2);
@@ -80,7 +78,7 @@ void GraphicUI::statusScreen()
 #if ENABLE_DRIVE_B
 	//Draw drive1	
 	u8g_SetDefaultForegroundColor(&u8g); //set color back to foreground color
-	if (isDrive1() ) 
+	if (isDriveB() ) 
 	{
 		drawXBMP(X_OFS, Y_OFS_B, floppym_width, floppym_height, floppyb_bits);
 		u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_B-1, floppym_width+2,floppym_height+2);
@@ -103,9 +101,9 @@ void GraphicUI::loadingScreen()
 	u8g_uint_t w = u8g_GetWidth(&u8g);
 	u8g_uint_t d = (w-getStrWidthP(str_loading))/2;
 
-	if (isDrive0() )
+	if (isDriveA() )
 		drawXBMP( (w - floppym_width)/2, 0, floppym_width, floppym_height, floppya_bits);
-	else if (isDrive1() )	
+	else if (isDriveB() )	
 		drawXBMP( (w - floppym_width)/2, 0, floppym_width, floppym_height, floppyb_bits);
 
 	drawStrP(d, floppym_height + 5, str_loading);	
@@ -118,9 +116,9 @@ void GraphicUI::busyScreen()
 	u8g_uint_t w = u8g_GetWidth(&u8g);
 	u8g_uint_t d = (w-getStrWidthP(str_busy))/2;
 
-	if (isDrive0() )
+	if (isDriveA() )
 		drawXBMP( (w - floppym_width)/2, 0, floppym_width, floppym_height, floppya_bits);
-	else if (isDrive1() )	
+	else if (isDriveB() )	
 		drawXBMP ( (w - floppym_width)/2, 0, floppym_width, floppym_height, floppyb_bits);
 
 	drawStrP(d, floppym_height + 5, str_busy);	
@@ -177,7 +175,7 @@ void GraphicUI::showNoticeP(const char *header, const char *message)
 
 void GraphicUI::showDriveIdle()
 {	
-	selectDrive(0);	
+	selectDrive(0);
 	setPage(PAGE_STATUS);
 	idle_timer = 0; //update screen ASAP
 	update();
@@ -185,7 +183,7 @@ void GraphicUI::showDriveIdle()
 
 void GraphicUI::showDriveBusy(uint8_t r_drive)
 {	
-	selectDrive(r_drive);	
+	selectDrive(r_drive);		
 	setPage(PAGE_BUSY);
 	idle_timer = 0; //update screen ASAP
 	update();
@@ -200,7 +198,7 @@ void GraphicUI::showDriveLoading()
 
 void GraphicUI::setPage(uint8_t r_page)
 {	
-	page = r_page; //set requested page
+	f.page = r_page; //set requested page
 	if (sleep_timer == 0)
 	{		
 		GraphicUI::sleepOff();
@@ -223,7 +221,7 @@ setPage(PAGE_SPLASH);
 
 void GraphicUI::drawPage()
 {
-switch(page)
+switch(f.page)
 	{
 		case PAGE_STATUS:
 			statusScreen();
@@ -342,8 +340,8 @@ void GraphicUI::buttonAction(int8_t button)
         if (getSelectedDrive() == 0)
           selectDrive(DRIVE0);	
       #if ENABLE_DRIVE_B  
-        else if (getSelectedDrive() == DRIVE0)
-          selectDrive(DRIVE1);	
+        else if (isDriveA())
+          selectDrive(DRIVE1);
       #endif //ENABLE_DRIVE_B
       }
       else if (getPage() == PAGE_MENU) //behave as file select+
@@ -355,7 +353,7 @@ void GraphicUI::buttonAction(int8_t button)
     case  BTN_UP:  //Previous file
       if (getPage() == PAGE_STATUS)  //behave as drive select-
       {
-        if (getSelectedDrive() == DRIVE1)
+        if (isDriveB())
           selectDrive(DRIVE0);	
       }
       else if (getPage() == PAGE_MENU) //behave as file select-

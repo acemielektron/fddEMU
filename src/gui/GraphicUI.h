@@ -53,11 +53,14 @@ class U8G{  //Encapsulate some u8g functions
 
 class GraphicUI: public U8G {
 private:
+struct __attribute__((__packed__)) uiFlags
+{
+	unsigned int page : 6;
+	unsigned int driveSel : 2;
+}f;
 uint8_t idle_timer;
 uint8_t sleep_timer;
 uint8_t notice_timer;
-uint8_t page;
-uint8_t drive_sel;
 const char *notice_header;
 const char *notice_message;
 void drawPage();
@@ -76,17 +79,17 @@ int8_t menu_max;
 char menuFileNames[MENU_ITEMS][FNAME_SIZE];
 GraphicUI();
 void setPage(uint8_t);
-uint8_t getPage() {return page;} 
+uint8_t getPage() {return f.page;} 
 void showNoticeP(const char *, const char *);
 void showNotice(const char *, char *);
 void update();
 void showDriveBusy(uint8_t);
 void showDriveIdle();
 void showDriveLoading();
-void selectDrive(uint8_t r_drive) {drive_sel = r_drive & (DRIVE0 | DRIVE1);}
-uint8_t getSelectedDrive() {return (drive_sel & (DRIVE0 | DRIVE1) );} 
-uint8_t isDrive0() {return drive_sel & DRIVE0;}
-uint8_t isDrive1() {return drive_sel & DRIVE1;}
+void selectDrive(uint8_t r_drive) {f.driveSel = r_drive;}
+uint8_t getSelectedDrive() {return f.driveSel;} 
+bool isDriveA() {return f.driveSel & (1 << 0) ? true:false;}
+bool isDriveB() {return f.driveSel & (1 << 1) ? true:false;}
 void loadMenuFiles();
 void buttonAction(int8_t button);
 };

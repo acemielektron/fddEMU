@@ -20,17 +20,10 @@
 
 #include "fddEMU.h"
 #include "FloppyDrive.h"
-#include "SerialUI.h"
+#include "serial/SerialUI.h"
 #include <avr/io.h>
-#if ENABLE_WDT
-	#include <avr/wdt.h>
-#endif  //ENABLE_WDT
-#include "pff.h"
-#include "GraphicUI.h"
+#include "petitfs/pff.h"
 #include "DiskFile.h"
-#include "ADCButton.h"
-#include "VirtualFloppyFS.h"
-
 
 int main(void)
 {
@@ -52,15 +45,16 @@ int main(void)
 	#if ENABLE_WDT
 		wdt_reset();
 	#endif //ENABLE_WDT
-		if (GET_DRVSEL() )
+		if (ds.isDrvChanged())
 		{
+			uint8_t selectedDrive = ds.getDriveSel();
 		#if ENABLE_GUI
-			disp.showDriveBusy(GET_DRVSEL());
+			disp.showDriveBusy(selectedDrive);
 		#endif //ENABLE_GUI
 		#if ENABLE_SERIAL || DEBUG
 			Serial.print_P(str_busy); //very short message, take too long and get drive read errors
 		#endif //#if ENABLE_SERIAL || DEBUG
-			drive[GET_DRVSEL() - 1].run();
+			drive[selectedDrive - 1].run();
 		#if ENABLE_VFFS
 			vffs.loadImage(); //check if a drive is flagged for vffs load and load if it is
 		#endif //ENABLE_VFFS

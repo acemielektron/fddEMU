@@ -22,7 +22,7 @@
 
 #include <avr/io.h>
 #include <avr/pgmspace.h>
-#include<util/delay.h>
+#include <util/delay.h>
 //if stdio is included stdio streams will be initialized for printf/scanf functions
 #include <stdio.h> //sprintf & printf
 #include <string.h> //strlen
@@ -38,18 +38,23 @@
 class __PGMSTR;
 #define F(string_literal) (reinterpret_cast<const __PGMSTR *>(PSTR(string_literal)))
 
+//define bases for printing numbers
+#define BIN 2
+#define OCT 8
+#define DEC 10
+#define HEX 16
+
 class UART{
     public:
     virtual int write(char) = 0;
     virtual int read(void) = 0;
-    void print(char *);
-    void print(const char *str) {print((char *)str);}
-    void print_P(const char *);
-    void print(const __PGMSTR *fstr) {print_P((const char *)fstr);}
-    void printHEX(uint8_t);
-    void printHEX(uint16_t val) {printHEX((uint8_t) (val >> 8)); printHEX((uint8_t) val);}
-    void printHEX(uint32_t val) {printHEX((uint16_t) (val >> 16)); printHEX((uint16_t) val);}
-    void printDEC(uint32_t);
+    void print(char *); // print from ram
+    void print(const char *str) {print((char *)str);} // print from ram const 
+    void print_P(const char *); //print from flash
+    void print(const __PGMSTR *fstr) {print_P((const char *)fstr);} //print from flash F() macro
+    void print(int32_t n, uint8_t base); // print number, base = ? BIN/OCT/DEC/HEX
+    void print(int32_t n) {print(n, DEC);} // print number, base = 10    
+    void printHEX(uint8_t); // print hex byte  
 };
 
 class UART0 : public UART{

@@ -21,12 +21,10 @@
 #include "SerialUI.h"
 #include "FloppyDrive.h" //drive
 #include "DiskFile.h" //sdfile
-#include "GraphicUI.h" //disp
 
-
-#if ENABLE_SERIAL || DEBUG
-class SerialUI ser;
-#endif //ENABLE_SERIAL || DEBUG
+#if ENABLE_SERIAL
+  class SerialUI ser;
+#endif //ENABLE_SERIAL
 
 SerialUI::SerialUI(void)
 {
@@ -62,11 +60,13 @@ void SerialUI::readRx()
             if (file_index < 0) file_index = 0;
             if (file_index >= sdfile.nFiles) file_index=sdfile.nFiles;      
             sdfile.openDir((char *)s_RootDir); //rewind directory
-            for (int16_t i = 0; i <= file_index; i++) sdfile.getNextFile(); //skip files
+            for (int16_t i = 0; i <= file_index; i++) sdfile.getNextFile(); //skip files                        
+            Serial.write('>'); 
             Serial.print_P(str_selected);      
             if (sdfile.getFileName()[0] != 0) Serial.print(sdfile.getFileName());
-            else Serial.print_P(str_label);
-            Serial.write('\n');  
+            else Serial.print_P(str_label);                        
+            for (int8_t k=0; k < 14; k++) Serial.write(' '); //clear current row in console
+            Serial.write('\r'); // return start of the same row  in console    
 		    break;      
 	    case 'l':	//Load
 	    case 'L':
@@ -75,9 +75,11 @@ void SerialUI::readRx()
                 char filename[13];
                 
                 memcpy(filename, sdfile.getFileName(), 13);
+                Serial.write('>'); 
                 Serial.print_P(str_loading);
                 if (filename[0] != 0) Serial.print(filename);
                 else Serial.print_P(str_label);
+                for (int8_t k=0; k < 14; k++) Serial.write(' '); //clear current row in console
                 Serial.write('\n');              
                 if (filename[0] != 0) drive[drv_sel -1].load(filename);
                 else drive[drv_sel -1].loadVirtualDisk();
@@ -90,8 +92,7 @@ void SerialUI::readRx()
             if (drv_sel) 
             {
                 Serial.print_P(str_eject);
-                if (drv_sel == DRIVE0) Serial.write('A');
-                else Serial.write('B');
+                (drv_sel == DRIVE0) ? Serial.write('A'):Serial.write('B');
                 Serial.write('\n');
                 drive[drv_sel -1].eject();
             }

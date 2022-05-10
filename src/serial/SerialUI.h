@@ -20,8 +20,6 @@
 #ifndef SERIALUI_H
 #define SERIALUI_H
 
-#include "simpleUART.h"
-
 class SerialUI{
     public:
     uint8_t drv_sel;

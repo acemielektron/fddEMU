@@ -51,16 +51,16 @@ jobs:
       run: make MCU=atmega328p clean      
     #atmega32u4-single-flipped
     - name: build atmega32u4-single-flipped
-      run: make MCU=atmega32u4 GUI=1 SERIAL=1 DUAL=0 VFFS=1 DEBUG=0 FLIP=1
+      run: make MCU=atmega32u4 GUI=1 SERIAL=1 DUAL=0 VFFS=0 DEBUG=0 FLIP=1
     - name: Copy atmega32u4-single-flipped
       run: mv fddEMU.hex ./atmega32u4-single-flipped.hex
     - name: make clean
       run: make MCU=atmega32u4 clean
     #atmega32u4-dual-flipped
     - name: build atmega32u4-dual-flipped
-      run: make MCU=atmega32u4 GUI=1 SERIAL=1 DUAL=1 VFFS=1 DEBUG=0 FLIP=1
+      run: make MCU=atmega32u4 GUI=1 SERIAL=1 DUAL=1 VFFS=0 DEBUG=0 FLIP=1
     - name: Copy atmega32u4-dual-flipped-flipped
-      run: mv fddEMU.hex ./atmega32u4-dual.hex
+      run: mv fddEMU.hex ./atmega32u4-dual-flipped.hex
     - name: make clean
       run: make MCU=atmega32u4 clean
     #upload built firmware files  

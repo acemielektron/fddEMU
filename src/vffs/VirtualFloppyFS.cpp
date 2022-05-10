@@ -18,15 +18,15 @@
 // -----------------------------------------------------------------------------
 
 #include "fddEMU.h"
-#include "FatStructures.h"
 #include "VirtualFloppyFS.h"
+#include "FatStructures.h"
 #include "FloppyDrive.h"
-#include "diskio.h" //direct SD access
-#include "SerialUI.h" //debug
-#include "pff.h" //file attributes
+#include "petitfs/diskio.h" //direct SD access
+#include "petitfs/pff.h" //file attributes
 #include <string.h>
+ 
 
-//Virtual FLoppy Boot sector
+//Virtual Floppy Boot sector
 #define BPS     512     //bytes per sector
 #define SPT     18      //sectors per track
 #define SPC     1       //sectors per cluster
@@ -129,9 +129,9 @@ uint32_t findSDrootSector(uint8_t *buffer)
         rootSect = bootSect + p32BS->reservedSectors + (p32BS->nFATs*p32BS->sectorsPerFAT) +( (p32BS->rootCluster -2)*p32BS->sectorsPerCluster );
 #if DEBUG    
     Serial.print(F("SD boot sect: "));
-    Serial.printDEC(bootSect);
+    Serial.print(bootSect);
     Serial.print(F(" root sect: "));
-    Serial.printDEC(rootSect);
+    Serial.print(rootSect);
     Serial.write('\n');
 #endif    
     return rootSect;
