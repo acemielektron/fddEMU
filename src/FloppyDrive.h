@@ -129,7 +129,7 @@ struct __attribute__((__packed__)) driveControlFlags
 class driveStatus
 {
 	private:
-		struct driveControlFlags f;		
+		volatile struct driveControlFlags f;		
 	public:
 		driveStatus() {f.driveSel = 0; f.trackChanged = 0;}
 		void setTrackChanged() {f.trackChanged = 1;}
