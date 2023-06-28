@@ -165,7 +165,9 @@ uint8_t *prepSectorBuffer(uint8_t track, uint8_t head, uint8_t sector, uint8_t s
 	secHeader.id = 0xFE; // ID mark
 	secHeader.track = track;
 	secHeader.side = head;
-	secHeader.sector = sector + 1;
+//	secHeader.sector = sector + 1;
+// start opus at index 0
+	secHeader.sector = sector + 0;
 	secHeader.length = seclen;
 	crc = calc_crc((uint8_t*)&secHeader, 5);
 	secHeader.crcHI = crc >> 8;
@@ -269,7 +271,10 @@ char *FloppyDrive::diskInfoStr()	//Generate disk CHS info string
 	infostring[1] = 0;
 	itoa(numTrack, convbuf, 10); //max 255 -> 3 digits
 	strcat(infostring, convbuf);
-	strcat(infostring, "H2S");
+	strcat(infostring, "H");
+	itoa(numHead, convbuf, 10); //max 255 -> 3 digits
+	strcat(infostring, convbuf);
+	strcat(infostring, "S");
 	itoa(numSec, convbuf, 10); //max 255 -> 3 digits
 	strcat(infostring, convbuf);
 	return infostring;
@@ -358,7 +363,8 @@ void FloppyDrive::run()
 		}
 		side = (SIDE()) ? 0:1; //check side
 		//start sector	
-		lba=(track*2+side)*numSec+sector;//LBA = (C × HPC + H) × SPT + (S − 1)			
+		uint8_t sides=1;
+		lba=(track*numHead+side)*numSec+sector;//LBA = (C × HPC + H) × SPT + (S − 1)			
 		getSectorData(lba); //get sector from SD
 		wBuffer = prepSectorBuffer(track, side, sector, flags.seclen);
 		fdcWriteHeader(bitLength, secHeader.buffer);
