@@ -28,67 +28,67 @@
 
 
 ///https://github.com/olikraus/u8glib/blob/master/sys/arm/examples/menu/menu.c
-void GraphicUI::drawMenu(void) 
+void GraphicUI::drawMenu(void)
 {
 	uint8_t i, h;
-	u8g_uint_t w, d;	
+	u8g_uint_t w, d;
 
 	//u8g_SetFont(&u8g, u8g_font_6x10);
 	u8g_SetFontRefHeightText(&u8g);
 	//u8g_SetFontPosTop(&u8g);
   	h = u8g_GetFontAscent(&u8g)-u8g_GetFontDescent(&u8g);
 	w = u8g_GetWidth(&u8g);
-	for( i = 0; i < menu_max; i++ ) 
+	for( i = 0; i < menu_max; i++ )
 	{
     	d = (w-getStrWidth(menuFileNames[i]))/2;
     	u8g_SetDefaultForegroundColor(&u8g);
-    	if ( i == menu_sel ) 
-    	{			
+    	if ( i == menu_sel )
+    	{
       		u8g_DrawBox(&u8g, 0, i*h+1, w, h);
       		u8g_SetDefaultBackgroundColor(&u8g);
     	}
-    	u8g_DrawStr(&u8g, d, i*h, menuFileNames[i]);	
+    	u8g_DrawStr(&u8g, d, i*h, menuFileNames[i]);
   	}
   u8g_SetDefaultForegroundColor(&u8g); //set color back to foreground color
 }
 
 void GraphicUI::statusScreen()
-{	
+{
 #define X_OFS	1
 #define Y_OFS_A	3
 #define Y_OFS_B 33
-	
+
 	u8g_uint_t w = u8g_GetWidth(&u8g);
-	//Draw drive0		
+	//Draw drive0
 	u8g_SetDefaultForegroundColor(&u8g); //set color back to foreground color
-	if (isDriveA() ) 	
+	if (isDriveA() )
 	{
-		drawXBMP(X_OFS, Y_OFS_A, floppym_width, floppym_height, floppya_bits);	
+		drawXBMP(X_OFS, Y_OFS_A, floppym_width, floppym_height, floppya_bits);
 		u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_A-1, floppym_width+2,floppym_height+2);
 		u8g_DrawBox(&u8g, X_OFS+floppym_width+2, Y_OFS_A-1, w-(X_OFS+floppym_width+2),floppym_height+2);
 		u8g_SetDefaultBackgroundColor(&u8g);	//set color black
 	}
 	else drawXBMP(X_OFS, Y_OFS_A, floppym_width, floppym_height, floppya_bits);
-	//Disk0 info	
+	//Disk0 info
 	u8g_uint_t d = (w-floppym_width-getStrWidth(drive[0].fName))/2;
-	drawStr(floppym_width+d, Y_OFS_A+1, drive[0].fName);		
+	drawStr(floppym_width+d, Y_OFS_A+1, drive[0].fName);
 	char *infostr = drive[0].diskInfoStr();
 	d = (w-floppym_width-getStrWidth(infostr))/2;
 	drawStr(floppym_width+d, Y_OFS_A+14, infostr);
 #if ENABLE_DRIVE_B
-	//Draw drive1	
+	//Draw drive1
 	u8g_SetDefaultForegroundColor(&u8g); //set color back to foreground color
-	if (isDriveB() ) 
+	if (isDriveB() )
 	{
 		drawXBMP(X_OFS, Y_OFS_B, floppym_width, floppym_height, floppyb_bits);
 		u8g_DrawFrame(&u8g, X_OFS-1, Y_OFS_B-1, floppym_width+2,floppym_height+2);
 		u8g_DrawBox(&u8g, X_OFS+floppym_width+2, Y_OFS_B-1, w-(X_OFS+floppym_width+2),floppym_height+2);
 		u8g_SetDefaultBackgroundColor(&u8g);	//set color black
-	}			
+	}
 	else drawXBMP(X_OFS, Y_OFS_B, floppym_width, floppym_height, floppyb_bits);
 	//Disk1 info
-	d = (w-floppym_width-getStrWidth(drive[1].fName))/2;	
-	drawStr(floppym_width+d, Y_OFS_B+1, drive[1].fName);	
+	d = (w-floppym_width-getStrWidth(drive[1].fName))/2;
+	drawStr(floppym_width+d, Y_OFS_B+1, drive[1].fName);
 	infostr = drive[1].diskInfoStr();
 	d = (w-floppym_width-getStrWidth(infostr))/2;
 	drawStr(floppym_width+d, Y_OFS_B+14, infostr);
@@ -103,12 +103,12 @@ void GraphicUI::loadingScreen()
 
 	if (isDriveA() )
 		drawXBMP( (w - floppym_width)/2, 0, floppym_width, floppym_height, floppya_bits);
-	else if (isDriveB() )	
+	else if (isDriveB() )
 		drawXBMP( (w - floppym_width)/2, 0, floppym_width, floppym_height, floppyb_bits);
 
-	drawStrP(d, floppym_height + 5, str_loading);	
+	drawStrP(d, floppym_height + 5, str_loading);
 	d = (w-getStrWidth(menuFileNames[menu_sel]))/2;
-	drawStr(d, floppym_height + 20, menuFileNames[menu_sel]);	
+	drawStr(d, floppym_height + 20, menuFileNames[menu_sel]);
 }
 
 void GraphicUI::busyScreen()
@@ -118,12 +118,12 @@ void GraphicUI::busyScreen()
 
 	if (isDriveA() )
 		drawXBMP( (w - floppym_width)/2, 0, floppym_width, floppym_height, floppya_bits);
-	else if (isDriveB() )	
+	else if (isDriveB() )
 		drawXBMP ( (w - floppym_width)/2, 0, floppym_width, floppym_height, floppyb_bits);
 
-	drawStrP(d, floppym_height + 5, str_busy);	
+	drawStrP(d, floppym_height + 5, str_busy);
 	d = (w-getStrWidth(drive[getSelectedDrive()-1].fName))/2;
-	drawStr(d, floppym_height + 20, drive[getSelectedDrive()-1].fName);	
+	drawStr(d, floppym_height + 20, drive[getSelectedDrive()-1].fName);
 }
 
 void GraphicUI::noticeScreen()
@@ -135,7 +135,7 @@ void GraphicUI::noticeScreen()
 
 	drawStrP(d, caution_height + 5, notice_header);
 	d = (w-getStrWidthP(notice_message))/2;
-	drawStrP(d, caution_height + 20, notice_message);	
+	drawStrP(d, caution_height + 20, notice_message);
 }
 
 void GraphicUI::splashScreen()
@@ -155,7 +155,11 @@ void GraphicUI::init()
 {
 	u8g_SetPinInput(PN(2,5)); u8g_SetPinLevel(PN(2,5), 1); u8g_SetPinOutput(PN(2,5));
 	u8g_SetPinInput(PN(2,4)); u8g_SetPinLevel(PN(2,4), 1); u8g_SetPinOutput(PN(2,4));
-	u8g_InitI2C(&u8g, &u8g_dev_ssd1306_128x64_2x_i2c, U8G_I2C_OPT_NONE);
+#if OLED_128X32
+	u8g_InitI2C(&u8g, &u8g_dev_ssd1306_128x32_2x_i2c, U8G_I2C_OPT_NONE);
+#else // default
+u8g_InitI2C(&u8g, &u8g_dev_ssd1306_128x64_2x_i2c, U8G_I2C_OPT_NONE);
+#endif // OLED_128X32
 #if FLIP_SCREEN
 	u8g_SetRot180(&u8g);
 #endif //FLIP_SCREEN
@@ -174,7 +178,7 @@ void GraphicUI::showNoticeP(const char *header, const char *message)
 }
 
 void GraphicUI::showDriveIdle()
-{	
+{
 	selectDrive(0);
 	setPage(PAGE_STATUS);
 	idle_timer = 0; //update screen ASAP
@@ -182,31 +186,31 @@ void GraphicUI::showDriveIdle()
 }
 
 void GraphicUI::showDriveBusy(uint8_t r_drive)
-{	
-	selectDrive(r_drive);		
+{
+	selectDrive(r_drive);
 	setPage(PAGE_BUSY);
 	idle_timer = 0; //update screen ASAP
 	update();
 }
 
 void GraphicUI::showDriveLoading()
-{		
+{
 	setPage(PAGE_LOADING);
 	idle_timer = 0; //update screen ASAP
 	update();
 }
 
 void GraphicUI::setPage(uint8_t r_page)
-{	
+{
 	f.page = r_page; //set requested page
 	if (sleep_timer == 0)
-	{		
+	{
 		GraphicUI::sleepOff();
-	#if DEBUG	
-		Serial.print(F("Screen wakeup\n"));		
+	#if DEBUG
+		Serial.print(F("Screen wakeup\n"));
 	#endif //DEBUG
 		//showDriveIdle();
-	}	
+	}
 	sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
 }
 
@@ -226,7 +230,7 @@ switch(f.page)
 		case PAGE_STATUS:
 			statusScreen();
 			break;
-		case PAGE_SPLASH:		
+		case PAGE_SPLASH:
 			splashScreen();
 			break;
 		case PAGE_BUSY:
@@ -234,15 +238,15 @@ switch(f.page)
 			break;
 		case PAGE_LOADING:
 			loadingScreen();
-			break;		
+			break;
 		case PAGE_NOTICE:
 			noticeScreen();
 			break;
 		case PAGE_MENU:
 			drawMenu();
-			break;				
+			break;
 		default:
-			statusScreen();	
+			statusScreen();
 	}
 }
 
@@ -262,7 +266,7 @@ void GraphicUI::update()
 			//update page
 			u8g_FirstPage(&u8g);
     		do	{
-    			drawPage();				
+    			drawPage();
     		} while ( u8g_NextPage(&u8g) );
 
 			sleep_timer --;
@@ -279,37 +283,37 @@ void GraphicUI::update()
 }
 
 void GraphicUI::loadMenuFiles()
-{      
+{
   menu_max = MENU_ITEMS;
   if (sdfile.nFiles+1 < menu_max) menu_max = sdfile.nFiles+1;
 
   //Limit menu selection
-  if (menu_sel < 0) 
+  if (menu_sel < 0)
 	  {
 	  menu_sel = 0;
 	  idx_sel--;
 	  }
-  else if (menu_sel >= menu_max) 
+  else if (menu_sel >= menu_max)
 	{
 	  menu_sel = menu_max - 1;
 	  idx_sel++;
 	}
   //Limit index selection (+1)add one more entry for "nodisk" or "virtual disk"
   if (idx_sel > (sdfile.nFiles - MENU_ITEMS +1)) idx_sel = sdfile.nFiles - MENU_ITEMS +1;
-  else if (idx_sel < 0) idx_sel = 0;  
+  else if (idx_sel < 0) idx_sel = 0;
   sdfile.openDir((char *)s_RootDir);  //open directory
   for (int16_t i=0; i < idx_sel; i++) sdfile.getNextFile(); //skip some files
   for (int8_t i=0; i < menu_max; i++)
-  {    
-	if (sdfile.getNextFile())  
-		memcpy(menuFileNames[i], sdfile.getFileName(), 13);   
+  {
+	if (sdfile.getNextFile())
+		memcpy(menuFileNames[i], sdfile.getFileName(), 13);
 	else
-	{	
+	{
 	#if ENABLE_VFFS
   		strcpy_P(menuFileNames[i], str_label);
   	#else
 		strcpy_P(menuFileNames[i], str_nodisk);
-  	#endif //ENABLE_VFFS	
+  	#endif //ENABLE_VFFS
 	}
   }
 }
@@ -324,22 +328,22 @@ void GraphicUI::buttonAction(int8_t button)
   sleep_timer = SLEEP_TIMEOUT; //reset sleep timer
   switch(button)
   {
-    case  BTN_EXTRA:  //load virtual disk to selected drive     
+    case  BTN_EXTRA:  //load virtual disk to selected drive
       if (getPage() == PAGE_STATUS)  //behave as drive select
       {
         if (getSelectedDrive())
-        {        
-          drive[getSelectedDrive() -1].loadVirtualDisk();     
+        {
+          drive[getSelectedDrive() -1].loadVirtualDisk();
           showDriveIdle();
         }
       }
       break;
-    case  BTN_DOWN:  //Next file    
+    case  BTN_DOWN:  //Next file
       if (getPage() == PAGE_STATUS)  //behave as drive select+
       {
         if (getSelectedDrive() == 0)
-          selectDrive(DRIVE0);	
-      #if ENABLE_DRIVE_B  
+          selectDrive(DRIVE0);
+      #if ENABLE_DRIVE_B
         else if (isDriveA())
           selectDrive(DRIVE1);
       #endif //ENABLE_DRIVE_B
@@ -348,27 +352,27 @@ void GraphicUI::buttonAction(int8_t button)
       {
         menu_sel++;
         loadMenuFiles();
-      }     
+      }
       break;
     case  BTN_UP:  //Previous file
       if (getPage() == PAGE_STATUS)  //behave as drive select-
       {
         if (isDriveB())
-          selectDrive(DRIVE0);	
+          selectDrive(DRIVE0);
       }
       else if (getPage() == PAGE_MENU) //behave as file select-
       {
         menu_sel--;
         loadMenuFiles();
-      }    
+      }
 		  break;
-    case  BTN_OK:  //load disk    
+    case  BTN_OK:  //load disk
       if (getPage() == PAGE_STATUS) //if we are in STATUS page
       {
         if (getSelectedDrive()) //if a drive is selected open file selection menu
         {
   	      menu_sel = 0;
-          idx_sel = 0;			
+          idx_sel = 0;
           setPage(PAGE_MENU);
           loadMenuFiles();
         }
@@ -380,21 +384,21 @@ void GraphicUI::buttonAction(int8_t button)
         showDriveLoading();
 		if (strcmp_P(menuFileNames[menu_sel], str_label) == 0)
 			drive[getSelectedDrive() -1].loadVirtualDisk();
-		else	
-        	load_res = drive[getSelectedDrive() -1].load(menuFileNames[menu_sel]);     
+		else
+        	load_res = drive[getSelectedDrive() -1].load(menuFileNames[menu_sel]);
         if (load_res) setPage(PAGE_STATUS); //return to status else show error message
       }
-		  break;		
+		  break;
     case  BTN_CANCEL:  //eject disk
       if (getPage() == PAGE_MENU)  //behave as cancel
       {
         setPage(PAGE_STATUS); //return to status
       }
       else if (getPage() == PAGE_STATUS)
-      {      
-        if (getSelectedDrive()) //if a drive is selected behave as eject        
-          drive[getSelectedDrive() - 1].eject();        
-      }                  
+      {
+        if (getSelectedDrive()) //if a drive is selected behave as eject
+          drive[getSelectedDrive() - 1].eject();
+      }
     break;
-  }  
+  }
 }
