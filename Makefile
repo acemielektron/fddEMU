@@ -8,11 +8,12 @@ WDT = 1		#WDT enabled = 1
 VFFS = 0	#Virtual FLoppy Disabled
 GUI = 1		#Graphical User Interface enabled
 SERIAL = 0	#Serial disabled
+HALFLCD = 1 #Half height (128x32) OLED instead of full height (128x64) OLED
 
 #if DEBUG is enabled, enable SERIAL
 ifneq ($(DEBUG),0)
 	SERIAL = 1
-endif 
+endif
 
 # Files
 EXT_C   = c
@@ -26,7 +27,7 @@ LUFAOBJS = \
 	$(patsubst %.$(EXT_C),%.o,$(wildcard ./libs/lufa/LUFA/Drivers/USB/Core/AVR8/Template/*.$(EXT_C)))\
 	$(patsubst %.$(EXT_C),%.o,$(wildcard ./libs/lufa/LUFA/Drivers/USB/Class/Device/*.$(EXT_C)))\
 	$(patsubst %.$(EXT_C),%.o,$(wildcard ./libs/lufa/LUFA/Drivers/USB/Class/Common/*.$(EXT_C)))\
-	$(patsubst %.$(EXT_C),%.o,$(wildcard ./libs/lufa/LUFA/Drivers/USB/Peripheral/AVR8/*.$(EXT_C))) 	
+	$(patsubst %.$(EXT_C),%.o,$(wildcard ./libs/lufa/LUFA/Drivers/USB/Peripheral/AVR8/*.$(EXT_C)))
 
 SERIALOBJS = \
 	$(patsubst %.$(EXT_C),%.o,$(wildcard src/serial/*.$(EXT_C)))\
@@ -46,9 +47,9 @@ SRCOBJS = \
 	$(patsubst %.$(EXT_C),%.o,$(wildcard ./src/avrFlux/*.$(EXT_C))) \
 	$(patsubst %.$(EXT_C),%.o,$(wildcard ./src/petitfs/*.$(EXT_C))) \
 	$(patsubst %.$(EXT_C),%.o,$(wildcard ./src/*.$(EXT_C))) \
-	$(patsubst %.$(EXT_C++),%.o,$(wildcard ./src/*.$(EXT_C++))) 
+	$(patsubst %.$(EXT_C++),%.o,$(wildcard ./src/*.$(EXT_C++)))
 #$(patsubst %.$(EXT_ASM),%.o,$(wildcard ./src/*.$(EXT_ASM)))
-#$(patsubst %.$(EXT_ASM),%.o,$(wildcard ./src/avrFlux/*.$(EXT_ASM))) \	
+#$(patsubst %.$(EXT_ASM),%.o,$(wildcard ./src/avrFlux/*.$(EXT_ASM))) \
 
 #MCU = atmega32u4
 MCU = atmega328p
@@ -56,21 +57,21 @@ OSC = 16000000UL
 
 CC = avr-gcc
 CXX = avr-g++
-INCLUDES	= -I ./ -I src  -I /usr/avr/include -I /usr/lib/avr/include 
+INCLUDES	= -I ./ -I src  -I /usr/avr/include -I /usr/lib/avr/include
 
 CFLAGS = -Os -mmcu=$(MCU) -DF_CPU=$(OSC) -Wall $(INCLUDES)
 CFLAGS += -ffunction-sections -fdata-sections -Wl,--gc-sections
 CFLAGS += -DENABLE_WDT=$(WDT)
 #CFLAGS += --save-temps #save temporary files (.s,.i,.ii)
 CXXFLAGS = -Os -mmcu=$(MCU) -DF_CPU=$(OSC) -Wall $(INCLUDES)
-CXXFLAGS += -DENABLE_DRIVE_B=$(DUAL) -DDEBUG=$(DEBUG) -DFLIP_SCREEN=$(FLIP) -DENABLE_WDT=$(WDT) 
-CXXFLAGS += -DENABLE_VFFS=$(VFFS) -DENABLE_GUI=$(GUI) -DENABLE_SERIAL=$(SERIAL)
+CXXFLAGS += -DENABLE_DRIVE_B=$(DUAL) -DDEBUG=$(DEBUG) -DFLIP_SCREEN=$(FLIP) -DENABLE_WDT=$(WDT)
+CXXFLAGS += -DENABLE_VFFS=$(VFFS) -DENABLE_GUI=$(GUI) -DENABLE_SERIAL=$(SERIAL) -DOLED_128X32=$(HALFLCD)
 LDFLAGS = -lm -g
 ASFLAGS = -mmcu=$(MCU) -Os -DF_CPU=$(OSC)
 
 #check target microcontroller
 ifeq ($(MCU),atmega32u4)
-	OBJECTS = $(SRCOBJS)		
+	OBJECTS = $(SRCOBJS)
 	PORT = /dev/ttyACM0
 ifeq ($(SERIAL),1)
 	INCLUDES	+= -I src/usb-cdc -I libs/lufa -I libs/lufa/LUFA/Drivers
@@ -94,12 +95,12 @@ endif
 ifneq ($(SERIAL),0)
 	INCLUDES += -I src/serial
 	OBJECTS += $(SERIALOBJS)
-endif	
+endif
 #if GUI is enabled add U8G
 ifneq ($(GUI),0)
 	INCLUDES += -I src/gui -I libs/u8glib/csrc
 	OBJECTS += $(GUIOBJS)
-endif	
+endif
 #check VFFS
 ifeq ($(VFFS),1)
 	OBJECTS += $(VFFSOBJS)
@@ -113,11 +114,11 @@ $(TARGET).elf: $(OBJECTS)
 %.o: %.cpp
 	${CXX} -c $(CXXFLAGS) $< -o $@
 
-%.o: %c 
+%.o: %c
 	${CC} -c $(CFLAGS) $< -o $@
 
-%.o: %S 
-	${CC} -c $(ASFLAGS) $< -o $@	
+%.o: %S
+	${CC} -c $(ASFLAGS) $< -o $@
 
 .PHONY : clean, hex, flash, bin, size, all
 hex:
@@ -127,7 +128,7 @@ bin:
 size:
 	avr-size --mcu=$(MCU) -C -x $(TARGET).elf
 flash:
-ifeq	($(MCU),atmega32u4) 
+ifeq	($(MCU),atmega32u4)
 	avrdude -p $(MCU) -c avr109 -P $(PORT) -U flash:w:$(TARGET).hex
 else
 	avrdude -p $(MCU) -c arduino -P $(PORT) -U flash:w:$(TARGET).hex
