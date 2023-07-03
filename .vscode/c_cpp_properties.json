@@ -14,7 +14,8 @@
             "cStandard": "gnu17",
             "cppStandard": "gnu++17",
             "intelliSenseMode": "linux-gcc-x64",
-            "compilerArgs": []
+            "compilerArgs": [],
+            "configurationProvider": "ms-vscode.makefile-tools"
         }
     ],
     "version": 4
