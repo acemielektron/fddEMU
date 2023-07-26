@@ -43,6 +43,11 @@ class FloppyDisk{
 		uint8_t numTrack;   //number of tracks
 		uint8_t numHead;   //number of heads/sides
 		uint8_t numSec;     //sectors per track
+		uint8_t gap1;     // gap1 th - sh
+		uint8_t gap2;     // gap2 sh - sd
+		uint8_t gap3;     // gap3 sd - next sh
+		uint8_t gap4;     // gap4 index - th
+		uint8_t gap4b;     // gap4b end - index
 		uint8_t bitLength;  //16 for HD, 32 for DD
 		long startSector;
 		FloppyDisk();

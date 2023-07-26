@@ -380,7 +380,7 @@ void FloppyDrive::run()
 			else debugPrint_P(err_readFDC); //couldnt read full sector		
 			while (IS_WRITE());//wait for WRITE_GATE to deassert
 		}	
-		else fdcWriteGap(bitLength, 54);
+		else fdcWriteGap(bitLength, gap3);
 		sector++; //next sector
 		if (sector >= numSec) sector = 0;
 	}//selected
