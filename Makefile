@@ -3,7 +3,7 @@ TARGET = fddEMU
 #Default build options
 DUAL = 0	#enable drive B = 1
 DEBUG = 0	#enable debug = 1
-FLIP = 1	#flip scren upside down = 1
+FLIP = 0	#flip scren upside down = 1
 WDT = 1		#WDT enabled = 1
 VFFS = 0	#Virtual FLoppy Disabled
 GUI = 1		#Graphical User Interface enabled

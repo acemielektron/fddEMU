@@ -24,7 +24,6 @@
 #include "UINotice.h" //msg.error
 #include <string.h> //memcpy
 
-
 bool FloppyDisk::load(char *filename)
 {
 	uint16_t totalSectors;
@@ -38,6 +37,18 @@ bool FloppyDisk::load(char *filename)
 		return false;
 		}
 	startSector = sdfile.getStartSector();
+  char extension[5];
+  extension[4]=0;
+  int8_t filenameLen = strlen (filename);
+  strncpy(extension,filename+filenameLen-4,4);
+  strlwr(extension);
+
+#if DEBUG
+  Serial.print(F("EXT: "));
+  Serial.print(extension);
+  Serial.write('\n');
+#endif //DEBUG
+
 	if (sdfile.getReadOnly()) flags.readonly = 1;
 
 	if ( disk_readp(wbuf, startSector, 54, 18) ) //FileSystemType@54
@@ -49,10 +60,46 @@ bool FloppyDisk::load(char *filename)
   Serial.print(F("FS: "));
   for (int i=0; i < 5; i++) Serial.write(wbuf[i]);
   Serial.write('\n');
-#endif //DEBUG 
-  if ( (wbuf[0] != 'F') || (wbuf[1] != 'A') || (wbuf[2] != 'T') || (wbuf[3] != '1') ) //Not FAT. Raw image ?
+#endif //DEBUG
+
+    if ((strncmp(extension,".opd",4)==0 )|| (strncmp(extension,".op2",4)==0 )) {
+      #if DEBUG
+      Serial.print(F("OPUS DISK DETECTED"));
+      Serial.write('\n');
+      #endif //DEBUG
+    totalSectors = sdfile.getFileSize() >> 9;  //convert filesize to 512 byte sectors (filesize / 512)
+	  numHead = 2;
+    switch(totalSectors)  //check filesize in sectors
+    { //Standart floppy: C*H*S*512      
+
+      case (uint16_t) (40*1*18/2): //40 track 1 sided Opus image 180k       
+              numTrack = 40;
+              numSec = 18;
+              numHead = 1;
+              bitLength = BIT_LENGTH_DD;
+              flags.seclen = 1; //256b sectors
+              gap1=49;     // gap1 th - sh
+              gap2=22;     // gap2 sh - sd
+              gap3=24;     // gap3 sd - next sh
+              gap4=32;     // gap4 index - th
+              gap4b=56;     // gap4b end - index
+              break;  
+        
+	  case (uint16_t) (80*2*18/2): //80 track 2 sided Opus image 720k       
+        numTrack = 80;
+        numSec = 18;
+        bitLength = BIT_LENGTH_DD;
+        flags.seclen = 1; //256b sectors
+        break;  
+      default:  //not a standart raw floppy image
+        msg.error(err_invfile);
+	      return false;
+    } //switch 
+    } 
+  else if ( (wbuf[0] != 'F') || (wbuf[1] != 'A') || (wbuf[2] != 'T') || (wbuf[3] != '1') ) //Not FAT. Raw image ?
   {
     totalSectors = sdfile.getFileSize() >> 9;  //convert filesize to 512 byte sectors (filesize / 512)
+	  numHead = 2;
     switch(totalSectors)  //check filesize in sectors
     { //Standart floppy: C*H*S*512      
       case (uint16_t)(80*2*36): //3.5" HD   2880KB
@@ -97,6 +144,27 @@ bool FloppyDisk::load(char *filename)
         bitLength = BIT_LENGTH_DD;
         flags.seclen = 1; //256b sectors
         break;        
+      case (uint16_t) (40*1*18/2): //40 track 1 sided Opus image 180k       
+        // only here if boot.img is 180k opus
+        numTrack = 40;
+        numSec = 18;
+		    numHead = 1;
+        bitLength = BIT_LENGTH_DD;
+        flags.seclen = 1; //256b sectors
+        gap1=49;     // gap1 th - sh
+        gap2=22;     // gap2 sh - sd
+        gap3=24;     // gap3 sd - next sh
+        gap4=32;     // gap4 index - th
+        gap4b=56;     // gap4b end - index
+        break;  
+
+      // this clases with other 720k disks        
+	    //case (uint16_t) (80*2*18/2): //80 track 2 sided Opus image 720k       
+        // numTrack = 80;
+        // numSec = 18;
+        //bitLength = BIT_LENGTH_DD;
+        //flags.seclen = 1; //256b sectors
+        //break;  
       default:  //not a standart raw floppy image
         msg.error(err_invfile);
 	      return false;
@@ -128,8 +196,10 @@ bool FloppyDisk::load(char *filename)
       msg.error(err_geombig);
 	    return false;        
     }
+	numHead = (uint8_t) *(int16_t *)(wbuf+15);
     numSec = (uint8_t) *(int16_t *)(wbuf+13);     //WsectorsPerTrack@24
-    numTrack = (uint8_t) ( totalSectors / (numSec*2) );
+    numTrack = (uint8_t) ( totalSectors / (numSec*numHead) );
+
     bitLength = (numSec >= 15) ? BIT_LENGTH_HD:BIT_LENGTH_DD; //Decide according to numSec, >=15 HD else DD
   }
   //After all the checks load image file
@@ -144,6 +214,12 @@ void FloppyDisk::eject(void)
 	memset(fName, 0, 13); //clear disk file name
 	numTrack = 80; //default for 3.5" HD Floppy
 	numSec = 18; //default for 3.5" HD Floppy
+	numHead = 2; //default for 3.5" HD Floppy
+  gap1=49;     // gap1 th - sh
+	gap2=22;     // gap2 sh - sd
+	gap3=54;     // gap3 sd - next sh
+	gap4=32;     // gap4 index - th
+	gap4b=56;     // gap4b end - index
   //clear flags & set DISK CHANGED  
 	flags.changed = 1;
   flags.ready = 0;
