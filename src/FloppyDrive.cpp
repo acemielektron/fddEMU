@@ -114,7 +114,7 @@ void debugPrintSector(char charRW, uint8_t* buffer, int16_t len)
 {
 #if DEBUG && ENABLE_SERIAL
 	uint8_t track  = secHeader.track;
-	uint8_t head   = secHeader.side;	
+	uint8_t head   = secHeader.side;
 	uint8_t sector = secHeader.sector;
 
 	ds.isDrive0() ? Serial.write('A'):Serial.write('B');
@@ -125,7 +125,7 @@ void debugPrintSector(char charRW, uint8_t* buffer, int16_t len)
 	Serial.print(head);
 	Serial.write('/');
 	Serial.print(sector);
-	Serial.write('\n');	
+	Serial.write('\n');
 
 	if (charRW == 'W')
 	{
@@ -140,8 +140,8 @@ void debugPrintSector(char charRW, uint8_t* buffer, int16_t len)
 			for (uint8_t j = 0; j < bytesPerLine; j++)
 			{
 				Serial.write(' ');
-				Serial.printHEX(buffer[i+j]);				
-			}			
+				Serial.printHEX(buffer[i+j]);
+			}
 			//write printable chars
 			Serial.write('\t');
 			for (uint8_t j = 0; j < bytesPerLine; j++)
@@ -160,7 +160,7 @@ uint8_t *prepSectorBuffer(uint8_t track, uint8_t head, uint8_t sector, uint8_t s
 {
 	uint16_t crc;
 	uint8_t *buffer = secData.buffer;
-	
+
 	//prepare header
 	secHeader.id = 0xFE; // ID mark
 	secHeader.track = track;
@@ -174,17 +174,17 @@ uint8_t *prepSectorBuffer(uint8_t track, uint8_t head, uint8_t sector, uint8_t s
 	secHeader.crcLO = crc & 0xFF;
 	secHeader.gap = 0x4E;
 
-	//prepare sector data	
+	//prepare sector data
 	secData.id = 0xFB;
-	secData.gap = 0x4E; 		
+	secData.gap = 0x4E;
 	switch (seclen)
 	{
 	case 2:
-		crc = calc_crc(secData.buffer, 512+1);		
+		crc = calc_crc(secData.buffer, 512+1);
 		secData.crcHI = crc >> 8;
 		secData.crcLO = crc & 0xFF;
 		break;
-	case 1:	
+	case 1:
 		if ((sector & 1) == 0) //first 256b
 		{
 			crc = calc_crc(secData.buffer, 256+1);
@@ -194,17 +194,17 @@ uint8_t *prepSectorBuffer(uint8_t track, uint8_t head, uint8_t sector, uint8_t s
 			memcpy(secData.data+256, &secData.crcHI, 3); //copy crc + gap over
 		}
 		else //second 256b
-		{			
+		{
 			secData.save[2] = secData.data[256 -1]; //save last byte of first half
-			secData.data[256 -1] = secData.id; //copy id over			
+			secData.data[256 -1] = secData.id; //copy id over
 			crc = calc_crc(secData.buffer+256, 256+1);
 			secData.crcHI = crc >> 8;
 			secData.crcLO = crc & 0xFF;
-			buffer = secData.buffer+256;	
+			buffer = secData.buffer+256;
 		}
 		break;
 	default:
-		debugPrint_P(err_secSize);		
+		debugPrint_P(err_secSize);
 	}
 	debugPrintSector('R', NULL, 0);
 	return buffer;
@@ -224,8 +224,8 @@ bool checkCRC() // crc check & restore sector to SD writable format
 		{
 			crc = calc_crc(secData.buffer, 256+1);
 			secData.crcHI = secData.data[256]; //copy crc to it's proper place
-			secData.crcLO = secData.data[257];			
-			memcpy(secData.data+256, secData.save, 3); //restore first 3 bytes of second half		
+			secData.crcLO = secData.data[257];
+			memcpy(secData.data+256, secData.save, 3); //restore first 3 bytes of second half
 		}
 		else //second 256b
 		{
@@ -235,7 +235,7 @@ bool checkCRC() // crc check & restore sector to SD writable format
 	}
 	if ( (secData.crcHI == (crc >> 8)) && (secData.crcLO == (crc & 0xFF)) ) status = false; //no error
 #if DEBUG
-	else 
+	else
 	{
 		Serial.print(F("CRC expected: "));
 		Serial.printHEX(crc);
@@ -244,7 +244,7 @@ bool checkCRC() // crc check & restore sector to SD writable format
 		Serial.printHEX(secData.crcLO);
 		Serial.write('\n');
 	}
-#endif //DEBUG		
+#endif //DEBUG
 	uint8_t *pbuf = ( (secHeader.length == 1) && ((secHeader.sector&1)==0) ) ? secData.data+256:secData.data;
 	debugPrintSector('W', pbuf, 128  << secHeader.length);
 	return status;
@@ -292,7 +292,7 @@ int FloppyDrive::getSectorData(int lba)
 	}
 	else if (isVirtual())
 	{
-	#if ENABLE_VFFS	
+	#if ENABLE_VFFS
 		n = vffs.readSector(secData.data, lba);
 	#endif //ENABLE_VFFS
 	}
@@ -302,7 +302,7 @@ int FloppyDrive::getSectorData(int lba)
 int FloppyDrive::setSectorData(int lba)
 {
 	int n = FR_DISK_ERR;
-	
+
 	if (isReady())
 	{
 		if (flags.seclen == 2) n = disk_write_sector(secData.data, startSector+lba);
@@ -313,7 +313,7 @@ int FloppyDrive::setSectorData(int lba)
 	{
 	#if ENABLE_VFFS
 		n = vffs.writeSector(secData.data, lba);
-	#endif //ENABLE_VFFS	
+	#endif //ENABLE_VFFS
 	}
 	return n;
 }
@@ -342,7 +342,7 @@ void FloppyDrive::run()
 		if (isReady() || isVirtual()) clrChanged();//if a disk is loaded clear diskChange flag
 	}
 	(isReadonly()) ? SET_WRITEPROT_LOW() : SET_WRITEPROT_HIGH();  //check readonly
-	fdcWriteMode();	
+	fdcWriteMode();
 	while(!ds.isDrvChanged())
 	{
 	#if ENABLE_WDT
@@ -350,7 +350,7 @@ void FloppyDrive::run()
 	#endif  //ENABLE_WDT
 	#if defined (__AVR_ATmega32U4__) && ENABLE_SERIAL
 		Serial.rcvRdy(); //service usb
-	#endif //defined (__AVR_ATmega32U4__) && ENABLE_SERIAL	
+	#endif //defined (__AVR_ATmega32U4__) && ENABLE_SERIAL
 		if (ds.isTrackChanged()) //if track changed
 		{
 			ds.clrTrackChanged();
@@ -362,24 +362,24 @@ void FloppyDrive::run()
 			isReady() || isVirtual() ? SET_DSKCHANGE_HIGH() : SET_DSKCHANGE_LOW(); //disk present ?
 		}
 		side = (SIDE()) ? 0:1; //check side
-		//start sector	
+		//start sector
 		uint8_t sides=1;
-		lba=(track*numHead+side)*numSec+sector;//LBA = (C × HPC + H) × SPT + (S − 1)			
+		lba=(track*numHead+side)*numSec+sector;//LBA = (C × HPC + H) × SPT + (S − 1)
 		getSectorData(lba); //get sector from SD
-		wBuffer = prepSectorBuffer(track, side, sector, flags.seclen);
+		wBuffer = prepSectorBuffer(track, side, numHead == 2 ? sector + 1 : sector, flags.seclen);
 		fdcWriteHeader(bitLength, secHeader.buffer);
 		if ( fdcWriteData(bitLength, wBuffer, (128 << flags.seclen)+4) ) //if WRITE_GATE asserted
-		{				
+		{
 			fdcReadMode();
 			uint8_t res = fdcReadData(bitLength, wBuffer, (128 << flags.seclen)+3);
 			fdcWriteMode();
 			if (res ==  0)
 			{
 				if (!checkCRC()) setSectorData(lba);
-			}					
-			else debugPrint_P(err_readFDC); //couldnt read full sector		
+			}
+			else debugPrint_P(err_readFDC); //couldnt read full sector
 			while (IS_WRITE());//wait for WRITE_GATE to deassert
-		}	
+		}
 		else fdcWriteGap(bitLength, gap3);
 		sector++; //next sector
 		if (sector >= numSec) sector = 0;
